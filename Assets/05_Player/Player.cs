@@ -124,6 +124,9 @@ public class Player : MonoBehaviour, IDamageable
     private InteractableObj targetInteractableObj;
     private int[] lastSoundFrames = new int[10];
     private float lastFootstepTime = -1f;
+
+    // 모션타임 조절을 위한 오프셋 변수 추가
+    private float _motionTimeOffset = 0f;
     #endregion
 
     #region Unity Lifecycle
@@ -170,7 +173,8 @@ public class Player : MonoBehaviour, IDamageable
 
     private void Update()
     {
-        animator.SetFloat("MotionTime", Time.time % 1.0f);
+        // 모션타임 오프셋을 반영하여 0부터 시작할 수 있도록 계산
+        animator.SetFloat("MotionTime", (Time.time - _motionTimeOffset) % 1.0f);
         searchTimer += Time.deltaTime;
 
         if (searchTimer >= interactionSearchDelay && !isInteracting)
@@ -246,7 +250,6 @@ public class Player : MonoBehaviour, IDamageable
 
         print($"Player takes {damage}");
 
-        // 변경: _currentDialogueCoroutine 대신 IsDialogueActive 검사, DialogueManager.Instance null 체크 추가
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
         {
             print($"Activate");
@@ -712,7 +715,7 @@ public class Player : MonoBehaviour, IDamageable
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
-                // 즉각적인 텔레포트 적용
+
                 transform.position = respawn;
                 rb.position = respawn;
             }
@@ -732,8 +735,14 @@ public class Player : MonoBehaviour, IDamageable
     }
 
     #endregion
-
     #region Animation & Movement
+    // 외부에서 언제든 모션타임을 0으로 초기화할 수 있는 함수
+    public void ResetMotionTime()
+    {
+        _motionTimeOffset = Time.time;
+        animator.SetFloat("MotionTime", 0);
+    }
+
     public void Animator_Play(string clipName) => animator.Play(clipName);
     public void Animator_SetBool(string boolName, bool state) => animator.SetBool(boolName, state);
     public void Animator_SetTrigger(string triggerName) => animator.SetTrigger(triggerName);
