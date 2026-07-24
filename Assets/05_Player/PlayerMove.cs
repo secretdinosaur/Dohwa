@@ -33,6 +33,15 @@ public class PlayerMove : MonoBehaviour
     private Vector2 _inputMove;
     private Vector2 _smoothInput;
     private bool _isSprinting;
+
+    // 조깅 -> 달리기 전환 상태 추적을 위한 이전 프레임 데이터
+    private bool _prevIsSprinting = false;
+    private Vector2 _prevInputMove = Vector2.zero;
+
+    private int _currentSprintDir = 0;
+    private bool _isSprintTransitionActive = false;
+    private float _sprintTransitionStartTime = 0f;
+
     private bool _isStopping = false;
     private float _animSpeed;
     private bool _isKnockedBack = false;
@@ -123,20 +132,6 @@ public class PlayerMove : MonoBehaviour
             return;
         }
 
-        if (_isSprintBtnHeld)
-        {
-            bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
-            bool considerLockedOn = isLockedOn || Player.Instance.PlayerAttack.lastLockOffTime + 1 > Time.time;
-
-            if (considerLockedOn && Time.time - _sprintPressTime > 0.25f)
-            {
-                if (Player.Instance.CanDash() && _inputMove.magnitude > InputThresholdMin && _inputMove.y >= 0 && sprintLockoutTimer <= 0f && Player.Instance.MP > 0f)
-                {
-                    _isSprinting = true;
-                }
-            }
-        }
-
         bool ctrlPressed = Keyboard.current != null && (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
         _isWalking = _isWalkingRequested || ctrlPressed;
 
@@ -194,19 +189,10 @@ public class PlayerMove : MonoBehaviour
         {
             _isSprintBtnHeld = true;
             _sprintPressTime = Time.time;
-
-            if (!considerLockedOn)
-            {
-                if (Player.Instance.CanDash() && _inputMove.magnitude > InputThresholdMin && _inputMove.y >= 0 && sprintLockoutTimer <= 0f && Player.Instance.MP > 0f)
-                {
-                    _isSprinting = true;
-                }
-            }
         }
         else if (context.canceled)
         {
             _isSprintBtnHeld = false;
-            _isSprinting = false;
 
             if (considerLockedOn && Time.time - _sprintPressTime <= 0.25f)
             {
@@ -240,14 +226,69 @@ public class PlayerMove : MonoBehaviour
     {
         if (_isDashing) return;
 
-        if (_inputMove.y < 0 || _inputMove.magnitude < InputMagnitudeZeroCheck)
+        bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
+        bool considerLockedOn = isLockedOn || Player.Instance.PlayerAttack.lastLockOffTime + 1 > Time.time;
+
+        bool canSprint = _isSprintBtnHeld
+                         && _inputMove.y >= 0
+                         && _inputMove.magnitude > InputMagnitudeZeroCheck
+                         && sprintLockoutTimer <= 0f
+                         && Player.Instance.MP > 0f
+                         && Player.Instance.CanDash();
+
+        if (considerLockedOn && Time.time - _sprintPressTime <= 0.25f)
         {
-            _isSprinting = false;
+            canSprint = false;
+        }
+
+        _isSprinting = canSprint;
+
+        // 정지 상태 -> 달리기 전환 방지 로직을 위한 이전 움직임 체크
+        bool justStartedSprinting = !_prevIsSprinting && _isSprinting;
+        bool wasMoving = _prevInputMove.magnitude > InputThresholdMin;
+
+        int targetSprintDir = 0;
+        if (_isSprinting)
+        {
+            if (_inputMove.x <= -InputThresholdMin) targetSprintDir = -1;
+            else if (_inputMove.x >= InputThresholdMin) targetSprintDir = 1;
+        }
+
+        if (targetSprintDir != _currentSprintDir)
+        {
+            // 방향이 바뀌거나 달리기가 풀리면 기존 전환 트리거 캔슬
+            if (_isSprintTransitionActive)
+            {
+                if (_currentSprintDir == -1) Player.Instance.Animator_SetTrigger("CancelLeftJoggingToRun");
+                _isSprintTransitionActive = false;
+            }
+
+            // 움직이던 중(wasMoving)에 막 달리기 시작했을 때(justStartedSprinting)만 트리거 발동
+            if (targetSprintDir != 0 && justStartedSprinting && wasMoving)
+            {
+                if (targetSprintDir == -1) Player.Instance.Animator_SetTrigger("LeftJoggingToRun");
+
+                _sprintTransitionStartTime = Time.time;
+                _isSprintTransitionActive = true;
+            }
+
+            _currentSprintDir = targetSprintDir;
+        }
+
+        // 0.5초가 지나면 캔슬 트리거 전송하여 전환 애니메이션 종료
+        if (_isSprintTransitionActive && Time.time - _sprintTransitionStartTime >= 0.5f)
+        {
+            if (_currentSprintDir == -1)
+            {
+                Player.Instance.Animator_SetTrigger("CancelLeftJoggingToRun");
+                Player.Instance.ResetMotionTime();
+            }
+
+            _isSprintTransitionActive = false;
         }
 
         _smoothInput = Vector2.Lerp(_smoothInput, _inputMove, Time.fixedDeltaTime * acceleration);
 
-        bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
         Transform target = Player.Instance.PlayerAttack != null ? Player.Instance.PlayerAttack.currentTarget : null;
 
         if (isLockedOn && target == null)
@@ -367,6 +408,10 @@ public class PlayerMove : MonoBehaviour
             transform.position += targetVelocity * Time.fixedDeltaTime;
             transform.rotation = nextRotation;
         }
+
+        // 현재 프레임의 데이터를 다음 프레임 비교를 위해 저장
+        _prevIsSprinting = _isSprinting;
+        _prevInputMove = _inputMove;
     }
     public LayerMask groundLayer;
     private bool OnSlope()
