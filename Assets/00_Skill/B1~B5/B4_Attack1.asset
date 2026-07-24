@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d6cb460c5e307a42adda57a4889bc7f, type: 3}
+  m_Name: B4_Attack1
+  m_EditorClassIdentifier: Assembly-CSharp::Skill_Slash
+  isEnemySkill: 0
+  isUpgraded: 0
+  UpgradedSkill: {fileID: 0}
+  commands: 0000000004000000
+  MP_cost: 20
+  clip: {fileID: 7400000, guid: a2f2f679b9b02084e906775024dcd702, type: 2}
+  icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
+  sound: {fileID: 8300000, guid: 79216edd7ec29524ab112c032a153f64, type: 3}
+  enemyHitEffect: {fileID: 0}
+  effect: {fileID: 0}
+  SpecialGuardEffect: {fileID: 0}
+  Localize_skillName:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466174
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillItemDesc:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466175
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillEffectDesc:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466176
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  damageMultipliers:
+  - 20
+  HitSound:
+  - {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
+  playerHitEffects:
+  - {fileID: 0}
+  enemyHitEffectDirections: 03000000
+  isSpecialSkill: 0
+  triggerType: 2
+  triggerThreshold: 0
+  triggerCooldown: 0
+  triggerChance: 1
+  triggerMaxUsesPerCaster: 0
+  hitDataList:
+  - centerOffset: {x: 0, y: 1, z: 1}
+    boxSize: {x: 2, y: 2, z: 2.5}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 20
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
+    effectDirection: 3
+    playerHitEffect: {fileID: 0}
+    useGuardSettings: 0
+    useStunSettings: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  references:
+    version: 2
+    RefIds: []

@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b5ebcdbdb5dc684b998a47d2a54d33a, type: 3}
+  m_Name: B6
+  m_EditorClassIdentifier: Assembly-CSharp::SkillBookBase
+  SkillTreePrefab: {fileID: 3711653323754946364, guid: a4f0c5820dd739940adbfaa0f5185134, type: 3}
+  Localize_skillBookName:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 36341287229091849
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillBookItemDesc:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 36341287229091850
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillBookFirstPage:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 36370287112515588
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  id: 4f582b4f-f26d-439c-847a-2bb0969f7462
+  icon: {fileID: 1704491446, guid: 8a5a34e0dbba6b849bbbd16e9004410f, type: 3}
+  skillTree:
+  - nodeType: 2
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 0}
+    statModifiers:
+    - statType: 0
+      statValue: 5
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466205
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466206
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 5
+    useCondition: 0
+    autoUnlockOnCondition: 0
+    conditions: []
+    unlocked: 0
+    prerequisiteIndices: 
+    isStartingNode: 0
+  - nodeType: 2
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 0}
+    statModifiers:
+    - statType: 1
+      statValue: 5
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466207
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466208
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 5
+    useCondition: 0
+    autoUnlockOnCondition: 0
+    conditions: []
+    unlocked: 0
+    prerequisiteIndices: 00000000
+    isStartingNode: 0
+  - nodeType: 2
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 0}
+    statModifiers:
+    - statType: 3
+      statValue: 5
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466209
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466210
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 5
+    useCondition: 0
+    autoUnlockOnCondition: 0
+    conditions: []
+    unlocked: 0
+    prerequisiteIndices: 01000000
+    isStartingNode: 0
+  - nodeType: 2
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 0}
+    statModifiers:
+    - statType: 1
+      statValue: 5
+    - statType: 3
+      statValue: 5
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466211
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+      m_TableEntryReference:
+        m_KeyId: 47229588645466212
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 5
+    useCondition: 0
+    autoUnlockOnCondition: 0
+    conditions: []
+    unlocked: 0
+    prerequisiteIndices: 02000000
+    isStartingNode: 0
+  references:
+    version: 2
+    RefIds: []

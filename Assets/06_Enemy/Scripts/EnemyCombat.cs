@@ -1,0 +1,153 @@
+using UnityEngine;
+using DG.Tweening;
+using System.Collections.Generic;
+using System.Collections;
+
+public class EnemyCombat : MonoBehaviour
+{
+    public float Power = 1f;
+    public SkillBase[] skillSet;
+    public Vector2 attackCooldownRange;
+
+    private float hitStopTimeScale = 0.2f, hitStopDuration = 0.25f, hitStopRestoreDuration = 0.05f;
+    private float preAttackLookDelay = 0.2f;
+
+    private EnemyCore core;
+    private EnemySound sound;
+    private AnimatorOverrideController overrideController;
+    private HashSet<int> processedHitIndices = new HashSet<int>();
+    private SkillBase currentActiveSkill;
+    private Coroutine attackRoutine;
+    private const string HITSTOP_ID = "HitStop";
+
+    private int currentSkillStateIndex = 1;
+
+    private void Awake()
+    {
+        core = GetComponent<EnemyCore>();
+        sound = GetComponent<EnemySound>();
+    }
+
+    private void Start()
+    {
+        overrideController = new AnimatorOverrideController(core.animator.runtimeAnimatorController);
+        core.animator.runtimeAnimatorController = overrideController;
+    }
+
+    private void OnEnable()
+    {
+        core.OnDamageTaken += HandleHit;
+        core.OnParried += CancelCurrentSkillAction;
+        core.OnDeath += CancelCurrentSkillAction;
+        core.OnStunned += CancelCurrentSkillAction;
+
+        core.QueryGetSkill = GetSkill;
+        core.CmdPerformAttack += InitiateAttack;
+    }
+
+    private void OnDisable()
+    {
+        core.OnDamageTaken -= HandleHit;
+        core.OnParried -= CancelCurrentSkillAction;
+        core.OnDeath -= CancelCurrentSkillAction;
+        core.OnStunned -= CancelCurrentSkillAction;
+
+        core.QueryGetSkill = null;
+        core.CmdPerformAttack -= InitiateAttack;
+    }
+
+    private void InitiateAttack(SkillBase skill)
+    {
+        if (attackRoutine != null) StopCoroutine(attackRoutine);
+        attackRoutine = StartCoroutine(PerformAttackRoutine(skill));
+    }
+
+    private IEnumerator PerformAttackRoutine(SkillBase skill)
+    {
+        core.CmdStopMovement?.Invoke();
+        currentActiveSkill = skill;
+        core.ChangeState(EnemyState.Attack);
+
+        float elapsed = 0f;
+        while (elapsed < preAttackLookDelay)
+        {
+            core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Animator_PlaySkill(skill);
+        core.CmdConsumeMP?.Invoke(skill.MP_cost);
+        if (sound != null) sound.PlaySkillSound(skill.sound);
+        core.PlayEffects(skill.name);
+
+        yield return new WaitForSeconds(skill.clip.length);
+
+        float nextAttackTime = Time.time + UnityEngine.Random.Range(attackCooldownRange.x, attackCooldownRange.y);
+        core.OnAttackCompleted?.Invoke(nextAttackTime);
+        attackRoutine = null;
+    }
+
+    private void Animator_PlaySkill(SkillBase skill, float crossFadeDuration = 0.1f)
+    {
+        string targetState = "SkillState" + currentSkillStateIndex;
+
+        overrideController[targetState] = skill.clip;
+        processedHitIndices.Clear();
+        core.animator.CrossFadeInFixedTime(targetState, crossFadeDuration);
+
+        currentSkillStateIndex = currentSkillStateIndex == 1 ? 2 : 1;
+    }
+
+    private void HandleHit(float damage)
+    {
+        if (core.isGuarding) return;
+
+        TriggerHitStop();
+
+        if (core.currentState == EnemyState.Dead) return;
+
+        CancelCurrentSkillAction();
+
+        core.animator.SetTrigger(UnityEngine.Random.Range(0, 2) == 0 ? "Hitted1" : "Hitted2");
+    }
+
+    private void TriggerHitStop()
+    {
+        DOTween.Kill(HITSTOP_ID);
+        Sequence seq = DOTween.Sequence().SetUpdate(true).SetId(HITSTOP_ID);
+        seq.AppendCallback(() => { Time.timeScale = hitStopTimeScale; });
+        seq.AppendInterval(hitStopDuration);
+        seq.Append(DOVirtual.Float(hitStopTimeScale, 1f, hitStopRestoreDuration, value => Time.timeScale = value).SetEase(Ease.OutQuad));
+    }
+
+    public void OnAttackHitEvent(int index)
+    {
+        if (processedHitIndices.Contains(index) || currentActiveSkill == null) return;
+
+        var target = currentActiveSkill.ExecuteHitCheck(transform, Power, index);
+        if (target.Count > 0) processedHitIndices.Add(index);
+    }
+
+    private void CancelCurrentSkillAction()
+    {
+        core.CmdCancelAttack?.Invoke();
+        if (currentActiveSkill != null)
+        {
+            core.StopEffects(currentActiveSkill.name);
+        }
+
+        if (attackRoutine != null)
+        {
+            StopCoroutine(attackRoutine);
+            attackRoutine = null;
+
+            float nextAttackTime = Time.time + UnityEngine.Random.Range(attackCooldownRange.x, attackCooldownRange.y);
+            core.OnAttackCompleted?.Invoke(nextAttackTime);
+        }
+
+        currentActiveSkill = null;
+    }
+
+    private SkillBase GetSkill() => skillSet.Length > 0 ? skillSet[UnityEngine.Random.Range(0, skillSet.Length)] : null;
+}

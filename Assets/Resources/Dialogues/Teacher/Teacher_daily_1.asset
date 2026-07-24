@@ -1,0 +1,188 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a820c655c9ce845bd58f84787fb154, type: 3}
+  m_Name: Teacher_daily_1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSet
+  Script:
+  - m_TableReference:
+      m_TableCollectionName: Teacher
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Teacher_daily_1
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Whisper: 1
+  Shout: 0
+  gettingWhat:
+    GettingType: 0
+    GetStatPoint: 0
+    OnDialogueEnd:
+      m_PersistentCalls:
+        m_Calls: []
+  isChoiceNode: 1
+  choiceOptions:
+  - Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+      m_TableEntryReference:
+        m_KeyId: 210977189890
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    needCheckConditionForChooseNextDialogue: 1
+    NextDialogueSet:
+    - dialogueSet: {fileID: 11400000, guid: 7a471515ee2de4c4a96a4a8ced6c07a5, type: 2}
+      conditions:
+      - conditionType: 5
+        keyName: 
+        shouldExist: 0
+        compareValue: 0
+        req:
+          requireItem:
+            Weapon: {fileID: 0}
+            Armor: {fileID: 0}
+            Consumable: {fileID: 0}
+            NonConsumable: {fileID: 11400000, guid: eb8bac0cae7a53343a5dbcbbed07d557, type: 2}
+            SkillBook: {fileID: 0}
+          requireItemCount: 1
+          isDeleteItem: 0
+        compareType: 0
+    - dialogueSet: {fileID: 11400000, guid: c5bf2bc292889f645980c711d201e389, type: 2}
+      conditions:
+      - conditionType: 0
+        keyName: 
+        shouldExist: 0
+        compareValue: 0
+        req:
+          requireItem:
+            Weapon: {fileID: 0}
+            Armor: {fileID: 0}
+            Consumable: {fileID: 0}
+            NonConsumable: {fileID: 11400000, guid: eb8bac0cae7a53343a5dbcbbed07d557, type: 2}
+            SkillBook: {fileID: 0}
+          requireItemCount: 1
+          isDeleteItem: 0
+        compareType: 0
+    needCheckCondition: 0
+    conditions: []
+    isQuest: 0
+    questOption:
+      QuestKey: 
+      NextDialogueSetIfQuestClear: {fileID: 0}
+      QuestReward: 0
+      questType: 0
+      requireItem: []
+      KillTargetKey: 
+      RequiredKillCount: 0
+      RequiredGradeIndex: 0
+      RequiredGold: 0
+    questRewardOption:
+      rewardType: 0
+      ItemType: 0
+      ItemId: 
+      ItemCount: 0
+      isDeleteItem: 0
+      Point: 0
+  - Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+      m_TableEntryReference:
+        m_KeyId: 210977189891
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    needCheckConditionForChooseNextDialogue: 0
+    NextDialogueSet:
+    - dialogueSet: {fileID: 11400000, guid: fdc9bbebc32a65e44928fbada7b1e6ba, type: 2}
+      conditions: []
+    - dialogueSet: {fileID: 11400000, guid: 3879e2095350394498e43f8f70959c17, type: 2}
+      conditions: []
+    - dialogueSet: {fileID: 11400000, guid: fe92f3cb57763514cb093d4276eba78c, type: 2}
+      conditions: []
+    - dialogueSet: {fileID: 11400000, guid: 2e7b2fec4afaf5943a7f4d9fd7639601, type: 2}
+      conditions: []
+    needCheckCondition: 0
+    conditions: []
+    isQuest: 0
+    questOption:
+      QuestKey: 
+      NextDialogueSetIfQuestClear: {fileID: 0}
+      QuestReward: 0
+      questType: 0
+      requireItem: []
+      KillTargetKey: 
+      RequiredKillCount: 0
+      RequiredGradeIndex: 0
+      RequiredGold: 0
+    questRewardOption:
+      rewardType: 0
+      ItemType: 0
+      ItemId: 
+      ItemCount: 0
+      isDeleteItem: 0
+      Point: 0
+  - Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+      m_TableEntryReference:
+        m_KeyId: 210977189892
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    needCheckConditionForChooseNextDialogue: 0
+    NextDialogueSet:
+    - dialogueSet: {fileID: 11400000, guid: 532603623c6216a48874caa6ceb3448e, type: 2}
+      conditions: []
+    needCheckCondition: 1
+    conditions:
+    - conditionType: 4
+      keyName: Teacher_OneTime_Question_1
+      shouldExist: 0
+      compareValue: 0
+      req:
+        requireItem:
+          Weapon: {fileID: 0}
+          Armor: {fileID: 0}
+          Consumable: {fileID: 0}
+          NonConsumable: {fileID: 0}
+          SkillBook: {fileID: 0}
+        requireItemCount: 0
+        isDeleteItem: 0
+      compareType: 0
+    isQuest: 0
+    questOption:
+      QuestKey: 
+      NextDialogueSetIfQuestClear: {fileID: 0}
+      QuestReward: 0
+      questType: 0
+      requireItem: []
+      KillTargetKey: 
+      RequiredKillCount: 0
+      RequiredGradeIndex: 0
+      RequiredGold: 0
+    questRewardOption:
+      rewardType: 0
+      ItemType: 0
+      ItemId: 
+      ItemCount: 0
+      isDeleteItem: 0
+      Point: 0
+  NextMainDialogue: {fileID: 0}
+  needExecutionFunction: 0
+  ExecutionFunctionIndex: 0
+  references:
+    version: 2
+    RefIds: []

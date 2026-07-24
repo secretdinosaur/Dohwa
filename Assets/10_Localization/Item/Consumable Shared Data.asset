@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Consumable Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Consumable
+  m_TableCollectionNameGuidString: 128a224ec6e4cab4abc696e220cfd8ca
+  m_Entries:
+  - m_Id: 46572875376259072
+    m_Key: Consumable_1_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922368
+    m_Key: Consumable_1_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922369
+    m_Key: Consumable_1_Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922370
+    m_Key: Consumable_2_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922371
+    m_Key: Consumable_2_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922372
+    m_Key: Consumable_2_Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922373
+    m_Key: Consumable_3_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922374
+    m_Key: Consumable_3_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46572875476922375
+    m_Key: Consumable_3_Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 36341698694508544
+    m_Key: Food_1_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 36341698749034496
+    m_Key: Food_1_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 36341698749034497
+    m_Key: Food_1_Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555036856320
+    m_Key: Food_2_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555095576576
+    m_Key: Food_2_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555095576577
+    m_Key: Food_2_Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555095576578
+    m_Key: Food_3_Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555095576579
+    m_Key: Food_3_Effect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 37506555095576580
+    m_Key: Food_3_Description
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1477941814594371705
+  references:
+    version: 2
+    RefIds:
+    - rid: 1477941814594371705
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1773287306551

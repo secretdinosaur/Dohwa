@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad54cd0e28bc2f647a6e54e7994f92e1, type: 3}
+  m_Name: Item
+  m_EditorClassIdentifier: Assembly-CSharp::Tutorial
+  TutorialName: Item
+  Localize_Title:
+    m_TableReference:
+      m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
+    m_TableEntryReference:
+      m_KeyId: 100089082703872
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Pages:
+  - Image: {fileID: 2130489405, guid: d40f8d22574f07740baca0b323a29127, type: 3}
+    Localize_Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
+      m_TableEntryReference:
+        m_KeyId: 100089116258304
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+  - Image: {fileID: 1636823017, guid: f4f6fff99c81a2e4bacd540db8f3e48f, type: 3}
+    Localize_Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
+      m_TableEntryReference:
+        m_KeyId: 100089116258305
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []

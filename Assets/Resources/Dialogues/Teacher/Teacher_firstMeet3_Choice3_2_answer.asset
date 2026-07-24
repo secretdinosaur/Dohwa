@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a820c655c9ce845bd58f84787fb154, type: 3}
+  m_Name: Teacher_firstMeet3_Choice3_2_answer
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSet
+  Script:
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 210998161431
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 210998161432
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Whisper: 1
+  Shout: 0
+  gettingWhat:
+    GettingType: 8
+    GetStatPoint: 0
+    OnDialogueEnd:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 7049019215116687560, guid: 8d6c66aae6c4c6445ad8f91bde43bcc1, type: 3}
+          m_TargetAssemblyTypeName: DialogueCommandSet, Assembly-CSharp
+          m_MethodName: PlayerDeadForPiece
+          m_Mode: 2
+          m_Arguments:
+            m_ObjectArgument: {fileID: 11400000, guid: 7d5d45fd88f2cfc42af9d184daf3fa5f, type: 2}
+            m_ObjectArgumentAssemblyTypeName: DialogueSet, Assembly-CSharp
+            m_IntArgument: 999999999
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  isChoiceNode: 0
+  choiceOptions: []
+  NextMainDialogue: {fileID: 0}
+  needExecutionFunction: 0
+  ExecutionFunctionIndex: 0
+  references:
+    version: 2
+    RefIds: []

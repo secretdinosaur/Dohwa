@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a820c655c9ce845bd58f84787fb154, type: 3}
+  m_Name: Teacher_firstMeet2
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSet
+  Script:
+  - m_TableReference:
+      m_TableCollectionName: Teacher
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Teacher_firstMeet2_1
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: Teacher
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Teacher_firstMeet2_2
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: Teacher
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Teacher_firstMeet2_3
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: Teacher
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Teacher_firstMeet2_4
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Whisper: 1
+  Shout: 0
+  gettingWhat:
+    GettingType: 0
+    GetStatPoint: 0
+    OnDialogueEnd:
+      m_PersistentCalls:
+        m_Calls: []
+  isChoiceNode: 1
+  choiceOptions:
+  - Text:
+      m_TableReference:
+        m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+      m_TableEntryReference:
+        m_KeyId: 210998161415
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    needCheckConditionForChooseNextDialogue: 0
+    NextDialogueSet:
+    - dialogueSet: {fileID: 11400000, guid: 684e34cbfb66c7f40ba5505cda3842bb, type: 2}
+      conditions: []
+    needCheckCondition: 0
+    conditions: []
+    isQuest: 0
+    questOption:
+      QuestKey: 
+      NextDialogueSetIfQuestClear: {fileID: 0}
+      QuestReward: 0
+      questType: 0
+      requireItem: []
+      KillTargetKey: 
+      RequiredKillCount: 0
+      RequiredGradeIndex: 0
+      RequiredGold: 0
+    questRewardOption:
+      rewardType: 0
+      ItemType: 0
+      ItemId: 
+      ItemCount: 0
+      isDeleteItem: 0
+      Point: 0
+  NextMainDialogue: {fileID: 0}
+  needExecutionFunction: 0
+  ExecutionFunctionIndex: 0
+  references:
+    version: 2
+    RefIds: []

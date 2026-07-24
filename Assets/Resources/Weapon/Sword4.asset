@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2b712d3ca4b26a4c8a3c016f72ddb80, type: 3}
+  m_Name: Sword4
+  m_EditorClassIdentifier: Assembly-CSharp::Weapon
+  Localize_weaponName:
+    m_TableReference:
+      m_TableCollectionName: GUID:4d987c9de26554c4392b684da0715257
+    m_TableEntryReference:
+      m_KeyId: 39070850308665349
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_ItemDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:4d987c9de26554c4392b684da0715257
+    m_TableEntryReference:
+      m_KeyId: 39070850308665350
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_EffectDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:4d987c9de26554c4392b684da0715257
+    m_TableEntryReference:
+      m_KeyId: 39070850308665351
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  id: dfbda469-1470-4995-91cb-904b9e25a04b
+  icon: {fileID: -1749113271, guid: 57618dd4235d6ad4da06241b1c66168e, type: 3}
+  weaponMesh: {fileID: 6687708012848683952, guid: 45015873dcce5fc4ca65fcf459f5fbbb, type: 3}
+  isDeletable: 1
+  attack: 45
+  equipPassive: {fileID: 0}
+  references:
+    version: 2
+    RefIds: []

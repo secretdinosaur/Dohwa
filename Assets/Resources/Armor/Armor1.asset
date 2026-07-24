@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3b84ca6a05f7a7499dcfae7027d6cb0, type: 3}
+  m_Name: Armor1
+  m_EditorClassIdentifier: Assembly-CSharp::Armor
+  Localize_armorName:
+    m_TableReference:
+      m_TableCollectionName: GUID:84c8459a609c99d439b8ceddb12b010b
+    m_TableEntryReference:
+      m_KeyId: 214777229312
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_ItemDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:84c8459a609c99d439b8ceddb12b010b
+    m_TableEntryReference:
+      m_KeyId: 214814978048
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_EffectDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:84c8459a609c99d439b8ceddb12b010b
+    m_TableEntryReference:
+      m_KeyId: 214814978049
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  id: 38969c76-70e2-48cb-bc49-97960bbd9a61
+  icon: {fileID: 1082831321, guid: 34fd3db0ded137949845a219676ee535, type: 3}
+  isDeletable: 1
+  defense: 10
+  equipPassive: {fileID: 0}
+  references:
+    version: 2
+    RefIds: []

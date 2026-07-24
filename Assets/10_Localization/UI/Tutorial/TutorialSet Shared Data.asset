@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: TutorialSet Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: TutorialSet
+  m_TableCollectionNameGuidString: 0dd7028881c51954a93f299e5f23c588
+  m_Entries:
+  - m_Id: 175602429952
+    m_Key: Tutorial_Inventory_Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175665344512
+    m_Key: Tutorial_Inventory_Text_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175669538816
+    m_Key: Tutorial_Inventory_Text_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175669538817
+    m_Key: Tutorial_Inventory_Text_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733120
+    m_Key: Tutorial_Inventory_Text_4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733121
+    m_Key: Tutorial_Inventory_Text_5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733122
+    m_Key: Tutorial_Fight_Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733123
+    m_Key: Tutorial_Fight_Text_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733124
+    m_Key: Tutorial_Fight_Text_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 175673733125
+    m_Key: Tutorial_Fight_Text_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 93675870253056
+    m_Key: Tutorial_Fight_Text_4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8434543521792
+    m_Key: Tutorial_GameGoal_Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8434572881920
+    m_Key: Tutorial_GameGoal_Text_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8434572881921
+    m_Key: Tutorial_GameGoal_Text_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8434572881922
+    m_Key: Tutorial_GameGoal_Text_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8434572881923
+    m_Key: Tutorial_GameGoal_Text_4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 100089082703872
+    m_Key: Tutorial_Item_Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 100089116258304
+    m_Key: Tutorial_Item_Text_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 100089116258305
+    m_Key: Tutorial_Item_Text_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 355180914176000
+    m_Key: Tutorial_Move_Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 355180951924736
+    m_Key: Tutorial_Move_Text_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 355180951924737
+    m_Key: Tutorial_Move_Text_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 355180951924738
+    m_Key: Tutorial_Move_Text_3
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 4119652894616060540
+  references:
+    version: 2
+    RefIds:
+    - rid: 4119652894616060540
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1782214831153

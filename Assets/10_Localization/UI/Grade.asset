@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be51871efa6c3e4eae1703925c8f5ac, type: 3}
+  m_Name: Grade
+  m_EditorClassIdentifier: Unity.Localization.Editor::UnityEditor.Localization.StringTableCollection
+  m_SharedTableData: {fileID: 11400000, guid: 96cb598cdf068ee4a987afeb0f74b899, type: 2}
+  m_Tables:
+  - {fileID: 11400000, guid: 6f08ba4e984afd840bb5c7f2f7d50d94, type: 2}
+  - {fileID: 11400000, guid: 371e26af11f1e874280aa5699e16bd3e, type: 2}
+  - {fileID: 11400000, guid: 7faf0b20d09ec634083411584c25ab84, type: 2}
+  - {fileID: 11400000, guid: c7d6b26ee9e707c4aaaa659797c2463a, type: 2}
+  m_Extensions:
+  - rid: 3661810486936338575
+  m_Group: String Table
+  references:
+    version: 2
+    RefIds:
+    - rid: 3661810486936338575
+      type: {class: GoogleSheetsExtension, ns: UnityEditor.Localization.Plugins.Google, asm: Unity.Localization.Editor}
+      data:
+        m_Collection: {fileID: 11400000}
+        m_SheetsServiceProvider: {fileID: 11400000, guid: 772f199237bd178478bad5d4c819810a, type: 2}
+        m_SpreadsheetId: 1yAcTPnN6GFLYYepsjP_tRTBWfzST3BJ0GSykt59l5fk
+        m_SheetId: 1341368064
+        m_Columns:
+        - rid: 3661810486936338577
+        - rid: 3661810486936338578
+        - rid: 3661810486936338579
+        - rid: 3661810486936338580
+        - rid: 3661810486936338581
+        m_RemoveMissingPulledKeys: 1
+    - rid: 3661810486936338577
+      type: {class: KeyColumn, ns: UnityEditor.Localization.Plugins.Google.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_Column: A
+    - rid: 3661810486936338578
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_Column: B
+        m_LocaleIdentifier:
+          m_Code: zh-Hans
+        m_IncludeComments: 0
+    - rid: 3661810486936338579
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_Column: C
+        m_LocaleIdentifier:
+          m_Code: en
+        m_IncludeComments: 0
+    - rid: 3661810486936338580
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_Column: D
+        m_LocaleIdentifier:
+          m_Code: ja
+        m_IncludeComments: 0
+    - rid: 3661810486936338581
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_Column: E
+        m_LocaleIdentifier:
+          m_Code: ko
+        m_IncludeComments: 0

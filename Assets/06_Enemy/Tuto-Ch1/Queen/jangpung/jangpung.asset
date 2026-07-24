@@ -1,0 +1,130 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34e3cad5530060042b198cdfcaf2913d, type: 3}
+  m_Name: jangpung
+  m_EditorClassIdentifier: Assembly-CSharp::Skill_Range
+  Localize_skillName:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillItemDesc:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillEffectDesc:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  commands: 
+  MP_cost: 35
+  damageMultipliers:
+  - 15
+  - 15
+  - 15
+  - 15
+  HitSound:
+  - {fileID: 8300000, guid: bc28f7f4ef3eaef48bce48f6e2999d48, type: 3}
+  playerHitEffects:
+  - {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+  - {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+  - {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+  - {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+  enemyHitEffectDirections: 
+  clip: {fileID: 7400000, guid: 99686b633db063c4a8494400e61ffabc, type: 2}
+  icon: {fileID: 0}
+  sound: {fileID: 8300000, guid: be7aac32dfe7eec4099720003492306f, type: 3}
+  enemyHitEffect: {fileID: 0}
+  effect: {fileID: 0}
+  SpecialGuardEffect: {fileID: -2007652515568816340, guid: accfd428aa936994f93be3117f5a5dd4, type: 3}
+  UpgradedSkill: {fileID: 0}
+  isUpgraded: 0
+  IsAdvancedSkill: 0
+  isEnemySkill: 1
+  isSpecialSkill: 0
+  triggerType: 0
+  triggerThreshold: 0.5
+  triggerCooldown: 5
+  triggerChance: 1
+  triggerMaxUsesPerCaster: 0
+  projectilePrefab: {fileID: 2138335265188839783, guid: 8ea29d48414e6ef468272da31deeeb13, type: 3}
+  range: 50
+  hitDataList:
+  - spawnOffset: {x: 0, y: 0, z: 0}
+    damageMultiplier: 15
+    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+  - spawnOffset: {x: 0, y: 0, z: 0}
+    damageMultiplier: 15
+    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+  - spawnOffset: {x: 0, y: 0, z: 0}
+    damageMultiplier: 15
+    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+  - spawnOffset: {x: 0, y: 0, z: 0}
+    damageMultiplier: 15
+    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+  references:
+    version: 2
+    RefIds: []

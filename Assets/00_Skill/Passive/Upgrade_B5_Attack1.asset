@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bae9f4e5250ee574c86a54ba5d44a558, type: 3}
+  m_Name: Upgrade_B5_Attack1
+  m_EditorClassIdentifier: Assembly-CSharp::PassiveSkillData
+  Localize_passiveName:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466195
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_description:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466196
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_EffectDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
+    m_TableEntryReference:
+      m_KeyId: 47229588645466197
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  icon: {fileID: -1859553251, guid: 43dca56709422264d921e609be2fe457, type: 3}
+  skillLogic:
+    rid: 6391738449294524860
+  references:
+    version: 2
+    RefIds:
+    - rid: 6391738449294524860
+      type: {class: UpgradeSkillPassive, ns: , asm: Assembly-CSharp}
+      data:
+        baseSkill: {fileID: 11400000, guid: 5a94ec0a1e96a1545b07eb44752d0c19, type: 2}
+        explicitUpgradedSkill: {fileID: 11400000, guid: 438d2100859e3da449556b5629de6adc, type: 2}
+        replaceDefaultSkill: 1

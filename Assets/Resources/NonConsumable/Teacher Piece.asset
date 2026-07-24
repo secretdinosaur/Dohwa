@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2d93c9c46b6c174c83ea9de7cdeb0f1, type: 3}
+  m_Name: Teacher Piece
+  m_EditorClassIdentifier: Assembly-CSharp::TeacherPiece
+  Localize_NonConsumableName:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 9941750856052736
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_ItemDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 9941750897995776
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_EffectDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 9941750897995777
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  id: cbbfcb75-fb88-4cff-8caf-c038f57ed59d
+  icon: {fileID: 104423612, guid: 67f8db1b491de2447a589a5e161b46b1, type: 3}
+  isDeletable: 0
+  dialogueSets:
+  - {fileID: 11400000, guid: 3117e1ee656999944b1985faf4b6cb01, type: 2}
+  - {fileID: 11400000, guid: 5f8395f2693488549b475b287035338d, type: 2}
+  - {fileID: 11400000, guid: 2aeabf33db5aa3845bf903258ca64c10, type: 2}
+  references:
+    version: 2
+    RefIds: []

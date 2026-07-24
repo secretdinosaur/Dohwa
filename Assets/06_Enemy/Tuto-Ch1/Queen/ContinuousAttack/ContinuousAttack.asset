@@ -1,0 +1,445 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d6cb460c5e307a42adda57a4889bc7f, type: 3}
+  m_Name: ContinuousAttack
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeSkill_KnockBack
+  Localize_skillName:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillItemDesc:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_skillEffectDesc:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  commands: 
+  MP_cost: 35
+  damageMultipliers:
+  - 10
+  - 10
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 15
+  HitSound:
+  - {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
+  - {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
+  - {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+  - {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+  - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+  - {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+  - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+  - {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+  - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+  - {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+  - {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+  - {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+  - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+  - {fileID: 8300000, guid: 8eee2d16541c6744e83770776e156dfc, type: 3}
+  playerHitEffects:
+  - {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
+  - {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
+  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  - {fileID: 11400000, guid: 6269dda2ff57b6249a0b412438a21b4e, type: 2}
+  - {fileID: 11400000, guid: a38f7579fd019cf49b234e3e3364ca3c, type: 2}
+  - {fileID: 11400000, guid: cd5d159b3840a044a816e12d9c9b101f, type: 2}
+  - {fileID: 11400000, guid: 8c0c319ba7e867646bf2f08cfbb83c11, type: 2}
+  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  - {fileID: 11400000, guid: 3523778363414bb4ca904d3fd7d6d820, type: 2}
+  - {fileID: 11400000, guid: c6bfc859889114b4ab190a0711d6c52a, type: 2}
+  - {fileID: 11400000, guid: 872232835ce9d0c478f795ef5abaa39a, type: 2}
+  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  - {fileID: 11400000, guid: 95af15bf30bbc2c45b79508d63f5567c, type: 2}
+  - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
+  enemyHitEffectDirections: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  clip: {fileID: 7400000, guid: 4c79a8bd161a6a145917c657325709f1, type: 2}
+  icon: {fileID: 0}
+  sound: {fileID: 8300000, guid: 55741a3fccafa0c4bb515e56d7e4cc64, type: 3}
+  enemyHitEffect: {fileID: 0}
+  effect: {fileID: 0}
+  SpecialGuardEffect: {fileID: 0}
+  UpgradedSkill: {fileID: 0}
+  isUpgraded: 0
+  IsAdvancedSkill: 0
+  isEnemySkill: 1
+  isSpecialSkill: 0
+  triggerType: 0
+  triggerThreshold: 0.5
+  triggerCooldown: 5
+  triggerChance: 1
+  triggerMaxUsesPerCaster: 0
+  hitDataList:
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1, y: 2, z: 1}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 10
+    knockbackForce: 2
+    hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1, y: 2, z: 1}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 10
+    knockbackForce: 2
+    hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 6269dda2ff57b6249a0b412438a21b4e, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: a38f7579fd019cf49b234e3e3364ca3c, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: cd5d159b3840a044a816e12d9c9b101f, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 8c0c319ba7e867646bf2f08cfbb83c11, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 3523778363414bb4ca904d3fd7d6d820, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: c6bfc859889114b4ab190a0711d6c52a, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 872232835ce9d0c478f795ef5abaa39a, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0, y: 1, z: 1.5}
+    boxSize: {x: 1.5, y: 2, z: 2}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: 0
+    hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: 95af15bf30bbc2c45b79508d63f5567c, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  - centerOffset: {x: 0.25, y: 1, z: 1.5}
+    boxSize: {x: 1.25, y: 2, z: 1}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 15
+    knockbackForce: 25
+    hitSound: {fileID: 8300000, guid: 8eee2d16541c6744e83770776e156dfc, type: 3}
+    effectDirection: 0
+    playerHitEffect: {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
+    useStatusEffects: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      applyEffect: 0
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
+  references:
+    version: 2
+    RefIds: []
