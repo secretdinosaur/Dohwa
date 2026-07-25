@@ -140805,6 +140805,81 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &543142661
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 543142662}
+  - component: {fileID: 543142664}
+  - component: {fileID: 543142663}
+  m_Layer: 5
+  m_Name: LockOnImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &543142662
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543142661}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
+  m_LocalScale: {x: 0.45, y: 0.45, z: 0.45}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1799086822}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &543142663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543142661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 575571413, guid: 925e42d0a5874e24aa0a3cceea2c8d54, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &543142664
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543142661}
+  m_CullTransparentMesh: 1
 --- !u!4 &543324940 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8210729821896099979, guid: c478a062066a2f64a989772af230b942, type: 3}
@@ -159690,6 +159765,7 @@ GameObject:
   - component: {fileID: 699517161}
   - component: {fileID: 699517162}
   - component: {fileID: 699517163}
+  - component: {fileID: 699517164}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -159851,6 +159927,20 @@ MonoBehaviour:
   minDeathSoundPitch: -2
   deathEffectContainer: {fileID: 525676490}
   hitEffectContainer: {fileID: 0}
+--- !u!114 &699517164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 699517160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4554d166e43d054d828e6d0015c83d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLockOnImage
+  target: {fileID: 0}
+  LockOnImage: {fileID: 543142663}
 --- !u!4 &700159095 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 423450072627483375, guid: 8c46841c52e186e438ae90c66d660994, type: 3}
@@ -168199,7 +168289,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PeakEnvironment
   innerBox: {fileID: 746097222}
   outerBox: {fileID: 746097221}
-  Fog: {fileID: 2100000, guid: 10b715fe0b72fdb4c92de3150a407de3, type: 2}
+  Fog: {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
   Sobel: {fileID: 2100000, guid: 38e9dbd32f6a28f4d92b98aed9835e41, type: 2}
   SmokeFilter: {fileID: 2100000, guid: 0ce7856a866b75042b71762f42c91334, type: 2}
   weight: 1
@@ -214428,7 +214518,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.086051434, y: 0.1580841, z: 0.013830148, w: 0.9835717}
+  m_LocalRotation: {x: -0.040239763, y: 0.883661, z: 0.07731031, w: 0.45994264}
   m_LocalPosition: {x: -170.4911, y: 51.281258, z: 52.725716}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -396205,7 +396295,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Stage1Environment
   innerBox: {fileID: 1607809954}
   outerBox: {fileID: 1607809953}
-  Fog: {fileID: 2100000, guid: 10b715fe0b72fdb4c92de3150a407de3, type: 2}
+  Fog: {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
   Sobel: {fileID: 2100000, guid: 38e9dbd32f6a28f4d92b98aed9835e41, type: 2}
   SmokeFilter: {fileID: 2100000, guid: 0ce7856a866b75042b71762f42c91334, type: 2}
   weight: 1
@@ -397020,6 +397110,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 2051108587}
+    - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: LowHPMat
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b87a97140a3f22419d878271b1b6821, type: 2}
     - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: RespawnSound
       value: 
@@ -438331,6 +438425,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 543142662}
   - {fileID: 1648261997}
   - {fileID: 1628535908}
   - {fileID: 622596872}

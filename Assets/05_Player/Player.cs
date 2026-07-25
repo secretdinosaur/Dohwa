@@ -12,7 +12,7 @@ public class Player : MonoBehaviour, IDamageable
     public static Player Instance;
     [HideInInspector] public Animator animator;
     [HideInInspector] public CinemachineImpulseSource impulseSource;
-    [HideInInspector] public Material LowHPMat;
+    public Material LowHPMat;
     [HideInInspector] public GameObject Sword;
 
     [HideInInspector] public PlayerAttack PlayerAttack;

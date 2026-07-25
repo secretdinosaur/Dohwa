@@ -168199,7 +168199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PeakEnvironment
   innerBox: {fileID: 746097222}
   outerBox: {fileID: 746097221}
-  Fog: {fileID: 2100000, guid: 10b715fe0b72fdb4c92de3150a407de3, type: 2}
+  Fog: {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
   Sobel: {fileID: 2100000, guid: 38e9dbd32f6a28f4d92b98aed9835e41, type: 2}
   SmokeFilter: {fileID: 2100000, guid: 0ce7856a866b75042b71762f42c91334, type: 2}
   weight: 1
@@ -214428,7 +214428,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.086051434, y: 0.1580841, z: 0.013830148, w: 0.9835717}
+  m_LocalRotation: {x: 0.050202385, y: 0.8143336, z: 0.071244955, w: -0.57381594}
   m_LocalPosition: {x: -170.4911, y: 51.281258, z: 52.725716}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -396205,7 +396205,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Stage1Environment
   innerBox: {fileID: 1607809954}
   outerBox: {fileID: 1607809953}
-  Fog: {fileID: 2100000, guid: 10b715fe0b72fdb4c92de3150a407de3, type: 2}
+  Fog: {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
   Sobel: {fileID: 2100000, guid: 38e9dbd32f6a28f4d92b98aed9835e41, type: 2}
   SmokeFilter: {fileID: 2100000, guid: 0ce7856a866b75042b71762f42c91334, type: 2}
   weight: 1
@@ -397020,6 +397020,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 2051108587}
+    - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: LowHPMat
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b87a97140a3f22419d878271b1b6821, type: 2}
     - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: RespawnSound
       value: 

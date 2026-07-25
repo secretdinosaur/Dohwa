@@ -658,6 +658,10 @@ public class PlayerAttack : MonoBehaviour
 
             currentTarget = target;
             isLockedOn = true;
+
+            if(currentTarget.GetComponentInChildren<EnemyLockOnImage>(true) != null)
+                currentTarget.GetComponentInChildren<EnemyLockOnImage>(true).gameObject.SetActive(true);
+
             Camera.main.GetComponent<CameraController>().SetLockOn(currentTarget);
             StartCoroutine(LockOnTransition());
         }
@@ -678,6 +682,8 @@ public class PlayerAttack : MonoBehaviour
     {
         if (!isLockedOn) return;
 
+        if (currentTarget.GetComponentInChildren<EnemyLockOnImage>(true) != null)
+            currentTarget.GetComponentInChildren<EnemyLockOnImage>(true).gameObject.SetActive(false);
         isLockedOn = false;
         currentTarget = null;
         lastLockOffTime = Time.time;
