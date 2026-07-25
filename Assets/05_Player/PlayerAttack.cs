@@ -659,8 +659,8 @@ public class PlayerAttack : MonoBehaviour
             currentTarget = target;
             isLockedOn = true;
 
-            if(currentTarget.GetComponentInChildren<EnemyLockOnImage>(true) != null)
-                currentTarget.GetComponentInChildren<EnemyLockOnImage>(true).gameObject.SetActive(true);
+            if(EnemyLockOnImage.Instance != null)
+                EnemyLockOnImage.Instance.SetTarget(currentTarget);
 
             Camera.main.GetComponent<CameraController>().SetLockOn(currentTarget);
             StartCoroutine(LockOnTransition());
@@ -682,11 +682,12 @@ public class PlayerAttack : MonoBehaviour
     {
         if (!isLockedOn) return;
 
-        if (currentTarget.GetComponentInChildren<EnemyLockOnImage>(true) != null)
-            currentTarget.GetComponentInChildren<EnemyLockOnImage>(true).gameObject.SetActive(false);
         isLockedOn = false;
         currentTarget = null;
         lastLockOffTime = Time.time;
+
+        if (EnemyLockOnImage.Instance != null)
+            EnemyLockOnImage.Instance.SetTarget(null);
 
         Camera.main.GetComponent<CameraController>().DisableLockOn();
         Player.Instance.Animator_SetBool("isStep", false);

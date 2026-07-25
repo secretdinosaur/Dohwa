@@ -2,43 +2,52 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using System.Collections;
 
 public class EnemyLockOnImage : MonoBehaviour
 {
+    public static EnemyLockOnImage Instance;
     public Transform target;
-    private Transform cam;
     private Camera mainCamera;
     [SerializeField] private Image LockOnImage;
     private RectTransform imageRectTransform;
+    private Coroutine LockOnCoroutine;
 
     void Awake()
     {
+        Instance = this;
         if (Camera.main != null)
-            cam = Camera.main.transform;
+            mainCamera = Camera.main;
         imageRectTransform = LockOnImage.GetComponent<RectTransform>();
         imageRectTransform.gameObject.SetActive(false);
     }
 
     public void SetTarget(Transform newTarget)
     {
-        target = newTarget.GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "DEF-spine.003");
-        imageRectTransform.gameObject.SetActive(target != null);
+        if(newTarget == null)
+        {
+            target = null;
+            imageRectTransform.gameObject.SetActive(false);
+            StopCoroutine(LockOnCoroutine);
+        }
+        else
+        {
+            target = newTarget.GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "DEF-spine.003");
+            imageRectTransform.gameObject.SetActive(true);
+            LockOnCoroutine = StartCoroutine(FollowTarget());
+        }
     }
 
-    void LateUpdate()
+    IEnumerator FollowTarget()
     {
-        if (target == null)
-            return;
-
-        Vector3 screenPos = mainCamera.WorldToScreenPoint(target.position);
-
-        if (screenPos.z < 0)
+        while (true)
         {
-            imageRectTransform.gameObject.SetActive(false);
-            return;
-        }
+            yield return new WaitForEndOfFrame();
 
-        imageRectTransform.gameObject.SetActive(true);
-        imageRectTransform.position = screenPos;
+            if (target == null)
+                continue;
+
+            imageRectTransform.position = mainCamera.WorldToScreenPoint(target.position);
+        }
     }
 }
