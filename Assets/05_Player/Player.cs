@@ -565,6 +565,14 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
+    public void OnScroll(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            Vector2 scroll = context.ReadValue<Vector2>();
+        }
+    }
+
     public InteractableObj GetInteractableObj()
     {
         Vector3 searchCenter = transform.position - transform.forward * 1f;
