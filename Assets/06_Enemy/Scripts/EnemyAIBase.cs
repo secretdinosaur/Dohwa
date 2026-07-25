@@ -215,7 +215,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         float distToPlayer = Vector3.Distance(transform.position, Player.Instance.transform.position);
 
         if (distToPlayer <= detectionRangeWithoutWatch)
-            return !Physics.Linecast(transform.position + Vector3.up, Player.Instance.transform.position + Vector3.up, wallLayer);
+            return !Physics.Linecast(transform.position + Vector3.up * 2, Player.Instance.transform.position + Vector3.up, wallLayer);
 
         Vector3 dir = (Player.Instance.transform.position - transform.position).normalized;
 
@@ -223,7 +223,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         if (distToPlayer <= activeRange && (Vector3.Angle(transform.forward, dir) < fieldOfView / 2f || isMemorizingPlayer))
         {
-            return !Physics.Linecast(transform.position + Vector3.up, Player.Instance.transform.position + Vector3.up, wallLayer);
+            return !Physics.Linecast(transform.position + Vector3.up * 2, Player.Instance.transform.position + Vector3.up, wallLayer);
         }
 
         return false;
