@@ -12,10 +12,9 @@ public class Skill_Area : SkillBase
     [SerializeField] private float defaultDuration = 6f;
     [SerializeField] private float defaultTickInterval = 1f;
 
-    public override SoundObject Activate(Transform casterTransform)
+    public override SkillEffect Activate(Transform casterTransform)
     {
-        if (sound) return SoundManager.Instance.PlaySound(sound);
-        return null;
+        return SkillEffectManager.Instance.PlaySkillEffect(casterTransform, this);
     }
     public override GuardableData GetGuardData(int hitIndex)
     {

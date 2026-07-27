@@ -40,7 +40,7 @@ public class SoundManager : MonoBehaviour
 
     private void Start()
     {
-        Button[] allButtons = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        Button[] allButtons = FindObjectsByType<Button>(FindObjectsInactive.Include);
         foreach (Button btn in allButtons)
         {
             if(NotUseDefaultSoundButton.Contains(btn)) continue;

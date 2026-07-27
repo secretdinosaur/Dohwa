@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b5ebcdbdb5dc684b998a47d2a54d33a, type: 3}
   m_Name: B0
   m_EditorClassIdentifier: Assembly-CSharp::SkillBookBase
-  SkillTreePrefab: {fileID: 885472331941776240, guid: c693257fe16b7f54a94b41fc26eced44, type: 3}
+  SkillTreePrefab: {fileID: 5909258232935994930, guid: c693257fe16b7f54a94b41fc26eced44, type: 3}
   Localize_skillBookName:
     m_TableReference:
       m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -47,6 +47,24 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 11400000, guid: c4ee776c489d6f644a476ac7a91c0fcf, type: 2}
     statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
     cost: 0
     useCondition: 0
     autoUnlockOnCondition: 0
@@ -58,6 +76,24 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 11400000, guid: e03247f1981cda04bbf133cddf937fd8, type: 2}
     statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
     cost: 0
     useCondition: 1
     autoUnlockOnCondition: 1
@@ -66,8 +102,140 @@ MonoBehaviour:
       targetValue: 1
     - conditionType: 3
       targetValue: 1
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 00000000
+    isStartingNode: 0
+  - nodeType: 1
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: 1e7d73628dde2354ea2fcde52359d315, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 0
+    useCondition: 1
+    autoUnlockOnCondition: 1
+    conditions:
+    - conditionType: 1
+      targetValue: 2
+    - conditionType: 3
+      targetValue: 99
+    unlocked: 1
+    prerequisiteIndices: 01000000
+    isStartingNode: 0
+  - nodeType: 1
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: 1e7d73628dde2354ea2fcde52359d315, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 0
+    useCondition: 1
+    autoUnlockOnCondition: 1
+    conditions:
+    - conditionType: 1
+      targetValue: 3
+    - conditionType: 3
+      targetValue: 99
+    unlocked: 1
+    prerequisiteIndices: 02000000
+    isStartingNode: 0
+  - nodeType: 1
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: 1e7d73628dde2354ea2fcde52359d315, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 0
+    useCondition: 1
+    autoUnlockOnCondition: 1
+    conditions:
+    - conditionType: 1
+      targetValue: 4
+    - conditionType: 3
+      targetValue: 99
+    unlocked: 0
+    prerequisiteIndices: 03000000
+    isStartingNode: 0
+  - nodeType: 1
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: 1e7d73628dde2354ea2fcde52359d315, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 0
+    useCondition: 1
+    autoUnlockOnCondition: 1
+    conditions:
+    - conditionType: 1
+      targetValue: 5
+    - conditionType: 3
+      targetValue: 99
+    unlocked: 0
+    prerequisiteIndices: 04000000
     isStartingNode: 0
   references:
     version: 2

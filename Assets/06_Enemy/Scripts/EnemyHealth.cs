@@ -12,6 +12,10 @@ public class EnemyHealth : MonoBehaviour
     private float currentHp, currentMp;
     private EnemyCore core;
     private HpBarCanvas hpBarCanvas;
+    private DecalGenerator decalGenerator;
+
+    private bool hasTriggered66 = false;
+    private bool hasTriggered33 = false;
 
     public event Action<float, float> OnHpChanged;
     public event Action<float, float> OnMpChanged;
@@ -20,9 +24,9 @@ public class EnemyHealth : MonoBehaviour
     {
         core = GetComponent<EnemyCore>();
         hpBarCanvas = GetComponentInChildren<HpBarCanvas>();
+        decalGenerator = GetComponent<DecalGenerator>();
         currentHp = maxHP;
         currentMp = maxMP;
-
     }
 
     private void OnEnable()
@@ -56,15 +60,35 @@ public class EnemyHealth : MonoBehaviour
 
     private void HandleDamage(float damage)
     {
-        hpBarCanvas.gameObject.SetActive(true);
+        if(hpBarCanvas != null)
+            hpBarCanvas.gameObject.SetActive(true);
+            
         currentHp -= damage;
+        
+        float hpPercentage = currentHp / maxHP;
+        if (!hasTriggered66 && hpPercentage <= 0.66f)
+        {
+            hasTriggered66 = true;
+            if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+        }
+        if (!hasTriggered33 && hpPercentage <= 0.33f)
+        {
+            hasTriggered33 = true;
+            if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+        }
+
         OnHpChanged?.Invoke(currentHp, maxHP);
         core.PlayHitSound(core.HittedSkill, core.HitIndex);
 
         if (hpBarCanvas != null)
             hpBarCanvas.UpdateHP(currentHp, maxHP);
         
-        if (currentHp <= 0) { GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);  core.TriggerDeath(); hpBarCanvas.gameObject.SetActive(false); }
+        if (currentHp <= 0) 
+        { 
+            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);  
+            core.TriggerDeath(); 
+            hpBarCanvas.gameObject.SetActive(false); 
+        }
     }
 
     private void HandleParryDamage(float mpDamage)
@@ -105,6 +129,9 @@ public class EnemyHealth : MonoBehaviour
     private void ResetHealth()
     {
         currentHp = maxHP; currentMp = maxMP;
+        hasTriggered66 = false;
+        hasTriggered33 = false;
+        
         OnHpChanged?.Invoke(currentHp, maxHP);
         OnMpChanged?.Invoke(currentMp, maxMP);
         

@@ -24,11 +24,19 @@ public class StrongBanditAI : EnemyAIBase
     public float guardProbability = 0.7f;
     public float maxGuardDistance = 5.0f;
 
+    // 💡 추가된 설정값
+    public float guardStartupDelay = 0.2f; // 가드 애니메이션 시작 후 판정이 생길 때까지의 여유 시간
+    public float postStunGuardDelay = 2.0f; // 기절 직후 가드를 올리지 않는 쿨타임
+
     private BossSkillSelector skillSelector;
     private float nextWanderTime = 0f;
     private Vector3 cooldownWanderTarget;
     private float lastGuardTime = -9999f;
     private bool isStartingFight = false;
+
+    // 💡 기절 직후 쿨타임 관리를 위한 변수
+    private bool wasStunned = false;
+    private float nextAllowedGuardTime = -9999f;
 
     private Action<float> currentAttackCompleteHandler;
 
@@ -42,7 +50,7 @@ public class StrongBanditAI : EnemyAIBase
         core.OnDeath += HandleInterruptSpecial;
         core.OnRevived += HandleRevived;
 
-        // 💡 범용 가드 성공 이벤트에 카운터 공격 연결
+        // 범용 가드 성공 이벤트에 카운터 공격 연결
         core.OnGuardSuccess += TriggerCounter;
     }
 
@@ -56,7 +64,6 @@ public class StrongBanditAI : EnemyAIBase
             core.OnDeath -= HandleInterruptSpecial;
             core.OnRevived -= HandleRevived;
 
-            // 💡 이벤트 해제
             core.OnGuardSuccess -= TriggerCounter;
         }
     }
@@ -64,16 +71,19 @@ public class StrongBanditAI : EnemyAIBase
     private void HandleInterruptSpecial()
     {
         isStartingFight = false;
-        core.isGuarding = false; // 💡 core의 상태 변수 사용
+        core.isGuarding = false;
+
+        // 💡 스턴 상태 진입 기록
+        wasStunned = true;
     }
 
     private void HandleRevived()
     {
         isStartingFight = false;
-        core.isGuarding = false; // 💡 core의 상태 변수 사용
+        core.isGuarding = false;
+        wasStunned = false;
         if (FightWall != null) FightWall.SetActive(false);
         animator.Play("BeforeFight", 0, 0f);
-
     }
 
     private void HandlePlayerDetected()
@@ -105,11 +115,23 @@ public class StrongBanditAI : EnemyAIBase
     {
         if (isAttacking || isStartingFight || core.currentState == EnemyState.BackWalk) return;
         if (core.IsDead) return;
+
+        // 💡 기절에서 회복되어 AI 로직이 다시 돌기 시작할 때 가드 쿨타임 세팅
+        if (wasStunned)
+        {
+            wasStunned = false;
+            nextAllowedGuardTime = Time.time + postStunGuardDelay;
+        }
+
         if (isMemorizingPlayer)
         {
             StopActionRoutine();
 
-            bool canGuard = guardSkill != null && Time.time >= lastGuardTime + guardCooldown;
+            // 💡 기본 쿨타임 + 기절 직후 쿨타임 모두 충족해야 가드 가능
+            bool canGuard = guardSkill != null
+                            && Time.time >= lastGuardTime + guardCooldown
+                            && Time.time >= nextAllowedGuardTime;
+
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
             if (canGuard && hasMpForGuard && distToLastPos <= maxGuardDistance)
@@ -194,7 +216,7 @@ public class StrongBanditAI : EnemyAIBase
     {
         if (counterSkill == null) return;
 
-        core.isGuarding = false; // 💡 카운터 발동 시 가드 판정 해제
+        core.isGuarding = false;
 
         if (actionCoroutine != null) StopCoroutine(actionCoroutine);
         Player.Instance.PlayerAttack.CancelCurrentSkill();
@@ -217,7 +239,7 @@ public class StrongBanditAI : EnemyAIBase
     private IEnumerator GuardSequence(SkillBase skill)
     {
         isAttacking = true;
-        core.isGuarding = true; // 💡 가드 판정 시작
+        // 💡 즉시 가드 판정을 켜지 않음
 
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
@@ -232,12 +254,24 @@ public class StrongBanditAI : EnemyAIBase
         core.OnAttackCompleted += currentAttackCompleteHandler;
         core.CmdPerformAttack?.Invoke(skill);
 
-        // 💡 가드 모션이 끝나거나, 누군가에 의해 가드가 깨졌을 때(카운터 발동 등) 루프 탈출
+        // 💡 설정한 시간(선딜레이)만큼 대기 (도중에 캔슬되면 루프 탈출)
+        float startupTimer = 0f;
+        while (startupTimer < guardStartupDelay && !actionFinished)
+        {
+            startupTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        // 💡 선딜레이를 무사히 넘겼다면 가드 판정 On
+        if (!actionFinished)
+        {
+            core.isGuarding = true;
+        }
+
         yield return new WaitUntil(() => actionFinished || !core.isGuarding);
 
         ClearAttackHandler();
 
-        // 자연스럽게 가드가 끝난 경우
         if (core.isGuarding)
         {
             core.isGuarding = false;
@@ -297,6 +331,7 @@ public class StrongBanditAI : EnemyAIBase
         if (skillSelector.isInstantComboTriggered)
         {
             skillSelector.isInstantComboTriggered = false;
+            core.CmdCancelAttack?.Invoke();
         }
 
         ChainNextAttackOrIdle();

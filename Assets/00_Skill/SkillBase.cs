@@ -83,7 +83,7 @@ public abstract class SkillBase : ScriptableObject
     public abstract GuardableData GetGuardData(int hitIndex);
     public abstract StunEffectData GetStunData(int hitIndex);
 
-    public abstract SoundObject Activate(Transform casterTransform);
+    public abstract SkillEffect Activate(Transform casterTransform);
     public abstract List<IDamageable> ExecuteHitCheck(Transform casterTransform, float baseDamage, int hitIndex);
     #endregion
 }
