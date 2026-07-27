@@ -258,7 +258,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
             DOVirtual.DelayedCall(3f, () => { if (dropItem != null) dropItem.ShowItemGainPanel(); }).SetTarget(gameObject);
         }
         OnDeath?.Invoke();
-        Invoke(nameof(DeactivateObject), destroyDelay);
+        //Invoke(nameof(DeactivateObject), destroyDelay);
     }
 
     private IEnumerator AlignToGroundRotation()
