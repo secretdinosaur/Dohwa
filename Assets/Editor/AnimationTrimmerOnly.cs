@@ -9,7 +9,7 @@ public class AnimationTrimmerOnly
     [MenuItem("Assets/Trim First 20 Frames Only")]
     public static void TrimAnimations()
     {
-        int trimFrames = 20;
+        int trimFrames = 100;
 
         foreach (Object obj in Selection.objects)
         {

@@ -214,6 +214,7 @@ GameObject:
   - component: {fileID: 4902357015079451237}
   - component: {fileID: 7431884652099070222}
   - component: {fileID: 2152382277301545675}
+  - component: {fileID: 7362386699426097014}
   m_Layer: 7
   m_Name: Dog
   m_TagString: Enemy
@@ -795,6 +796,58 @@ MonoBehaviour:
   firstDetectionDelay: 1
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
+--- !u!114 &7362386699426097014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 527803656181843370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a052cb068065ad4cbed40649471df48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DecalGenerator
+  decalPrefab: {fileID: 3704037044412366106, guid: 6e701bf9284d11f4aa99d6e8f750fd1e, type: 3}
+  boneSettings:
+  - targetBone: {fileID: 6405755749178069577}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 1.2}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.002, y: -0.002, z: -0.0025}
+    offsetMax: {x: 0.002, y: 0.002, z: -0.0025}
+  - targetBone: {fileID: 4031614302515125258}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 0.8}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.002, y: -0.002, z: -0.0025}
+    offsetMax: {x: 0.002, y: 0.002, z: -0.0025}
+  - targetBone: {fileID: 2834402531816513634}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 0.5}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.002, y: -0.001, z: -0.0025}
+    offsetMax: {x: 0.002, y: 0.001, z: -0.0025}
+  - targetBone: {fileID: 7629375716979907382}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 0.5}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.002, y: -0.001, z: -0.0025}
+    offsetMax: {x: 0.002, y: 0.001, z: -0.0025}
+  - targetBone: {fileID: 1214430122223516166}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 0.5}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.0002, y: -0.0005, z: -0.001}
+    offsetMax: {x: 0.0002, y: 0.0005, z: -0.001}
+  - targetBone: {fileID: 3062692844693353699}
+    widthRange: {x: 0.03, y: 0.05}
+    heightRange: {x: 0.1, y: 0.5}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.0002, y: -0.0005, z: -0.001}
+    offsetMax: {x: 0.0002, y: 0.0005, z: -0.001}
+  maxDecals: 10
+  depth: 1
 --- !u!1 &529674953381056702
 GameObject:
   m_ObjectHideFlags: 0
@@ -2003,7 +2056,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}

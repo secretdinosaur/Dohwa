@@ -223,11 +223,8 @@ public class DialogueManager : MonoBehaviour
 
         }
         CurrentDialogueSet.GetImmadiately();
-        print(needExecution);
         if (needExecution)
         {
-            print(npc);
-            print(npc.ExecutionFunctionSet[CurrentDialogueSet.ExecutionFunctionIndex]);
             npc.ExecutionFunctionSet[CurrentDialogueSet.ExecutionFunctionIndex].Invoke();
         }
         StopShowDialogue();

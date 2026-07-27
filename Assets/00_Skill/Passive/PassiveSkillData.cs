@@ -128,7 +128,6 @@ public class UpgradeSkillPassive : PassiveLogic
                     // 복제본 생성 후 isUpgraded=true 설정
                     SkillBase clone = Object.Instantiate(baseSkill);
                     clone.isUpgraded = true;
-                    Debug.Log(1);
                     // 명시된 업그레이드 스킬이 있으면 링크 유지 (선택사항)
                     if (explicitUpgradedSkill != null)
                         clone.UpgradedSkill = explicitUpgradedSkill;

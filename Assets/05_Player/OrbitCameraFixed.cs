@@ -181,7 +181,7 @@ public class CameraController : MonoBehaviour
     public void OnSkillStarted()
     {
         if (weightCoroutine != null) StopCoroutine(weightCoroutine);
-        weightCoroutine = StartCoroutine(ChangeTargetWeights(new float[] { 0.5f, 0.5f, 0.1f, 0f }, duration));
+        weightCoroutine = StartCoroutine(ChangeTargetWeights(new float[] { 0.1f, 0.1f, 0.1f, 0.9f }, duration));
     }
 
     public void OnSkillEnd()

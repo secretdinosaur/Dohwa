@@ -159,7 +159,7 @@ public class SkillBookBase : ScriptableObject
                 case ConditionType.hasTeatherItem:
                     if (int.TryParse(condition.targetValue, out int target))
                     {
-                        if (InventoryManager.Instance.GetItemCount("TeaturePiece") < target)
+                        if (InventoryManager.Instance.GetItemCount("cbbfcb75-fb88-4cff-8caf-c038f57ed59d") < target)
                             return false;
                     }
                     else return false;

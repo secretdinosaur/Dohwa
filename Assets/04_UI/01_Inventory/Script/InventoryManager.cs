@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI; // UI 네임스페이스 (RawImage 사용 위함)
+using UnityEngine.UI;
 using static InventoryManager;
 using static SkillBookBase;
 using TMPro;
@@ -33,21 +33,18 @@ public class InventoryManager : MonoBehaviour
         WeaponSub,
         ArmorSub,
         Setting,
-        SettingGameSub, // 추가됨
-        SettingKeySub,   // 추가됨
+        SettingGameSub,
+        SettingKeySub,
         SettingCreditSub
     }
 
     public static InventoryManager Instance;
     public bool isInventoryOpen = false;
 
-    // ----- [추가된 부분: 배경 텍스처 배열] -----
     [Header("Background Textures")]
     public RenderTexture[] backgrounds;
     public Camera[] cameras;
     public GameObject uiMap;
-    // 0: Info, 1: Grade, 2: Equipment, 3: SkillBook, 4: Item(Food), 5: Setting
-    // -------------------------------------------
 
     [Header("Inventory")]
     public GameObject itemPrefab;
@@ -70,7 +67,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject ItemInventory;
     public GameObject ItemSlotContainer;
     public List<InventorySlot> ItemSlots;
-    
+
     public ItemInfoPanel EquipItemInfoPanel;
     public ItemInfoPanel NormalItemInfoPanel;
 
@@ -91,8 +88,8 @@ public class InventoryManager : MonoBehaviour
 
     [Header("Setting UI")]
     public GameObject SettingTab;
-    public GameObject SettingGamePanel; // 추가됨: Game 설정 내용이 들어갈 패널
-    public GameObject SettingKeyPanel;  // 추가됨: Key 설정 내용이 들어갈 패널
+    public GameObject SettingGamePanel;
+    public GameObject SettingKeyPanel;
     public GameObject SettingCreditPanel;
 
     public Button EquipmentButton;
@@ -105,8 +102,8 @@ public class InventoryManager : MonoBehaviour
 
     [Header("Setting Buttons")]
     public Button SettingButton;
-    public Button SettingGameButton; // 추가됨
-    public Button SettingKeyButton;  // 추가됨
+    public Button SettingGameButton;
+    public Button SettingKeyButton;
     public Button SettingCreditButton;
     public GameObject TitlePanel;
     public GameObject QuitPanel;
@@ -122,10 +119,10 @@ public class InventoryManager : MonoBehaviour
 
     private void Start()
     {
-        CreateNewSlots(InventoryType.Weapon); //weapon
-        CreateNewSlots(InventoryType.Armor); //armor
-        CreateNewSlots(InventoryType.SkillBook); //skillbook
-        CreateNewSlots(InventoryType.Item); //item
+        CreateNewSlots(InventoryType.Weapon);
+        CreateNewSlots(InventoryType.Armor);
+        CreateNewSlots(InventoryType.SkillBook);
+        CreateNewSlots(InventoryType.Item);
     }
 
     public void EquipWeapon(Weapon weapon, InventorySlot slot = null)
@@ -160,7 +157,7 @@ public class InventoryManager : MonoBehaviour
         }
         if (slot != null)
         {
-            if(EquippedArmor.item.armor != null)
+            if (EquippedArmor.item.armor != null)
             {
                 slot.item.SetItem(EquippedArmor.item.armor);
                 EquippedArmor.item.SetItem(armor);
@@ -393,7 +390,6 @@ public class InventoryManager : MonoBehaviour
         {
             if (skillBook.skillTree != null)
             {
-                // 특정 ID를 찾지 않고, 스킬트리 전체를 돌며 시작 노드를 찾아 모두 강제 해금
                 for (int i = 0; i < skillBook.skillTree.Length; i++)
                 {
                     if (skillBook.skillTree[i].isStartingNode)
@@ -629,7 +625,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (slot != null)
         {
-            if(count < slot.item.Count)
+            if (count < slot.item.Count)
             {
                 slot.item.Count -= count;
             }
@@ -706,7 +702,7 @@ public class InventoryManager : MonoBehaviour
         }
         else if (item.itemType == InventoryType.Item)
         {
-            if(item.consumable != null)
+            if (item.consumable != null)
             {
                 NormalItemInfoPanel.ItemIcon.sprite = item.consumable.icon;
                 NormalItemInfoPanel.ItemNameText.text = item.consumable.ConsumableName;
@@ -752,9 +748,9 @@ public class InventoryManager : MonoBehaviour
 
         ItemContextMenu.gameObject.SetActive(true);
         ItemContextMenu.slot = null;
-        if (selectedItem.item.weapon != null || selectedItem.item.armor != null) 
+        if (selectedItem.item.weapon != null || selectedItem.item.armor != null)
         { ItemContextMenu.OnEquipmentContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
-        else if (selectedItem.item.isQuickSlot ) { ItemContextMenu.OnQuickSlotContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
+        else if (selectedItem.item.isQuickSlot) { ItemContextMenu.OnQuickSlotContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.consumable != null) { ItemContextMenu.OnConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.nonConsumable != null) { ItemContextMenu.OnNonConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.skillBook != null) { HideItemContextMenu(); ShowSkillBookDetail(selectedItem.item.skillBook); }
@@ -763,7 +759,7 @@ public class InventoryManager : MonoBehaviour
 
     public void HideItemContextMenu()
     {
-        if(selectedItem != null)
+        if (selectedItem != null)
             selectedItem.canvasGroup.blocksRaycasts = true;
         ItemContextMenu.gameObject.SetActive(false);
     }
@@ -779,6 +775,9 @@ public class InventoryManager : MonoBehaviour
         if (skillBook == null || skillBook.SkillTreePrefab == null) return;
         SoundManager.Instance.PlayUISound(4);
         LastSkillTree = Instantiate(skillBook.SkillTreePrefab, SkillBookPanel);
+        SkillTreeTooltip.Instance.currentSkillBook = skillBook;
+
+        SkillTreeTooltip.Instance.UpdateBlindState();
 
         BookInfo.SetActive(true);
         TreeInfo.SetActive(false);
@@ -806,7 +805,7 @@ public class InventoryManager : MonoBehaviour
         if (InformationTab != null) InformationTab.SetActive(false);
         if (GradeTab != null) GradeTab.SetActive(false);
         if (SkillBookInventory != null) SkillBookInventory.SetActive(false);
-        
+
         if (ItemInventory != null) ItemInventory.SetActive(false);
 
 
@@ -820,7 +819,6 @@ public class InventoryManager : MonoBehaviour
         if (WeaponButton != null) WeaponButton.gameObject.SetActive(false);
         if (ArmorButton != null) ArmorButton.gameObject.SetActive(false);
 
-        // 새로 추가된 세팅 서브 버튼 및 패널 숨김 처리
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(false);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(false);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(false);
@@ -864,7 +862,6 @@ public class InventoryManager : MonoBehaviour
         Destroy(LastSkillTree);
     }
 
-    // ----- [추가된 부분: 배경 적용 헬퍼 메서드] -----
     private void SetInventoryBackground(int index)
     {
         if (backgrounds != null && backgrounds.Length > index && backgrounds[index] != null)
@@ -877,7 +874,6 @@ public class InventoryManager : MonoBehaviour
             cameras[index].gameObject.SetActive(true);
         }
     }
-    // --------------------------------------------------
 
     public void OnClickEquipmentTab()
     {
@@ -885,8 +881,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.Equipment;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(2);
 
         Inventory.SetActive(true);
@@ -902,8 +896,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.Info;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(0);
 
         if (InformationTab != null) InformationTab.SetActive(true);
@@ -916,8 +908,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.Grade;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(1);
 
         if (GradeTab != null) GradeTab.SetActive(true);
@@ -933,8 +923,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.SkillBook;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(3);
 
         SkillBookPanel.gameObject.SetActive(true);
@@ -950,8 +938,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.Item;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(4);
 
         Inventory.SetActive(true);
@@ -967,8 +953,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.WeaponSub;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(2);
 
         Inventory.SetActive(true);
@@ -992,8 +976,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.ArmorSub;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(2);
 
         Inventory.SetActive(true);
@@ -1010,15 +992,12 @@ public class InventoryManager : MonoBehaviour
         SetInfoPanel(1);
     }
 
-    // Setting 메인 탭 클릭 시 (기본으로 Game 서브 탭을 열도록 변경)
     public void OnClickSettingTab()
     {
         if (currentTab == TabType.Setting) return;
 
         HideAllTabs();
         currentTab = TabType.Setting;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(5);
 
         SettingTab.gameObject.SetActive(true);
@@ -1031,15 +1010,12 @@ public class InventoryManager : MonoBehaviour
         OnClickSettingGameSubTab();
     }
 
-    // 추가됨: Game 서브 탭 클릭 로직
     public void OnClickSettingGameSubTab()
     {
         if (currentTab == TabType.SettingGameSub) return;
 
         HideAllTabs();
         currentTab = TabType.SettingGameSub;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(5);
 
         SettingTab.gameObject.SetActive(true);
@@ -1047,29 +1023,29 @@ public class InventoryManager : MonoBehaviour
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
 
+        SettingManager.Instance.OnOpenSettings();
+
         if (SettingGamePanel != null) SettingGamePanel.SetActive(true);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
-
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingGameButton != null) SettingGameButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
     }
 
-    // 추가됨: Key 서브 탭 클릭 로직
     public void OnClickSettingKeySubTab()
     {
         if (currentTab == TabType.SettingKeySub) return;
 
         HideAllTabs();
         currentTab = TabType.SettingKeySub;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(5);
 
         SettingTab.gameObject.SetActive(true);
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+
+        SettingManager.Instance.OnOpenSettings();
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(true);
@@ -1085,8 +1061,6 @@ public class InventoryManager : MonoBehaviour
 
         HideAllTabs();
         currentTab = TabType.SettingCreditSub;
-
-        // ----- [추가됨] -----
         SetInventoryBackground(5);
 
         SettingTab.gameObject.SetActive(true);
@@ -1107,7 +1081,7 @@ public class InventoryManager : MonoBehaviour
         currentTab = TabType.None;
     }
 
-    public int GetItemCount(string itemName)
+    public int GetItemCount(string itemID)
     {
         int count = 0;
 
@@ -1115,12 +1089,12 @@ public class InventoryManager : MonoBehaviour
         {
             if (slot != null && slot.item != null && slot.item.consumable != null)
             {
-                if (slot.item.consumable.name == itemName)
+                if (slot.item.consumable.Id == itemID)
                     count += slot.item.Count;
             }
             if (slot != null && slot.item != null && slot.item.nonConsumable != null)
             {
-                if (slot.item.nonConsumable.name == itemName)
+                if (slot.item.nonConsumable.Id == itemID)
                     count += slot.item.Count;
             }
         }
@@ -1131,9 +1105,9 @@ public class InventoryManager : MonoBehaviour
             {
                 if (slot != null && slot.item != null)
                 {
-                    if (slot.item.consumable != null && slot.item.consumable.name == itemName)
+                    if (slot.item.consumable != null && slot.item.consumable.Id == itemID)
                         count += slot.item.Count;
-                    else if (slot.item.nonConsumable != null && slot.item.nonConsumable.name == itemName)
+                    else if (slot.item.nonConsumable != null && slot.item.nonConsumable.Id == itemID)
                         count += slot.item.Count;
                 }
             }
@@ -1141,31 +1115,31 @@ public class InventoryManager : MonoBehaviour
 
         foreach (InventorySlot slot in WeaponSlots)
         {
-            if (slot != null && slot.item != null && slot.item.weapon != null && slot.item.weapon.name == itemName)
+            if (slot != null && slot.item != null && slot.item.weapon != null && slot.item.weapon.Id == itemID)
                 count++;
         }
 
         if (EquippedWeaponSlot != null && EquippedWeaponSlot.item != null && EquippedWeaponSlot.item.weapon != null)
         {
-            if (EquippedWeaponSlot.item.weapon.name == itemName)
+            if (EquippedWeaponSlot.item.weapon.Id == itemID)
                 count++;
         }
 
         foreach (InventorySlot slot in ArmorSlots)
         {
-            if (slot != null && slot.item != null && slot.item.armor != null && slot.item.armor.name == itemName)
+            if (slot != null && slot.item != null && slot.item.armor != null && slot.item.armor.Id == itemID)
                 count++;
         }
 
         if (EquippedArmorSlot != null && EquippedArmorSlot.item != null && EquippedArmorSlot.item.armor != null)
         {
-            if (EquippedArmorSlot.item.armor.name == itemName)
+            if (EquippedArmorSlot.item.armor.Id == itemID)
                 count++;
         }
 
         foreach (InventorySlot slot in SkillBookSlots)
         {
-            if (slot != null && slot.item != null && slot.item.skillBook != null && slot.item.skillBook.name == itemName)
+            if (slot != null && slot.item != null && slot.item.skillBook != null && slot.item.skillBook.Id == itemID)
                 count++;
         }
 

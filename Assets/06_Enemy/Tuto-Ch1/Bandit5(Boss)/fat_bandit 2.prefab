@@ -179,7 +179,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -351,7 +351,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -681,7 +681,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -1245,7 +1245,7 @@ MeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
@@ -1472,7 +1472,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -1740,7 +1740,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -1882,6 +1882,7 @@ GameObject:
   - component: {fileID: 8846057325310399860}
   - component: {fileID: 3223557853381149133}
   - component: {fileID: 4432431938055024236}
+  - component: {fileID: 2195481694920036551}
   m_Layer: 7
   m_Name: fat_bandit 2
   m_TagString: Enemy
@@ -2623,6 +2624,70 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 38be8cb02cea5324087e7013472d0ead, type: 2}
   - {fileID: 11400000, guid: ee4aef4311a6612438658f994a7689f4, type: 2}
   attackCooldownRange: {x: 1, y: 3}
+--- !u!114 &2195481694920036551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3782932140620462241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a052cb068065ad4cbed40649471df48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DecalGenerator
+  decalPrefab: {fileID: 3704037044412366106, guid: 6e701bf9284d11f4aa99d6e8f750fd1e, type: 3}
+  boneSettings:
+  - targetBone: {fileID: 4153008223814246358}
+    widthRange: {x: 0.04, y: 0.06}
+    heightRange: {x: 1, y: 3}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.015, y: -0.02, z: -0.01}
+    offsetMax: {x: 0.015, y: 0.02, z: -0.01}
+  - targetBone: {fileID: 4153008223814246358}
+    widthRange: {x: 0.04, y: 0.06}
+    heightRange: {x: 1, y: 3}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.015, y: -0.02, z: 0.01}
+    offsetMax: {x: 0.015, y: 0.02, z: 0.01}
+  - targetBone: {fileID: 3508116924081534257}
+    widthRange: {x: 0.04, y: 0.06}
+    heightRange: {x: 1, y: 3}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: -0.01, y: -0.015, z: -0.03}
+    offsetMax: {x: -0.01, y: 0.015, z: 0.02}
+  - targetBone: {fileID: 4750694855060427619}
+    widthRange: {x: 0.04, y: 0.06}
+    heightRange: {x: 1, y: 3}
+    rotationRange: {x: -45, y: 45}
+    offsetMin: {x: 0.01, y: -0.015, z: -0.02}
+    offsetMax: {x: 0.01, y: 0.015, z: 0.02}
+  - targetBone: {fileID: 8273457674054740679}
+    widthRange: {x: 0.04, y: 0.05}
+    heightRange: {x: 0.2, y: 0.6}
+    rotationRange: {x: -120, y: -90}
+    offsetMin: {x: -0.01, y: -0.0075, z: -0.02}
+    offsetMax: {x: -0.01, y: 0.015, z: 0.02}
+  - targetBone: {fileID: 8443540707290400579}
+    widthRange: {x: 0.04, y: 0.05}
+    heightRange: {x: 0.2, y: 0.6}
+    rotationRange: {x: -120, y: -90}
+    offsetMin: {x: 0.01, y: -0.0075, z: -0.02}
+    offsetMax: {x: 0.01, y: 0.015, z: 0.02}
+  - targetBone: {fileID: 1815360739980800472}
+    widthRange: {x: 0.04, y: 0.05}
+    heightRange: {x: 0.2, y: 0.5}
+    rotationRange: {x: -120, y: -90}
+    offsetMin: {x: 0.01, y: -0.0075, z: -0.02}
+    offsetMax: {x: 0.01, y: 0.015, z: 0.02}
+  - targetBone: {fileID: 5343157285419512412}
+    widthRange: {x: 0.04, y: 0.05}
+    heightRange: {x: 0.2, y: 0.5}
+    rotationRange: {x: -120, y: -90}
+    offsetMin: {x: -0.01, y: -0.0075, z: -0.02}
+    offsetMax: {x: -0.01, y: 0.015, z: 0.02}
+  maxDecals: 60
+  depth: 0.3
 --- !u!1 &3925547127938219553
 GameObject:
   m_ObjectHideFlags: 0
@@ -3380,7 +3445,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}
@@ -3746,7 +3811,7 @@ SkinnedMeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}

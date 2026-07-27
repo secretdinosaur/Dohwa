@@ -51,16 +51,17 @@ public class SettingManager : MonoBehaviour
     {
         BindListeners();
         Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.Auto);
+        StartCoroutine(InitUIRoutine());
     }
 
     public void OnOpenSettings()
     {
+        isUIReady = false;
         StartCoroutine(InitUIRoutine());
     }
 
     private IEnumerator InitUIRoutine()
     {
-        isUIReady = false;
         yield return new WaitForEndOfFrame();
         DataManager.Instance?.LoadSettingsData();
         isUIReady = true;
@@ -85,6 +86,7 @@ public class SettingManager : MonoBehaviour
         currentLocaleIndex = localeIdx;
         StartCoroutine(SetLocaleRoutine(localeIdx));
     }
+
     private void BindListeners()
     {
         if (sfxSlider != null)
@@ -116,13 +118,34 @@ public class SettingManager : MonoBehaviour
         }
 
         if (resoltionDropdown != null)
-            resoltionDropdown.onValueChanged.AddListener(ChangeResolution);
+        {
+            resoltionDropdown.onValueChanged.AddListener((index) =>
+            {
+                ChangeResolution(index);
+                if (isUIReady) SoundManager.Instance?.PlayUISound(4);
+            });
+            AddDropdownClickListener(resoltionDropdown);
+        }
 
         if (screenDropdown != null)
-            screenDropdown.onValueChanged.AddListener(ChangeWindowMode);
+        {
+            screenDropdown.onValueChanged.AddListener((index) =>
+            {
+                ChangeWindowMode(index);
+                if (isUIReady) SoundManager.Instance?.PlayUISound(4);
+            });
+            AddDropdownClickListener(screenDropdown);
+        }
 
         if (languageDropdown != null)
-            languageDropdown.onValueChanged.AddListener(ChangeLocale);
+        {
+            languageDropdown.onValueChanged.AddListener((index) =>
+            {
+                ChangeLocale(index);
+                if (isUIReady) SoundManager.Instance?.PlayUISound(4);
+            });
+            AddDropdownClickListener(languageDropdown);
+        }
     }
 
     private void AddPointerUpListener(Slider slider)
@@ -130,6 +153,18 @@ public class SettingManager : MonoBehaviour
         EventTrigger trigger = slider.gameObject.GetComponent<EventTrigger>() ?? slider.gameObject.AddComponent<EventTrigger>();
         EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
         entry.callback.AddListener((data) => { DataManager.Instance?.SaveSettingsData(); });
+        trigger.triggers.Add(entry);
+    }
+
+    private void AddDropdownClickListener(TMP_Dropdown dropdown)
+    {
+        EventTrigger trigger = dropdown.gameObject.GetComponent<EventTrigger>() ?? dropdown.gameObject.AddComponent<EventTrigger>();
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+
+        entry.callback.AddListener((data) => {
+            if (isUIReady) SoundManager.Instance?.PlayUISound(4);
+        });
+
         trigger.triggers.Add(entry);
     }
 

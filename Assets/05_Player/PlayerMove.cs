@@ -24,12 +24,13 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float JumpForce = 5f;
     [SerializeField] private float sprintLockoutDuration = 3f;
     [SerializeField] private float jumpHorizontalVelocityMultiplier = 12f;
+    [SerializeField] private float jumpCooldown = 0.5f;
     #endregion
 
     #region State Flags & Internal Variables
     [Header("Status Flags")]
     public bool isGrounded = true;
-
+    private float _lastJumpTime = 0f;
     private Vector2 _inputMove;
     private Vector2 _smoothInput;
     private bool _isSprinting;
@@ -211,11 +212,14 @@ public class PlayerMove : MonoBehaviour
     {
         if (context.performed && Player.Instance != null && Player.Instance.CanJump() && isGrounded && !DialogueManager.Instance.IsDialogueActive)
         {
+            if (Time.time - _lastJumpTime < jumpCooldown) return;
+
             if (Physics.Raycast(transform.position + Vector3.up * slopeRaycastOffset, Vector3.down, out RaycastHit hit, slopeRaycastDistance, groundLayer))
             {
                 if (Vector3.Angle(Vector3.up, hit.normal) >= maxJumpSlopeAngle) return;
             }
 
+            _lastJumpTime = Time.time;
             StartCoroutine(JumpRoutine());
         }
     }
@@ -243,7 +247,6 @@ public class PlayerMove : MonoBehaviour
 
         _isSprinting = canSprint;
 
-        // 정지 상태 -> 달리기 전환 방지 로직을 위한 이전 움직임 체크
         bool justStartedSprinting = !_prevIsSprinting && _isSprinting;
         bool wasMoving = _prevInputMove.magnitude > InputThresholdMin;
 
@@ -256,18 +259,13 @@ public class PlayerMove : MonoBehaviour
 
         if (targetSprintDir != _currentSprintDir)
         {
-            // 방향이 바뀌거나 달리기가 풀리면 기존 전환 트리거 캔슬
             if (_isSprintTransitionActive)
             {
-                if (_currentSprintDir == -1) Player.Instance.Animator_SetTrigger("CancelLeftJoggingToRun");
                 _isSprintTransitionActive = false;
             }
 
-            // 움직이던 중(wasMoving)에 막 달리기 시작했을 때(justStartedSprinting)만 트리거 발동
             if (targetSprintDir != 0 && justStartedSprinting && wasMoving)
             {
-                if (targetSprintDir == -1) Player.Instance.Animator_SetTrigger("LeftJoggingToRun");
-
                 _sprintTransitionStartTime = Time.time;
                 _isSprintTransitionActive = true;
             }
@@ -275,15 +273,8 @@ public class PlayerMove : MonoBehaviour
             _currentSprintDir = targetSprintDir;
         }
 
-        // 0.5초가 지나면 캔슬 트리거 전송하여 전환 애니메이션 종료
         if (_isSprintTransitionActive && Time.time - _sprintTransitionStartTime >= 0.5f)
         {
-            if (_currentSprintDir == -1)
-            {
-                Player.Instance.Animator_SetTrigger("CancelLeftJoggingToRun");
-                Player.Instance.ResetMotionTime();
-            }
-
             _isSprintTransitionActive = false;
         }
 
@@ -500,7 +491,7 @@ public class PlayerMove : MonoBehaviour
             if (!Physics.SphereCast(castOrigin, sphereCastRadius, Vector3.down, out RaycastHit hit, sphereCastHeightOffset + 1.5f, layerMask))
             {
                 isGrounded = false;
-                Player.Instance.Animator_SetTrigger("isJump");
+                Player.Instance.Animator_SetBool("IsJump", true);
                 StartCoroutine(WaitAndDetectLandingRoutine());
             }
         }
@@ -536,7 +527,7 @@ public class PlayerMove : MonoBehaviour
 
                 if (isHighLanding || isPredictLanded)
                 {
-                    Player.Instance.Animator_SetTrigger("isLand");
+                    Player.Instance.Animator_SetBool("IsJump", false);
 
                     _isStopping = true;
 
@@ -554,8 +545,7 @@ public class PlayerMove : MonoBehaviour
     {
         _isStopping = false;
         isGrounded = false;
-        Player.Instance.Animator_SetTrigger("isJump");
-
+        Player.Instance.Animator_SetBool("IsJump", true);
         yield return new WaitForSeconds(jumpDelayBeforeForce);
 
         if (_rb != null)

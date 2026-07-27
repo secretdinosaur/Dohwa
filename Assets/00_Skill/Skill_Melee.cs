@@ -62,12 +62,9 @@ public class Skill_Melee : SkillBase
     #endregion
 
     #region Core Logic
-    public override SoundObject Activate(Transform casterTransform)
+    public override SkillEffect Activate(Transform casterTransform)
     {
-        SoundObject activeSound = null;
-        if (sound) activeSound = SoundManager.Instance.PlaySound(sound);
-        SkillEffectManager.Instance.PlaySkillEffect(casterTransform, this);
-        return activeSound;
+        return SkillEffectManager.Instance.PlaySkillEffect(casterTransform, this);
     }
 
     public override GuardableData GetGuardData(int hitIndex)
