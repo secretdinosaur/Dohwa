@@ -35,7 +35,7 @@ public class SkillEffectManager : MonoBehaviour
         StartCoroutine(guardEffect.ReturnToPool());
     }
 
-    public void PlaySkillEffect(Transform caster, SkillBase skill)
+    public SkillEffect PlaySkillEffect(Transform caster, SkillBase skill)
     {
         try
         {
@@ -45,10 +45,11 @@ public class SkillEffectManager : MonoBehaviour
             effect.transform.rotation = caster.rotation * Quaternion.Euler(effect.rotation);
             effect.skill = skill;
             StartCoroutine(effect.ReturnToPool());
+            return effect;
         }
         catch
         {
-            return;
+            return null;
         }
         
 
@@ -69,7 +70,8 @@ public class SkillEffectManager : MonoBehaviour
 
     public void ReturnSkillEffect(SkillEffect effect, string name)
     {
-        poolManager.TakeToPool<SkillEffect>(name, effect);
+        if(effect != null && effect.gameObject.activeSelf)
+            poolManager.TakeToPool<SkillEffect>(name, effect);
     }
 
     public void ReturnSkillEffect(HitEffect effect)

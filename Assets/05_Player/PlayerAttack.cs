@@ -23,12 +23,13 @@ public class PlayerAttack : MonoBehaviour
     public bool isAttacking = false;
     public bool isArmed = false;
     public bool isSwordMoving = false;
+    [HideInInspector] public bool canComboInput = false;
 
     [Header("Combat Targets & Skills")]
     public Transform currentTarget;
     public List<SkillBase> acquiredSkills = new List<SkillBase>();
     public SkillBase ViewSkill;
-
+    SkillEffect CurrentEffect;
     [HideInInspector] public float lastAttackTime = 0f;
     [HideInInspector] public float lastAttackEndTime = 0f;
 
@@ -43,6 +44,7 @@ public class PlayerAttack : MonoBehaviour
     private Coroutine SheathRoutine;
     private Coroutine GuardRoutine;
     private Coroutine AttackFaceRoutine;
+    private Coroutine currentAttackRoutine;
 
     private List<SkillBase.Command> commandBuffer = new List<SkillBase.Command>();
     private HashSet<int> processedHitIndices = new HashSet<int>();
@@ -68,6 +70,7 @@ public class PlayerAttack : MonoBehaviour
     private float drawAnimDuration = 0.25f;
     private float sheathAnimDuration = 0.1f;
     private float sheathPostDelay = 2f;
+
     #endregion
 
     #region Constants
@@ -231,8 +234,9 @@ public class PlayerAttack : MonoBehaviour
         if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
         if (Player.Instance == null || !Player.Instance.CanAttack()) return;
 
-        if (isSwordMoving || isAttacking || DrawRoutine != null) return;
-        if (Time.time - lastAttackEndTime < attackComboThreshold) return;
+        if (isSwordMoving || DrawRoutine != null) return;
+        if (isAttacking && !canComboInput) return;
+        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) return;
 
         StartCoroutine(AttackRoutine());
     }
@@ -300,11 +304,15 @@ public class PlayerAttack : MonoBehaviour
     private SoundObject currentSkillSound;
     public void Attack(SkillBase skillToUse)
     {
+        if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
+        if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
+
         Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
 
         isAttacking = true;
+        canComboInput = false;
         lastAttackTime = Time.time;
         lastActivatedSkill = skillToUse;
 
@@ -327,31 +335,80 @@ public class PlayerAttack : MonoBehaviour
         currentAttackID++;
         processedHitIndices.Clear();
         CameraController.Instance.OnSkillStarted();
-        currentSkillSound = skillToUse.Activate(Player.Instance.transform);
+        CurrentEffect = skillToUse.Activate(Player.Instance.transform);
+        currentSkillSound = SoundManager.Instance.PlaySound(skillToUse.sound);
 
         PlayEffects(skillToUse.name);
-        Player.Instance.Animator_PlaySkill(skillToUse);
+        Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
 
         Player.Instance.MP -= skillToUse.MP_cost;
         GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
-        StartCoroutine(AnimateMotionTime(skillToUse.clip.name));
-        StartCoroutine(Player.Instance.WaitUntilAnimationEnd(() =>
+        currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
+    }
+
+    private IEnumerator AttackLifecycleRoutine(SkillBase skillToUse)
+    {
+        Player.Instance.Animator_SetFloat("motiontimeforskill", 0f);
+
+        float clipLength = skillToUse.clip.length;
+        float cancelTime = clipLength;
+
+        if (skillToUse.clip != null)
         {
-            isAttacking = false;
-            lastActivatedSkill = null;
-            StopEffects(skillToUse.name);
-            CameraController.Instance.OnSkillEnd();
-
-            Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
-
-            if (AttackFaceRoutine != null)
+            float lastHitEventTime = -1f;
+            foreach (AnimationEvent animEvent in skillToUse.clip.events)
             {
-                StopCoroutine(AttackFaceRoutine);
-                AttackFaceRoutine = null;
+                if (animEvent.functionName == "OnAttackHitEvent")
+                {
+                    if (animEvent.time > lastHitEventTime)
+                    {
+                        lastHitEventTime = animEvent.time + 0.2f;
+                    }
+                }
             }
-            lastAttackEndTime = Time.time;
-        }));
+
+            if (lastHitEventTime >= 0f)
+            {
+                cancelTime = lastHitEventTime;
+            }
+        }
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < clipLength)
+        {
+            elapsedTime += Time.deltaTime;
+            Player.Instance.Animator_SetFloat("motiontimeforskill", Mathf.Clamp01(elapsedTime / clipLength));
+
+            if (elapsedTime >= cancelTime && !canComboInput)
+            {
+                canComboInput = true;
+            }
+
+            yield return null;
+        }
+
+        EndAttack(skillToUse);
+    }
+
+    private void EndAttack(SkillBase skillToUse)
+    {
+        isAttacking = false;
+        canComboInput = false;
+        lastActivatedSkill = null;
+        StopEffects(skillToUse.name);
+        CameraController.Instance.OnSkillEnd();
+
+        Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
+
+        if (AttackFaceRoutine != null)
+        {
+            StopCoroutine(AttackFaceRoutine);
+            AttackFaceRoutine = null;
+        }
+        lastAttackEndTime = Time.time;
+        currentAttackRoutine = null;
     }
 
     private IEnumerator FaceTargetDuringAttack()
@@ -379,6 +436,22 @@ public class PlayerAttack : MonoBehaviour
             SoundManager.Instance.StopSound(currentSkillSound);
             currentSkillSound = null;
         }
+
+        if (currentAttackRoutine != null)
+        {
+            StopCoroutine(currentAttackRoutine);
+            currentAttackRoutine = null;
+        }
+
+        if (lastActivatedSkill != null)
+        {
+            StopEffects(lastActivatedSkill.name);
+            SkillEffectManager.Instance.ReturnSkillEffect(CurrentEffect, lastActivatedSkill.name);
+            lastActivatedSkill = null;
+        }
+
+        isAttacking = false;
+        canComboInput = false;
     }
 
     public void CancelDrawSword()
@@ -389,33 +462,6 @@ public class PlayerAttack : MonoBehaviour
             DrawRoutine = null;
         }
         isSwordMoving = false;
-    }
-
-    private IEnumerator AnimateMotionTime(string targetClipName)
-    {
-        Player.Instance.Animator_SetFloat("motiontimeforskill", 0f);
-        Animator anim = Player.Instance.GetComponent<Animator>() ?? Player.Instance.GetComponentInChildren<Animator>();
-
-        if (anim != null)
-        {
-            while (true)
-            {
-                var clipInfo = anim.GetCurrentAnimatorClipInfo(0);
-                if (clipInfo.Length > 0 && clipInfo[0].clip.name == targetClipName) break;
-                yield return null;
-            }
-
-            float clipLength = anim.GetCurrentAnimatorStateInfo(0).length;
-            float elapsedTime = 0f;
-
-            while (elapsedTime < clipLength)
-            {
-                elapsedTime += Time.deltaTime;
-                Player.Instance.Animator_SetFloat("motiontimeforskill", Mathf.Clamp01(elapsedTime / clipLength));
-                yield return null;
-            }
-        }
-        Player.Instance.Animator_SetFloat("motiontimeforskill", 1f);
     }
 
     public void OnAttackHitEvent(int HitIndex)

@@ -20,7 +20,6 @@ MonoBehaviour:
   clip: {fileID: 7400000, guid: 343e4371cf842484ca10c9fc1430b359, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 0}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -54,7 +53,7 @@ MonoBehaviour:
   - 0
   HitSound:
   - {fileID: 8300000, guid: 61f7d62cc3435c64baf35ddc589b47a1, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 0}
   enemyHitEffectDirections: 00000000
   isSpecialSkill: 0
@@ -81,7 +80,7 @@ MonoBehaviour:
       stunType: 2
       offset: {x: 0, y: -1.5, z: 0}
       isRealtimeFollow: 1
-      stunDuration: 3.6
+      stunDuration: 3.25
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

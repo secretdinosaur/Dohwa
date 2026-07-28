@@ -27,6 +27,7 @@ public class Player : MonoBehaviour, IDamageable
     [HideInInspector] public AudioClip RespawnSound;
 
     private AnimatorOverrideController overrideController;
+    private DecalGenerator decalGenerator;
     #endregion
 
     #region State Flags & Properties
@@ -44,13 +45,34 @@ public class Player : MonoBehaviour, IDamageable
     public bool isDetected => detectedByEnemyCount > 0;
     public void AddDetection() => detectedByEnemyCount++;
     public void RemoveDetection() => detectedByEnemyCount = Mathf.Max(0, detectedByEnemyCount - 1);
+
+    private bool hasTriggered66 = false;
+    private bool hasTriggered33 = false;
+
     private float hp;
     public float HP
     {
         get { return hp; }
         set
         {
+            float oldHp = hp;
             hp = Mathf.Clamp(value, 0, StatManager.Instance.MaxHp);
+
+            if (hp < oldHp)
+            {
+                float hpPercentage = hp / StatManager.Instance.MaxHp;
+                if (!hasTriggered66 && hpPercentage <= 0.66f)
+                {
+                    hasTriggered66 = true;
+                    if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+                }
+                if (!hasTriggered33 && hpPercentage <= 0.33f)
+                {
+                    hasTriggered33 = true;
+                    if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+                }
+            }
+
             if (hp <= 0 && DeathRoutine == null) DeathRoutine = StartCoroutine(PlayerDead());
             UIManager.Instance.HpText.text = $"{(int)hp} / {(int)StatManager.Instance.MaxHp}";
         }
@@ -75,11 +97,11 @@ public class Player : MonoBehaviour, IDamageable
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
     public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking;
-    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && !PlayerAttack.isAttacking;
+    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput);
     public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating;
     public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating;
     public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isEating;
-    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating;
+    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving;
     public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating;
     public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding;
     #endregion
@@ -125,8 +147,8 @@ public class Player : MonoBehaviour, IDamageable
     private int[] lastSoundFrames = new int[10];
     private float lastFootstepTime = -1f;
 
-    // 모션타임 조절을 위한 오프셋 변수 추가
     private float _motionTimeOffset = 0f;
+    private int currentSkillStateIndex = 1;
     #endregion
 
     #region Unity Lifecycle
@@ -134,12 +156,14 @@ public class Player : MonoBehaviour, IDamageable
     {
         Instance = this;
         animator = GetComponent<Animator>();
+        decalGenerator = GetComponent<DecalGenerator>();
         overrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
         animator.runtimeAnimatorController = overrideController;
         PlayerAttack = GetComponent<PlayerAttack>();
         PlayerMove = GetComponent<PlayerMove>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
-
+        transform.rotation = Quaternion.identity;
+        GetComponent<Rigidbody>().MoveRotation(Quaternion.identity);
         for (int i = 0; i < lastSoundFrames.Length; i++) lastSoundFrames[i] = -1;
     }
 
@@ -160,6 +184,11 @@ public class Player : MonoBehaviour, IDamageable
     IEnumerator FullHpRoutine()
     {
         yield return null;
+
+        hasTriggered66 = false;
+        hasTriggered33 = false;
+        decalGenerator?.ClearDecals();
+
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;
     }
@@ -173,7 +202,6 @@ public class Player : MonoBehaviour, IDamageable
 
     private void Update()
     {
-        // 모션타임 오프셋을 반영하여 0부터 시작할 수 있도록 계산
         animator.SetFloat("MotionTime", (Time.time - _motionTimeOffset) % 1.0f);
         searchTimer += Time.deltaTime;
 
@@ -244,15 +272,23 @@ public class Player : MonoBehaviour, IDamageable
         equippedArmor = null;
     }
 
+    private void TryApplyRandomWound()
+    {
+        if (UnityEngine.Random.value < 0.3f && decalGenerator != null)
+        {
+            if (decalGenerator.GetActiveDecalCount() < (decalGenerator.maxDecals * 0.5f))
+            {
+                decalGenerator.GenerateWound();
+            }
+        }
+    }
+
     public void TakeDamage(float damage, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
         if (!IsAlive) return;
 
-        print($"Player takes {damage}");
-
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
         {
-            print($"Activate");
             DialogueManager.Instance.StopShowDialogue();
         }
 
@@ -260,11 +296,14 @@ public class Player : MonoBehaviour, IDamageable
         bool skillIsGuardable = gData != null ? gData.guardable : true;
         bool skillIsParryable = gData != null ? gData.parryable : true;
         float ShakePower = 1f;
+
         if (damage >= (hp * 0.3f)) ShakePower = 3f;
         else if (damage >= (hp * 0.5f)) ShakePower = 10f;
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
+
         float actualDamage = ApplyArmorReduction(damage);
         bool willDie = (HP - actualDamage) <= 0;
+
         if ((isParrying || isGuarding) && skillIsGuardable)
         {
             if (Mathf.Abs(Vector3.Dot(transform.forward, (caster.position - transform.position).normalized)) < GuardAngleThreshold)
@@ -318,6 +357,7 @@ public class Player : MonoBehaviour, IDamageable
                     StartCoroutine(Animator_SetBool_Time("GuardBreak"));
                 }
 
+                if (actualRemainingDamage > 0) TryApplyRandomWound();
                 HP -= actualRemainingDamage;
 
                 if (hitEffect != null) InkBrushEffectManager.Instance.PlayHitEffect(hitEffect);
@@ -359,7 +399,9 @@ public class Player : MonoBehaviour, IDamageable
         if (!isStunApplied && !willDie && !hasKnockback)
         {
             CancelCurrentAction();
-            if (animator != null)
+
+            // 핵심 변경점: 현재 스턴 상태일 경우 일반 피격 모션을 무시하여 Stagger 상태 유지
+            if (animator != null && currentStunRoutine == null)
             {
                 animator.ResetTrigger("Hitted1");
                 animator.ResetTrigger("Hitted2");
@@ -374,12 +416,16 @@ public class Player : MonoBehaviour, IDamageable
             InkBrushEffectManager.Instance.PlayHitEffect(hitEffect);
 
         impulseSource.GenerateImpulse(ShakePower);
+
+        if (actualDamage > 0) TryApplyRandomWound();
         HP -= actualDamage;
+
         if (caster.TryGetComponent<EnemyCore>(out var enemyCore))
         {
             enemyCore.TriggerPlayerHit(skill);
         }
     }
+
     public void TakeFallDamage(float damage)
     {
         if (!IsAlive || damage <= 0) return;
@@ -395,6 +441,7 @@ public class Player : MonoBehaviour, IDamageable
             SoundManager.Instance.PlayMovementSound(10);
         }
     }
+
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)
     {
         CancelCurrentAction();
@@ -408,9 +455,7 @@ public class Player : MonoBehaviour, IDamageable
         if (type == StunType.Grabbed && targetTransform != null)
         {
             Vector3 worldTarget = targetTransform.TransformPoint(grabOffset);
-
             savedGrabOffset = targetTransform.root.InverseTransformPoint(worldTarget);
-
             transform.position = worldTarget;
         }
 
@@ -421,6 +466,11 @@ public class Player : MonoBehaviour, IDamageable
     {
         PreventMove = true; PreventAttack = true;
         PlayerAttack.ClearCommandBuffer();
+
+        // 핵심 변경점: 누적된 트리거를 제거하여 모션이 즉시 풀리는 현상 방지
+        animator.ResetTrigger("StaggerEnd");
+        animator.ResetTrigger("Hitted1");
+        animator.ResetTrigger("Hitted2");
 
         switch (type)
         {
@@ -450,15 +500,20 @@ public class Player : MonoBehaviour, IDamageable
             }
         }
 
+        // 핵심 변경점: 끝날 때 시작 트리거를 리셋
+        animator.ResetTrigger("Stagger");
+
         switch (type)
         {
             case StunType.Stagger: Animator_SetTrigger("StaggerEnd"); break;
             case StunType.Stun: Animator_SetTrigger("StaggerEnd"); break;
             case StunType.Grabbed: Animator_SetBool("isGrabbed", false); break;
         }
+
         PreventMove = false;
         PreventAttack = false;
         currentStunRoutine = null;
+
         if (type == StunType.Grabbed && grabTargetTransform != null && grabIsRealtimeFollow)
         {
             savedGrabOffset = grabTargetTransform.root.rotation * grabTargetOffset;
@@ -469,7 +524,7 @@ public class Player : MonoBehaviour, IDamageable
     private float mpRecoveryDelay;
     public void mpRecoveryDelayStart()
     {
-        mpRecoveryDelay = 2f;
+        mpRecoveryDelay = 1f;
     }
     IEnumerator RecoveryRoutine()
     {
@@ -679,11 +734,14 @@ public class Player : MonoBehaviour, IDamageable
     {
         UIManager.Instance.DeathPanel.GetComponent<DeathPanel>().HidePanel();
         InkBrushEffectManager.Instance.ClearDeathEffects();
-
         UIManager.Instance.BossStatus.gameObject.SetActive(false);
 
         if (RespawnCheckpoint) RespawnToCheckpoint();
         DungeonManager.Instance.ReviveAllEnemies();
+
+        decalGenerator?.ClearDecals();
+        hasTriggered66 = false;
+        hasTriggered33 = false;
 
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;
@@ -743,8 +801,8 @@ public class Player : MonoBehaviour, IDamageable
     }
 
     #endregion
+
     #region Animation & Movement
-    // 외부에서 언제든 모션타임을 0으로 초기화할 수 있는 함수
     public void ResetMotionTime()
     {
         _motionTimeOffset = Time.time;
@@ -757,12 +815,17 @@ public class Player : MonoBehaviour, IDamageable
     public void Animator_SetFloat(string floatName, float value, float damp = 0f, float time = 0f) => animator.SetFloat(floatName, value, damp, time);
     public void SetAFnimatorWeight(int layer, float weight) => animator.SetLayerWeight(layer, weight);
 
-    public void Animator_PlaySkill(SkillBase skill)
+    public void Animator_PlaySkill(SkillBase skill, float crossFadeDuration = 0.1f)
     {
         animator.ResetTrigger("parrySuccess");
-        overrideController["SkillState"] = skill.clip;
-        animator.CrossFadeInFixedTime("SkillState", 0f, 0);
-        animator.CrossFadeInFixedTime("SkillState", 0f, 1);
+
+        string targetState = "SkillState" + currentSkillStateIndex;
+        overrideController[targetState] = skill.clip;
+
+        animator.CrossFadeInFixedTime(targetState, crossFadeDuration, 0);
+        animator.CrossFadeInFixedTime(targetState, crossFadeDuration, 1);
+
+        currentSkillStateIndex = currentSkillStateIndex == 1 ? 2 : 1;
     }
 
     public IEnumerator Animator_SetBool_Time(string boolName)
@@ -782,7 +845,7 @@ public class Player : MonoBehaviour, IDamageable
         while (true)
         {
             AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
-            if (state.IsName("SkillState") && state.normalizedTime < 0.95f) yield return null;
+            if ((state.IsName("SkillState1") || state.IsName("SkillState2")) && state.normalizedTime < 0.95f) yield return null;
             else break;
         }
         action?.Invoke();

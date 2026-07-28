@@ -74,6 +74,8 @@ public class EnemyCore : MonoBehaviour, IDamageable
     [HideInInspector] public SkillBase HittedSkill;
     [HideInInspector] public int HitIndex;
 
+    private DecalGenerator decalGenerator;
+
     private struct WeaponOriginData
     {
         public Transform Parent;
@@ -86,6 +88,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     protected virtual void Awake()
     {
         animator = GetComponent<Animator>();
+        decalGenerator = GetComponent<DecalGenerator>();
         CreateCameraTarget();
         InitializeEffects();
         CacheAndUnifyMaterials();
@@ -125,10 +128,12 @@ public class EnemyCore : MonoBehaviour, IDamageable
         CmdSetIgnorePlayerCollision -= HandleSetIgnorePlayerCollision;
         SetPlayerDetection(false);
     }
+
     private void HandleSetIgnorePlayerCollision(bool ignore)
     {
         isIgnoringPlayer = ignore;
     }
+
     private void HandleForceDetect()
     {
         if (IsDead) return;
@@ -158,7 +163,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
 
     public void ChangeState(EnemyState newState)
     {
-        if (currentState == EnemyState.Dead && newState != EnemyState.Idle) return; // 추가
+        if (currentState == EnemyState.Dead && newState != EnemyState.Idle) return;
 
         if (currentState == newState) return;
         currentState = newState;
@@ -176,6 +181,14 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public void TakeDamage(float damageValue, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
         if (IsDead) return;
+
+        if (UnityEngine.Random.value < 0.3f && decalGenerator != null)
+        {
+            if (decalGenerator.GetActiveDecalCount() < (decalGenerator.maxDecals * 0.5f))
+            {
+                decalGenerator.GenerateWound();
+            }
+        }
 
         HittedSkill = skill;
         HitIndex = hitIndex;
@@ -238,7 +251,6 @@ public class EnemyCore : MonoBehaviour, IDamageable
         }
 
         StartCoroutine(AlignToGroundRotation());
-
         StartCoroutine(FadeShaderPropertiesToZero(10f));
         if (dropItem != null)
         {
@@ -246,7 +258,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
             DOVirtual.DelayedCall(3f, () => { if (dropItem != null) dropItem.ShowItemGainPanel(); }).SetTarget(gameObject);
         }
         OnDeath?.Invoke();
-        Invoke(nameof(DeactivateObject), destroyDelay);
+        //Invoke(nameof(DeactivateObject), destroyDelay);
     }
 
     private IEnumerator AlignToGroundRotation()
@@ -263,7 +275,6 @@ public class EnemyCore : MonoBehaviour, IDamageable
                 forwardOnPlane = transform.forward;
 
             Quaternion targetRot = Quaternion.LookRotation(forwardOnPlane, hit.normal);
-
             Vector3 startPos = transform.position;
             Vector3 targetPos = new Vector3(transform.position.x, hit.point.y, transform.position.z);
 
@@ -274,12 +285,10 @@ public class EnemyCore : MonoBehaviour, IDamageable
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-
                 float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
                 transform.rotation = Quaternion.Lerp(startRot, targetRot, smoothT);
                 transform.position = Vector3.Lerp(startPos, targetPos, smoothT);
-
                 yield return null;
             }
 
@@ -384,6 +393,8 @@ public class EnemyCore : MonoBehaviour, IDamageable
 
         StopAllSkillEffects();
         StartCoroutine(RestoreShaderProperties(0f, 0.1f));
+
+        decalGenerator?.ClearDecals();
 
         OnRevived?.Invoke();
     }
@@ -512,7 +523,6 @@ public class EnemyCore : MonoBehaviour, IDamageable
             Quaternion worldRotation = transform.rotation * Quaternion.Euler(hitData.boxRotation);
 
             Gizmos.matrix = Matrix4x4.TRS(worldCenter, worldRotation, Vector3.one);
-
             Gizmos.DrawWireCube(Vector3.zero, hitData.boxSize);
         }
         Gizmos.matrix = originalMatrix;

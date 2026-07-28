@@ -271,13 +271,13 @@ public class DungeonManager : MonoBehaviour
         StartCoroutine(Teleport(idx));
     }
 
-    public GameObject TeleportPanel;
+    public FadePanel TeleportPanel;
 
     IEnumerator Teleport(int idx)
     {
         currentRespawnIndex = idx;
         Player.Instance.isInteracting = true;
-        TeleportPanel.SetActive(true);
+        TeleportPanel.ShowPanel();
         yield return new WaitForSeconds(1f);
         Player.Instance.HP = StatManager.Instance.MaxHp;
         Player.Instance.MP = StatManager.Instance.MaxMp;
@@ -297,7 +297,7 @@ public class DungeonManager : MonoBehaviour
             }
 
         }
-        TeleportPanel.GetComponent<FadePanel>().HidePanel(3);
+        TeleportPanel.HidePanel(3);
         Player.Instance.isInteracting = false;
         Player.Instance.reachedCheckPoint = true;
         CurrentCheckpoint.Exit();

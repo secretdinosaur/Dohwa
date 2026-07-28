@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.Serialization;
 
 #region Auxiliary Classes
 [Serializable]
@@ -24,7 +25,7 @@ public class GuardableData
 public abstract class SkillBase : ScriptableObject
 {
     public enum Command { W, A, S, D, J }
-    public enum EnemyHitEffectDirection { H12, H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, Forward, Backward }
+    public enum EnemyHitEffectDirection { None, H12, H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, Forward, Backward }
     public enum TriggerType { None, OnParry, OnEnemyParryStuned }
 
     [Header("Upgrade & System Flags")]
@@ -40,7 +41,6 @@ public abstract class SkillBase : ScriptableObject
     public AnimationClip clip;
     public Sprite icon;
     public AudioClip sound;
-    public HitEffect enemyHitEffect;
     public SkillEffect effect;
     public SkillEffect SpecialGuardEffect;
     
@@ -55,7 +55,8 @@ public abstract class SkillBase : ScriptableObject
 
     [HideInInspector] public float[] damageMultipliers;
     [HideInInspector] public AudioClip[] HitSound;
-    [HideInInspector] public HitEffectData[] playerHitEffects;
+    [FormerlySerializedAs("playerHitEffects")]
+    [HideInInspector] public HitEffectData[] HitEffects;
     [HideInInspector] public EnemyHitEffectDirection[] enemyHitEffectDirections;
     
     public bool isSpecialSkill = false;
@@ -83,7 +84,7 @@ public abstract class SkillBase : ScriptableObject
     public abstract GuardableData GetGuardData(int hitIndex);
     public abstract StunEffectData GetStunData(int hitIndex);
 
-    public abstract SoundObject Activate(Transform casterTransform);
+    public abstract SkillEffect Activate(Transform casterTransform);
     public abstract List<IDamageable> ExecuteHitCheck(Transform casterTransform, float baseDamage, int hitIndex);
     #endregion
 }
