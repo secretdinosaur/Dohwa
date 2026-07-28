@@ -38,11 +38,11 @@ public class Skill_Range : SkillBase
 
         int count = hitDataList.Count;
         damageMultipliers = new float[count];
-        playerHitEffects = new HitEffectData[count];
+        HitEffects = new HitEffectData[count];
         for (int i = 0; i < count; i++)
         {
             damageMultipliers[i] = hitDataList[i].damageMultiplier;
-            playerHitEffects[i] = hitDataList[i].playerHitEffect;
+            HitEffects[i] = hitDataList[i].playerHitEffect;
         }
     }
     #endregion
@@ -75,15 +75,15 @@ public class Skill_Range : SkillBase
             return new List<IDamageable>();
 
         RangeHitData hitData = hitDataList[hitIndex];
+        Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
         Vector3 shootDirection = casterTransform.forward;
         if (casterTransform.TryGetComponent<EnemyCore>(out var enemy) && Player.Instance != null)
         {
-            shootDirection = (Player.Instance.transform.position - enemy.transform.position).normalized;
+            shootDirection = ((Player.Instance.transform.position + Vector3.up * 1.5f) - spawnPos);
         }
 
         float finalDamage = baseDamage * hitData.damageMultiplier;
-        Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
         GameObject go = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(shootDirection));
         if (go.TryGetComponent<Projectile>(out var proj))

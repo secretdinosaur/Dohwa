@@ -8,12 +8,6 @@ public class RangeEnemyAI : EnemyAIBase
     public float backWalkTriggerFactor = 0.7f;
     public float LookAtPlayerBeforeAttackTime = 1f;
 
-    [Header("Run Attack Specific")]
-    public SkillBase runAttackSkill;
-    public float runAttackChancePerSec = 15f;
-    public float runAttackCooldown = 8f;
-
-    private float lastRunAttackTime = -9999f;
     private bool lastActionWasBackWalk = false;
 
     protected override void HandleBehaviorLogic(float distToLastPos)
@@ -50,21 +44,6 @@ public class RangeEnemyAI : EnemyAIBase
             }
             else
             {
-                // 일반 사거리 밖일 때 발동 조건 체크
-                bool canRunAttack = runAttackSkill != null && Time.time >= lastRunAttackTime + runAttackCooldown;
-                bool hasMpForRunAttack = core.QueryHasEnoughMP?.Invoke(runAttackSkill?.MP_cost ?? 0) ?? false;
-
-                if (canRunAttack && hasMpForRunAttack && isDetectedPlayer)
-                {
-                    if (UnityEngine.Random.Range(0f, 100f) < runAttackChancePerSec * Time.deltaTime)
-                    {
-                        lastRunAttackTime = Time.time;
-                        lastActionWasBackWalk = false;
-                        actionCoroutine = StartCoroutine(AttackSequence(runAttackSkill));
-                        return;
-                    }
-                }
-
                 UpdateChaseTarget();
             }
         }

@@ -19,13 +19,13 @@ public class Skill_MeleeEditor : Editor
                 "Localize_skillName",
                 "Localize_skillItemDesc",
                 "Localize_skillEffectDesc",
-                "enemyHitEffect",
+                // "enemyHitEffect",  // <--- 적 스킬의 피격 이펙트가 보이도록 제외 목록에서 제거
                 "commands",
                 "isUpgraded",
                 "UpgradedSkill",
                 "IsAdvancedSkill",
                 "isSpecialSkill",
-                "effect",
+                // "effect",          // <--- 적 스킬의 시전 이펙트가 보이도록 제외 목록에서 제거
                 "icon",
                 "triggerType",
                 "triggerThreshold",
@@ -36,7 +36,9 @@ public class Skill_MeleeEditor : Editor
         }
         else
         {
+            // 플레이어 스킬일 경우 (필요에 따라 enemyHitEffect 숨김 처리)
             excludedProps.Add("enemyHitEffect");
+
             if (!serializedObject.FindProperty("isSpecialSkill").boolValue)
             {
                 excludedProps.AddRange(new string[] { "triggerType", "triggerThreshold", "triggerCooldown", "triggerChance", "triggerMaxUsesPerCaster" });
@@ -51,7 +53,7 @@ public class Skill_MeleeEditor : Editor
         EditorGUILayout.Space();
 
         // ---------------------------------------------------------
-        // 2. ★ 누락되었던 부분: 커스텀으로 다시 밑에다가 그려줍니다!
+        // 2. 커스텀으로 다시 밑에다가 그려줍니다!
         // ---------------------------------------------------------
         EditorGUILayout.LabelField("Status & Guard Settings", EditorStyles.boldLabel);
 

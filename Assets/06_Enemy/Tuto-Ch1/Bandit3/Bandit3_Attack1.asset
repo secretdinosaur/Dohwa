@@ -15,13 +15,11 @@ MonoBehaviour:
   isEnemySkill: 1
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
-  IsAdvancedSkill: 0
   commands: 
   MP_cost: 15
   clip: {fileID: 7400000, guid: 1b6c9f07e6290d34d88e6f2e91ce4c32, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: df6cb60e61cf10b45962b85360be1d89, type: 3}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -55,9 +53,9 @@ MonoBehaviour:
   - 5
   HitSound:
   - {fileID: 8300000, guid: 5043c001f673682468e172443f07f137, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-  enemyHitEffectDirections: 00000000
+  enemyHitEffectDirections: 07000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -71,7 +69,7 @@ MonoBehaviour:
     damageMultiplier: 5
     knockbackForce: 0
     hitSound: {fileID: 8300000, guid: 5043c001f673682468e172443f07f137, type: 3}
-    effectDirection: 0
+    effectDirection: 7
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
