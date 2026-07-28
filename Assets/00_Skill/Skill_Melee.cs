@@ -49,14 +49,14 @@ public class Skill_Melee : SkillBase
         damageMultipliers = new float[count];
         HitSound = new AudioClip[count];
         enemyHitEffectDirections = new EnemyHitEffectDirection[count];
-        playerHitEffects = new HitEffectData[count];
+        HitEffects = new HitEffectData[count];
         for (int i = 0; i < count; i++)
         {
 
             damageMultipliers[i] = hitDataList[i].damageMultiplier;
             HitSound[i] = hitDataList[i].hitSound;
             enemyHitEffectDirections[i] = hitDataList[i].effectDirection;
-            playerHitEffects[i] = hitDataList[i].playerHitEffect;
+            HitEffects[i] = hitDataList[i].playerHitEffect;
         }
     }
     #endregion
@@ -126,7 +126,7 @@ public class Skill_Melee : SkillBase
                 // 💡 가드 상태가 아닐 때만 힛 이펙트 및 넉백 적용
                 if (!isGuarding)
                 {
-                    if (isCasterPlayer)
+                    if(enemyHitEffectDirections[hitIndex] != EnemyHitEffectDirection.None)
                         SkillEffectManager.Instance.PlayHitEffect(col.gameObject, this, hitPoint, CalculateEffectRotation(enemyHitEffectDirections[hitIndex], casterTransform, hitPoint, col.transform), hitIndex);
 
                     if (hitData.knockbackForce > 0f)
@@ -158,7 +158,7 @@ public class Skill_Melee : SkillBase
 
     private Quaternion CalculateEffectRotation(EnemyHitEffectDirection effectDir, Transform casterTransform, Vector3 hitPoint, Transform targetTransform)
     {
-        int dirIndex = (int)effectDir;
+        int dirIndex = (int)effectDir - 1;
         if (dirIndex <= 11)
         {
             Vector3 dirToEnemy = targetTransform.position - casterTransform.position;

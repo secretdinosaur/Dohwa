@@ -20,7 +20,6 @@ MonoBehaviour:
   clip: {fileID: 7400000, guid: 596d8c133b164c3408a30afee5831151, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 0}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -60,12 +59,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
   - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
   - {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-  enemyHitEffectDirections: 00000000000000000000000000000000
+  enemyHitEffectDirections: 0e0000000e0000000e00000000000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -79,7 +78,7 @@ MonoBehaviour:
     damageMultiplier: 4
     knockbackForce: 0
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -103,7 +102,7 @@ MonoBehaviour:
     damageMultiplier: 4
     knockbackForce: 0
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -127,7 +126,7 @@ MonoBehaviour:
     damageMultiplier: 4
     knockbackForce: 0
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -149,7 +148,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 10
+    knockbackForce: 15
     hitSound: {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}

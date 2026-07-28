@@ -20,7 +20,6 @@ MonoBehaviour:
   clip: {fileID: 7400000, guid: d46943992667a6a4297767a3ff7b9685, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 75367b924274b5941922576dd5ef3cbf, type: 3}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -54,9 +53,9 @@ MonoBehaviour:
   - 7
   HitSound:
   - {fileID: 8300000, guid: c68fb3fd0e2c60a4291c950d01f76c8a, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 11400000, guid: 7ea488816118b344d93bd109996172e8, type: 2}
-  enemyHitEffectDirections: 00000000
+  enemyHitEffectDirections: 08000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -70,7 +69,7 @@ MonoBehaviour:
     damageMultiplier: 7
     knockbackForce: 0
     hitSound: {fileID: 8300000, guid: c68fb3fd0e2c60a4291c950d01f76c8a, type: 3}
-    effectDirection: 0
+    effectDirection: 8
     playerHitEffect: {fileID: 11400000, guid: 7ea488816118b344d93bd109996172e8, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

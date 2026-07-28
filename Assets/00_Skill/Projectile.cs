@@ -105,9 +105,9 @@ public class Projectile : MonoBehaviour
         else
         {
             HitEffectData effectData = null;
-            if (SkillFired != null && SkillFired.playerHitEffects != null && SkillFired.playerHitEffects.Length > HitIndex)
+            if (SkillFired != null && SkillFired.HitEffects != null && SkillFired.HitEffects.Length > HitIndex)
             {
-                effectData = SkillFired.playerHitEffects[HitIndex];
+                effectData = SkillFired.HitEffects[HitIndex];
             }
             target.TakeDamage(Damage, SkillFired, casterTransform, effectData, HitIndex);
         }

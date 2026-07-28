@@ -27,11 +27,7 @@ public class MeleeHitDataDrawer : PropertyDrawer
             DrawField(ref y, position, property, "knockbackForce");
             DrawField(ref y, position, property, "hitSound");
 
-            // Enemy 스킬이 아닐 때만 Effect Direction 표시
-            if (!isEnemySkill)
-            {
-                DrawField(ref y, position, property, "effectDirection");
-            }
+            DrawField(ref y, position, property, "effectDirection");
 
             // Enemy 스킬일 때만 Player Hit Effect 표시
             if (isEnemySkill)
@@ -107,7 +103,7 @@ public class MeleeHitDataDrawer : PropertyDrawer
         h += GetHeight(property, "centerOffset") + GetHeight(property, "boxSize") + GetHeight(property, "boxRotation");
         h += GetHeight(property, "damageMultiplier") + GetHeight(property, "knockbackForce") + GetHeight(property, "hitSound");
 
-        if (!isEnemySkill) h += GetHeight(property, "effectDirection");
+        h += GetHeight(property, "effectDirection");
         if (isEnemySkill) h += GetHeight(property, "playerHitEffect");
 
         h += GetHeight(property, "useAreaSpawn");
