@@ -6,11 +6,10 @@ using System.Collections;
 public class EnemyCombat : MonoBehaviour
 {
     public float Power = 1f;
-    public SkillBase[] skillSet;
     public Vector2 attackCooldownRange;
 
     private float hitStopTimeScale = 0.1f, hitStopDuration = 0.1f, hitStopRestoreDuration = 0.025f;
-    private float preAttackLookDelay = 0.2f;
+    private float preAttackLookDelay = 0.25f;
 
     private EnemyCore core;
     private EnemySound sound;
@@ -40,7 +39,6 @@ public class EnemyCombat : MonoBehaviour
         core.OnDeath += CancelCurrentSkillAction;
         core.OnStunned += CancelCurrentSkillAction;
 
-        core.QueryGetSkill = GetSkill;
         core.CmdPerformAttack += InitiateAttack;
     }
 
@@ -51,7 +49,6 @@ public class EnemyCombat : MonoBehaviour
         core.OnDeath -= CancelCurrentSkillAction;
         core.OnStunned -= CancelCurrentSkillAction;
 
-        core.QueryGetSkill = null;
         core.CmdPerformAttack -= InitiateAttack;
     }
 
@@ -70,7 +67,7 @@ public class EnemyCombat : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < preAttackLookDelay)
         {
-            core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+            core.CmdFasyLookAt?.Invoke(Player.Instance.transform.position);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -143,6 +140,4 @@ public class EnemyCombat : MonoBehaviour
 
         currentActiveSkill = null;
     }
-
-    private SkillBase GetSkill() => skillSet.Length > 0 ? skillSet[UnityEngine.Random.Range(0, skillSet.Length)] : null;
 }

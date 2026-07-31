@@ -2,15 +2,18 @@
 using System;
 using System.Collections;
 
-[RequireComponent(typeof(BossSkillSelector))]
+[RequireComponent(typeof(SkillSelector))]
 public class Bandit5AI : EnemyAIBase
 {
     [Header("Behavior Tuning")]
     public float walkApproachFactor = 1.5f;
-    public float closeWanderMin = 1.5f;
-    public float closeWanderMax = 3.5f;
-    [Range(0f, 1f)] public float walkApproachChance = 0.2f; // 💡 멀어졌을 때 걸어갈 확률 (40%)
-    private bool isChoosingWalkApproach = false;            // 💡 결정된 이동 방식 유지용
+    [Range(0f, 1f)] public float walkApproachChance = 0.2f; // 멀어졌을 때 걸어갈 확률
+    private bool isChoosingWalkApproach = false;            // 결정된 이동 방식 유지용
+
+    [Header("Strafe & Evasion Specific")]
+    public float backWalkTriggerFactor = 0.7f;
+    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    private bool lastActionWasBackWalk = false;
 
     [Header("Run Attack Specific")]
     public SkillBase runAttackSkill;
@@ -24,20 +27,19 @@ public class Bandit5AI : EnemyAIBase
     public float jumpDuration = 0.8f;
     public float jumpLandingOffset = 1.5f;
 
-    private BossSkillSelector skillSelector;
-    private float nextWanderTime = 0f;
-    private Vector3 cooldownWanderTarget;
+    private SkillSelector skillSelector;
 
     protected override void Awake()
     {
         base.Awake();
-        skillSelector = GetComponent<BossSkillSelector>();
+        skillSelector = GetComponent<SkillSelector>();
     }
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk) return;
+        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+
         if (isMemorizingPlayer)
         {
             StopActionRoutine();
@@ -55,26 +57,35 @@ public class Bandit5AI : EnemyAIBase
                 }
                 else
                 {
-                    float optimalDist = skillSelector.GetOptimalDistance(null);
-                    HandleCooldownWalk(optimalDist);
+                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                 }
                 return;
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
-
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
             if (canAttackGlobal && hasEnoughMP)
             {
                 if (selectedSkill == jumpAttackSkill)
                 {
-                    actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
+                    if (distToLastPos <= executeRange)
+                        actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
+                    else
+                        HandleDistantApproach(executeRange);
                 }
                 else if (selectedSkill == runAttackSkill)
                 {
-                    actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
+                    // Running Attack은 대상 방향으로 달리고 있을 때만 발동합니다.
+                    if (distToLastPos <= executeRange && core.currentState == EnemyState.Chase && isRunningForward)
+                    {
+                        actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
+                    }
+                    else
+                    {
+                        UpdateChaseTarget(); // 강제로 앞달리기 실행
+                    }
                 }
                 else if (distToLastPos <= executeRange)
                 {
@@ -89,7 +100,7 @@ public class Bandit5AI : EnemyAIBase
                     HandleDistantApproach(executeRange);
                 }
             }
-            else
+            else // 쿨타임 또는 마나 부족
             {
                 if (distToLastPos > executeRange * walkApproachFactor)
                 {
@@ -97,8 +108,24 @@ public class Bandit5AI : EnemyAIBase
                 }
                 else
                 {
-                    float optimalDist = skillSelector.GetOptimalDistance(selectedSkill);
-                    HandleCooldownWalk(optimalDist);
+                    float backWalkRange = executeRange * backWalkTriggerFactor;
+                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk)
+                    {
+                        if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
+                        {
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        }
+                        else
+                        {
+                            actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        }
+                        lastActionWasBackWalk = true;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
                 }
             }
         }
@@ -134,48 +161,6 @@ public class Bandit5AI : EnemyAIBase
             UpdateChaseTarget();
         }
     }
-
-    private void UpdateChaseTarget()
-    {
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(true, false, false);
-
-        if (Time.time >= nextTargetUpdateTime)
-        {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
-        }
-    }
-
-    private void UpdateWalkApproachTarget()
-    {
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(false, true, false);
-
-        if (Time.time >= nextTargetUpdateTime)
-        {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, 1f);
-        }
-    }
-
-    private void HandleCooldownWalk(float optimalDistance)
-    {
-        core.ChangeState(EnemyState.CooldownWalk);
-        core.SetMoveAnimations(false, true, false);
-
-        bool isPathPending = core.QueryIsPathPending?.Invoke() ?? false;
-
-        if (Time.time > nextWanderTime || !isPathPending)
-        {
-            Vector3 dirToMe = (transform.position - lastKnownPlayerPos).normalized;
-            cooldownWanderTarget = lastKnownPlayerPos + (dirToMe * optimalDistance);
-            nextWanderTime = Time.time + UnityEngine.Random.Range(closeWanderMin, closeWanderMax);
-
-            core.CmdMoveTo?.Invoke(cooldownWanderTarget, 1f);
-        }
-    }
-
     private void ChainNextAttackOrIdle()
     {
         if (skillSelector.HasPendingCombo)
@@ -210,6 +195,7 @@ public class Bandit5AI : EnemyAIBase
         isAttacking = true;
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
+        isRunningForward = false;
 
         bool attackFinished = false;
 
@@ -279,6 +265,7 @@ public class Bandit5AI : EnemyAIBase
         isAttacking = true;
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
+        isRunningForward = false;
 
         bool attackFinished = false;
 
@@ -338,6 +325,7 @@ public class Bandit5AI : EnemyAIBase
         isAttacking = true;
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
+        isRunningForward = false;
 
         bool attackFinished = false;
 
@@ -362,24 +350,6 @@ public class Bandit5AI : EnemyAIBase
         ChainNextAttackOrIdle();
     }
 
-    protected float GetSkillRange(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            float maxDist = 0f;
-            foreach (var h in m.hitDataList)
-            {
-                float dist = Mathf.Abs(h.centerOffset.z) + (h.boxSize.z / 2f);
-                if (dist > maxDist) maxDist = dist;
-            }
-            return maxDist;
-        }
-        else if (skill is Skill_Range r)
-        {
-            return r.range;
-        }
-        return 2.5f;
-    }
 
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()

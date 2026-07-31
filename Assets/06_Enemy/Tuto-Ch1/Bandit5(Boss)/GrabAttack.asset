@@ -76,7 +76,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
     effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -100,7 +100,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
     effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -124,7 +124,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
     effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -148,7 +148,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 15
+    knockbackForce: {x: 0, y: 0, z: 15}
     hitSound: {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}

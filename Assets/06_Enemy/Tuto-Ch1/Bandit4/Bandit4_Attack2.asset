@@ -50,12 +50,15 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
+  - 0
   - 7
   HitSound:
+  - {fileID: 0}
   - {fileID: 8300000, guid: c68fb3fd0e2c60a4291c950d01f76c8a, type: 3}
   HitEffects:
+  - {fileID: 0}
   - {fileID: 11400000, guid: 7ea488816118b344d93bd109996172e8, type: 2}
-  enemyHitEffectDirections: 08000000
+  enemyHitEffectDirections: 0000000008000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -63,6 +66,30 @@ MonoBehaviour:
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
   hitDataList:
+  - centerOffset: {x: 0, y: 1.5, z: 1.4}
+    boxSize: {x: 1.47, y: 1, z: 7}
+    boxRotation: {x: 0, y: 0, z: 0}
+    damageMultiplier: 0
+    knockbackForce: 0
+    hitSound: {fileID: 0}
+    effectDirection: 0
+    playerHitEffect: {fileID: 0}
+    useGuardSettings: 0
+    useStunSettings: 0
+    guardData:
+      guardable: 0
+      parryable: 0
+    stunData:
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
+    useAreaSpawn: 0
+    areaPrefab: {fileID: 0}
+    areaOffset: {x: 0, y: 0, z: 0}
+    areaDuration: 6
+    areaTickInterval: 1
+    areaDamageMultiplier: 1
   - centerOffset: {x: 0, y: 1.5, z: 1.4}
     boxSize: {x: 1.47, y: 1, z: 1.5}
     boxRotation: {x: 0, y: 0, z: 0}
