@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
 
@@ -21,6 +21,9 @@ public abstract class EnemyAIBase : MonoBehaviour
     public float backWalkSpeedMultiplier = 0.6f;
     public float backWalkDist = 3f;
     public float backWalkMaxDuration = 3f;
+    public float strafeSpeedMultiplier = 1f;
+    public float strafeMinDuration = 1.0f;
+    public float strafeMaxDuration = 5.0f;
 
     [Header("Combat Common")]
     public float skillRangeMultiplier = 0.9f;
@@ -30,6 +33,8 @@ public abstract class EnemyAIBase : MonoBehaviour
     protected EnemyCore core;
     public bool isDetectedPlayer = false;
     public bool isMemorizingPlayer = false;
+    protected bool isRunningForward = false;
+
     protected float detectedPlayerTime = -1f;
     protected Coroutine actionCoroutine;
     protected LayerMask wallLayer;
@@ -45,6 +50,7 @@ public abstract class EnemyAIBase : MonoBehaviour
     protected Renderer[] childRenderers;
     protected Animator animator;
     HpBarCanvas hpbar;
+
     protected virtual void Awake()
     {
         core = GetComponent<EnemyCore>();
@@ -53,6 +59,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         childRenderers = GetComponentsInChildren<Renderer>();
         animator = GetComponentInChildren<Animator>();
         hpbar = GetComponentInChildren<HpBarCanvas>();
+
         core.OnStunned += HandleInterrupt;
         core.OnParried += HandleInterrupt;
         core.OnDeath += HandleDeath;
@@ -93,6 +100,7 @@ public abstract class EnemyAIBase : MonoBehaviour
     {
         enabled = true;
         isDetectedPlayer = false;
+        isRunningForward = false;
         core.CmdWarpToOriginal?.Invoke();
     }
 
@@ -108,11 +116,12 @@ public abstract class EnemyAIBase : MonoBehaviour
                 core.CmdCancelAttack?.Invoke();
                 core.CmdStopMovement?.Invoke();
                 core.ChangeState(EnemyState.Idle);
-                core.SetMoveAnimations(false, false, false);
+                core.SetMoveAnimations(0f, 0f, 0f);
 
                 isAttacking = false;
                 isDetectedPlayer = false;
                 isMemorizingPlayer = false;
+                isRunningForward = false;
             }
             return;
         }
@@ -181,11 +190,6 @@ public abstract class EnemyAIBase : MonoBehaviour
             }
         }
 
-        if (isDetectedPlayer || isMemorizingPlayer)
-        {
-            core.CmdLookAt?.Invoke(lastKnownPlayerPos);
-        }
-
         HandleBehaviorLogic(Vector3.Distance(transform.position, Player.Instance.transform.position));
     }
 
@@ -203,9 +207,8 @@ public abstract class EnemyAIBase : MonoBehaviour
                 childRenderers[i].enabled = state;
             }
         }
-        if(hpbar)
+        if (hpbar)
             hpbar.gameObject.SetActive(state);
-
     }
 
     protected abstract void HandleBehaviorLogic(float distance);
@@ -218,7 +221,6 @@ public abstract class EnemyAIBase : MonoBehaviour
             return !Physics.Linecast(transform.position + Vector3.up * 2, Player.Instance.transform.position + Vector3.up, wallLayer);
 
         Vector3 dir = (Player.Instance.transform.position - transform.position).normalized;
-
         float activeRange = (isDetectedPlayer || isMemorizingPlayer) ? chaseRange : detectionRange;
 
         if (distToPlayer <= activeRange && (Vector3.Angle(transform.forward, dir) < fieldOfView / 2f || isMemorizingPlayer))
@@ -238,7 +240,8 @@ public abstract class EnemyAIBase : MonoBehaviour
         {
             core.ChangeState(EnemyState.Idle);
             core.CmdStopMovement?.Invoke();
-            core.SetMoveAnimations(false, false, false);
+            core.SetMoveAnimations(0f, 0f, 0f);
+            isRunningForward = false;
 
             yield return new WaitForSeconds(UnityEngine.Random.Range(2f, 4f));
 
@@ -248,7 +251,7 @@ public abstract class EnemyAIBase : MonoBehaviour
             if (NavMesh.SamplePosition(target, out NavMeshHit hit, wanderSearchRadius, NavMesh.AllAreas))
             {
                 core.CmdMoveTo?.Invoke(hit.position, 1f);
-                core.SetMoveAnimations(false, true, false);
+                core.SetMoveAnimations(0f, 1f, 1f);
 
                 float timeout = 5f;
                 float elapsed = 0f;
@@ -266,7 +269,8 @@ public abstract class EnemyAIBase : MonoBehaviour
     {
         core.ChangeState(EnemyState.BackWalk);
         core.CmdStopMovement?.Invoke();
-        core.SetMoveAnimations(false, false, true);
+        core.SetMoveAnimations(0f, -1f, 1f);
+        isRunningForward = false;
 
         float movedDistance = 0f;
         float elapsedDuration = 0f;
@@ -292,7 +296,7 @@ public abstract class EnemyAIBase : MonoBehaviour
             yield return null;
         }
 
-        core.SetMoveAnimations(false, false, false);
+        core.SetMoveAnimations(0f, 0f, 0f);
         core.CmdTrySnapToNavMesh?.Invoke();
         core.ChangeState(EnemyState.Idle);
         actionCoroutine = null;
@@ -315,5 +319,192 @@ public abstract class EnemyAIBase : MonoBehaviour
             elapsed += Time.deltaTime;
             yield return null;
         }
+    }
+
+    protected void UpdateChaseTarget()
+    {
+        core.ChangeState(EnemyState.Chase);
+        core.SetMoveAnimations(0f, 1f, 2f);
+        isRunningForward = true;
+
+        if (Time.time >= nextTargetUpdateTime)
+        {
+            nextTargetUpdateTime = Time.time + targetUpdateInterval;
+            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
+        }
+    }
+
+    protected void UpdateWalkApproachTarget()
+    {
+        core.ChangeState(EnemyState.Chase);
+        core.SetMoveAnimations(0f, 1f, 1f);
+        isRunningForward = false;
+
+        if (Time.time >= nextTargetUpdateTime)
+        {
+            nextTargetUpdateTime = Time.time + targetUpdateInterval;
+            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, 1f);
+        }
+    }
+
+    protected IEnumerator StrafeRoutine(float duration, float run = 1f)
+    {
+        return WalkStrafeRoutine(duration, run);
+    }
+
+    protected IEnumerator WalkStrafeRoutine(float duration, float run)
+    {
+        core.ChangeState(EnemyState.CooldownWalk);
+        core.CmdStopMovement?.Invoke();
+        isRunningForward = false;
+
+        float elapsed = 0f;
+        float dirSign = UnityEngine.Random.value > 0.5f ? 1f : -1f;
+
+        core.SetMoveAnimations(dirSign, 0f, run);
+
+        while (elapsed < duration)
+        {
+            if (Player.Instance != null)
+            {
+                Vector3 dirToPlayer = (Player.Instance.transform.position - transform.position).normalized;
+                dirToPlayer.y = 0f;
+
+                Vector3 lookDir = Quaternion.Euler(0, 60f * dirSign, 0) * dirToPlayer;
+                core.CmdLookAt?.Invoke(transform.position + lookDir);
+
+                Vector3 orbitDir = Vector3.Cross(Vector3.up, dirToPlayer).normalized * dirSign;
+
+                float SpeedMultiplier = run >= 1.5f ? chaseSpeedMultiplier * 0.7f : strafeSpeedMultiplier;
+                float step = core.BaseMovementSpeed * SpeedMultiplier * Time.deltaTime;
+
+                if (!Physics.SphereCast(transform.position + Vector3.up, 0.3f, orbitDir, out _, step, wallLayer))
+                {
+                    core.CmdMoveDirection?.Invoke(orbitDir, SpeedMultiplier);
+                }
+                else
+                {
+                    dirSign *= -1f;
+                    core.SetMoveAnimations(dirSign, 0f, run);
+                }
+            }
+
+            bool canAttack = isDetectedPlayer && Time.time >= nextAttackTime;
+
+            if (elapsed > 1f && canAttack && UnityEngine.Random.value < 0.5f * Time.deltaTime)
+            {
+                break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        core.SetMoveAnimations(0f, 0f, 0f);
+        core.CmdTrySnapToNavMesh?.Invoke();
+        core.ChangeState(EnemyState.Idle);
+        actionCoroutine = null;
+    }
+
+    protected float GetSkillRange(SkillBase skill)
+    {
+        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
+        {
+            float maxDist = 0f;
+            foreach (var h in m.hitDataList)
+            {
+                float dist = Mathf.Abs(h.centerOffset.z) + (h.boxSize.z / 2f);
+                if (dist > maxDist) maxDist = dist;
+            }
+            return maxDist;
+        }
+        else if (skill is Skill_Range r)
+        {
+            return r.range;
+        }
+        return 2.5f;
+    }
+
+    protected bool IsPlayerInSkillBox(SkillBase skill, float scale = 0.9f)
+    {
+        if (Player.Instance == null) return false;
+
+        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
+        {
+            var h = m.hitDataList[0];
+
+            Vector3 worldCenter = transform.position + (transform.rotation * h.centerOffset);
+            Quaternion worldRotation = transform.rotation * Quaternion.Euler(h.boxRotation);
+
+            Vector3 playerPos = Player.Instance.transform.position + (Vector3.up * 1f);
+            Vector3 localPos = Quaternion.Inverse(worldRotation) * (playerPos - worldCenter);
+            Vector3 extents = (h.boxSize * scale) / 2f;
+
+            return Mathf.Abs(localPos.x) <= extents.x &&
+                   Mathf.Abs(localPos.y) <= (extents.y + 1f) &&
+                   Mathf.Abs(localPos.z) <= extents.z;
+        }
+        else if (skill is Skill_Range r)
+        {
+            return Vector3.Distance(transform.position, Player.Instance.transform.position) <= r.range * scale;
+        }
+
+        return Vector3.Distance(transform.position, Player.Instance.transform.position) <= 2.5f * scale;
+    }
+    protected float GetSkillOptimalDistance(SkillBase skill)
+    {
+        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
+        {
+            return Mathf.Abs(m.hitDataList[0].centerOffset.z);
+        }
+        else if (skill is Skill_Range r)
+        {
+            return r.range * 0.8f;
+        }
+        return 2.5f;
+    }
+
+    protected float GetSkillBoxZExtents(SkillBase skill)
+    {
+        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
+        {
+            return m.hitDataList[0].boxSize.z / 2f;
+        }
+        return 1.0f;
+    }
+    protected void CancelCurrentSkillAction()
+    {
+        core.animator.CrossFade("Idle", 0.25f);
+        core.ChangeState(EnemyState.Idle);
+    }
+
+    protected void ChainNextAttackOrIdle()
+    {
+        if (core.skillSelector != null && core.skillSelector.HasPendingCombo)
+        {
+            float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
+            selectedSkill = core.skillSelector.GetNextSkill(currentDist);
+
+            if (selectedSkill != null)
+            {
+                actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
+                return;
+            }
+        }
+
+        EndAttackAndIdle();
+    }
+
+    protected virtual void EndAttackAndIdle()
+    {
+        isAttacking = false;
+        selectedSkill = null;
+        core.ChangeState(EnemyState.Idle);
+        actionCoroutine = null;
+    }
+
+    protected virtual IEnumerator PerformAttackSequence(SkillBase skill)
+    {
+        yield break;
     }
 }

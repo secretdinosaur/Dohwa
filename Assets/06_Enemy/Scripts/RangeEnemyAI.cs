@@ -7,39 +7,64 @@ public class RangeEnemyAI : EnemyAIBase
     [Header("Range Specific")]
     public float backWalkTriggerFactor = 0.7f;
     public float LookAtPlayerBeforeAttackTime = 1f;
+    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
 
     private bool lastActionWasBackWalk = false;
+    private Action<float> currentAttackCompleteHandler;
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+
         if (isMemorizingPlayer)
         {
             StopActionRoutine();
-            SkillBase selectedSkill = core.QueryGetSkill?.Invoke();
+
+            if (selectedSkill == null)
+            {
+                selectedSkill = core.skillSelector.GetNextSkill(distToLastPos);
+            }
+
+            if (selectedSkill == null)
+            {
+                UpdateChaseTarget();
+                return;
+            }
+
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             float backWalkRange = executeRange * backWalkTriggerFactor;
 
-            bool canAttack = isDetectedPlayer && Time.time >= nextAttackTime && !isAttacking;
+            bool canAttackGlobal = Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo;
+            bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
             if (distToLastPos <= executeRange)
             {
-                if (distToLastPos < backWalkRange && !lastActionWasBackWalk)
+                if (distToLastPos < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo)
                 {
-                    actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                    }
                     lastActionWasBackWalk = true;
                 }
-                else if (canAttack && (core.QueryHasEnoughMP?.Invoke(selectedSkill?.MP_cost ?? 0) ?? false))
+                else if (canAttackGlobal && hasEnoughMP)
                 {
-                    actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+                    actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
                     lastActionWasBackWalk = false;
                 }
                 else
                 {
-                    core.ChangeState(EnemyState.Idle);
-                    core.SetMoveAnimations(false, false, false);
-                    core.CmdStopMovement?.Invoke();
+                    float ran = UnityEngine.Random.value;
+                    if (ran < 0.3f)
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
+                    else if (ran < 0.8f)
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
+                    lastActionWasBackWalk = false;
                 }
             }
             else
@@ -54,41 +79,40 @@ public class RangeEnemyAI : EnemyAIBase
         }
     }
 
-    private void UpdateChaseTarget()
-    {
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(true, false, false);
-
-        if (Time.time >= nextTargetUpdateTime)
-        {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
-        }
-    }
-
-    private IEnumerator AttackSequence(SkillBase skill)
+    protected override IEnumerator PerformAttackSequence(SkillBase skill)
     {
         isAttacking = true;
         bool attackFinished = false;
 
-        Action<float> onComplete = (nextTime) => {
-            nextAttackTime = nextTime;
+        currentAttackCompleteHandler = (nextTime) => {
+            nextAttackTime = Time.time + core.skillSelector.GetLastSkillDelay();
             attackFinished = true;
-            isAttacking = false;
-            core.ChangeState(EnemyState.Idle);
         };
 
-        core.OnAttackCompleted += onComplete;
+        core.OnAttackCompleted += currentAttackCompleteHandler;
         core.CmdPerformAttack?.Invoke(skill);
 
         StartCoroutine(LookatPlayer(LookAtPlayerBeforeAttackTime));
-        yield return new WaitUntil(() => attackFinished);
 
-        core.OnAttackCompleted -= onComplete;
+        yield return new WaitUntil(() => attackFinished || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead || core.skillSelector.isInstantComboTriggered);
+
+        if (currentAttackCompleteHandler != null)
+        {
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
+        }
+
         core.StopEffects(skill.name);
-        isAttacking = false;
-        core.ChangeState(EnemyState.Idle);
-        actionCoroutine = null;
+
+        if (core.skillSelector.isInstantComboTriggered)
+        {
+            core.skillSelector.isInstantComboTriggered = false;
+            core.CmdCancelAttack?.Invoke();
+        }
+
+        core.wasParried = false;
+
+        ChainNextAttackOrIdle();
     }
 
     private IEnumerator LookatPlayer(float time)
@@ -96,23 +120,18 @@ public class RangeEnemyAI : EnemyAIBase
         float elapsed = 0f;
         while (elapsed < time)
         {
+            if (isAttacking == false || core.IsDead || core.currentState == EnemyState.Stun) yield break;
+
             elapsed += Time.deltaTime;
             if (!CheckForPlayer())
             {
                 core.CmdCancelAttack?.Invoke();
                 CancelCurrentSkillAction();
+                ChainNextAttackOrIdle();
                 yield break;
             }
             core.CmdLookAt?.Invoke(Player.Instance.transform.position);
             yield return null;
         }
     }
-
-    private void CancelCurrentSkillAction()
-    {
-        core.animator.CrossFade("Idle", 0.25f);
-        core.ChangeState(EnemyState.Idle);
-    }
-
-    protected float GetSkillRange(SkillBase skill) => skill is Skill_Range r ? r.range : 10f;
 }

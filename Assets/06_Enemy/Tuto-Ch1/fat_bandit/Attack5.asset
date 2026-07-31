@@ -15,13 +15,11 @@ MonoBehaviour:
   isEnemySkill: 1
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
-  IsAdvancedSkill: 0
   commands: 
   MP_cost: 0
   clip: {fileID: 7400000, guid: 27f73e3c9ed0ea145a74016cf297ba6a, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 53ed89e5e02396346911fc0487e8a690, type: 3}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -59,7 +57,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
   - {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
   - {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -75,7 +73,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -99,7 +97,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
@@ -123,7 +121,7 @@ MonoBehaviour:
     boxSize: {x: 3, y: 3, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 4
-    knockbackForce: 10
+    knockbackForce: {x: 0, y: 0, z: 10}
     hitSound: {fileID: 8300000, guid: 5c07ca95d7fd584499c7b62b5e2bb5d4, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}

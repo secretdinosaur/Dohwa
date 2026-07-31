@@ -40,6 +40,9 @@ public class Player : MonoBehaviour, IDamageable
     public bool isInteracting = false;
     public bool isCinematic = false;
     public bool isDeathPanelOn = false;
+    public bool isAirborne = false;
+    public bool isWakingUp = false;
+
     private Vector3 savedGrabOffset;
     private int detectedByEnemyCount = 0;
     public bool isDetected => detectedByEnemyCount > 0;
@@ -96,14 +99,14 @@ public class Player : MonoBehaviour, IDamageable
     public bool isEating => animator.GetCurrentAnimatorStateInfo(1).IsTag("Eat");
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
-    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking;
-    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput);
-    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating;
-    public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating;
-    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isEating;
-    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving;
-    public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating;
-    public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding;
+    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp;
+    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
+    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp;
+    public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
+    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isEating && !isWakingUp;
+    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
+    public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating && !isWakingUp;
+    public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isWakingUp;
     #endregion
 
     #region Combat & Tuning Settings
@@ -393,15 +396,23 @@ public class Player : MonoBehaviour, IDamageable
         bool hasKnockback = false;
         if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
         {
-            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce > PlayerMove.knockbackForceThreshold;
+            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+        }
+        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex)
+        {
+            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
 
         if (!isStunApplied && !willDie && !hasKnockback)
         {
             CancelCurrentAction();
 
-            // 핵심 변경점: 현재 스턴 상태일 경우 일반 피격 모션을 무시하여 Stagger 상태 유지
-            if (animator != null && currentStunRoutine == null)
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            bool isPlayingKnockMotion = state.IsName("KnockBack") || state.IsName("KnockBackEnd") ||
+                                        state.IsName("KnockDown1") || state.IsName("KnockDown1End") ||
+                                        state.IsName("KnockDown2") || state.IsName("KnockDown2End");
+
+            if (animator != null && currentStunRoutine == null && !isAirborne && !isWakingUp && !isPlayingKnockMotion)
             {
                 animator.ResetTrigger("Hitted1");
                 animator.ResetTrigger("Hitted2");
@@ -422,7 +433,7 @@ public class Player : MonoBehaviour, IDamageable
 
         if (caster.TryGetComponent<EnemyCore>(out var enemyCore))
         {
-            enemyCore.TriggerPlayerHit(skill);
+            enemyCore.TriggerPlayerHit(skill, hitIndex);
         }
     }
 
@@ -442,10 +453,23 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
+    public void ClearStun()
+    {
+        if (currentStunRoutine != null)
+        {
+            StopCoroutine(currentStunRoutine);
+            currentStunRoutine = null;
+        }
+
+        currentStunType = StunType.Stagger;
+        animator.SetBool("isGrabbed", false);
+        animator.ResetTrigger("Stagger");
+    }
+
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)
     {
         CancelCurrentAction();
-        if (currentStunRoutine != null) StopCoroutine(currentStunRoutine);
+        ClearStun();
 
         currentStunType = type;
         grabTargetTransform = targetTransform;
@@ -467,7 +491,6 @@ public class Player : MonoBehaviour, IDamageable
         PreventMove = true; PreventAttack = true;
         PlayerAttack.ClearCommandBuffer();
 
-        // 핵심 변경점: 누적된 트리거를 제거하여 모션이 즉시 풀리는 현상 방지
         animator.ResetTrigger("StaggerEnd");
         animator.ResetTrigger("Hitted1");
         animator.ResetTrigger("Hitted2");
@@ -500,7 +523,6 @@ public class Player : MonoBehaviour, IDamageable
             }
         }
 
-        // 핵심 변경점: 끝날 때 시작 트리거를 리셋
         animator.ResetTrigger("Stagger");
 
         switch (type)
@@ -510,15 +532,39 @@ public class Player : MonoBehaviour, IDamageable
             case StunType.Grabbed: Animator_SetBool("isGrabbed", false); break;
         }
 
-        PreventMove = false;
-        PreventAttack = false;
         currentStunRoutine = null;
+
+        if (!PlayerMove.isKnockedBack && !isWakingUp)
+        {
+            PreventMove = false;
+            PreventAttack = false;
+        }
 
         if (type == StunType.Grabbed && grabTargetTransform != null && grabIsRealtimeFollow)
         {
             savedGrabOffset = grabTargetTransform.root.rotation * grabTargetOffset;
             transform.position = grabTargetTransform.position + savedGrabOffset;
         }
+    }
+
+    public void StartWakeUp(float wakeUpDuration)
+    {
+        CancelCurrentAction();
+        ClearStun();
+        StartCoroutine(WakeUpRoutine(wakeUpDuration));
+    }
+
+    private IEnumerator WakeUpRoutine(float duration)
+    {
+        // 💡 기존의 불필요한 3초 대기 시간을 삭제했습니다.
+        isWakingUp = true;
+        isAirborne = false;
+
+        Animator_SetTrigger("WakeUp");
+
+        yield return new WaitForSeconds(duration);
+
+        isWakingUp = false;
     }
 
     private float mpRecoveryDelay;
@@ -749,6 +795,8 @@ public class Player : MonoBehaviour, IDamageable
         PreventAttack = false;
         isGuarding = false;
         isParrying = false;
+        isAirborne = false;
+        isWakingUp = false;
         if (PlayerAttack != null)
         {
             PlayerAttack.isLockedOn = false;
@@ -813,7 +861,6 @@ public class Player : MonoBehaviour, IDamageable
     public void Animator_SetBool(string boolName, bool state) => animator.SetBool(boolName, state);
     public void Animator_SetTrigger(string triggerName) => animator.SetTrigger(triggerName);
     public void Animator_SetFloat(string floatName, float value, float damp = 0f, float time = 0f) => animator.SetFloat(floatName, value, damp, time);
-    public void SetAFnimatorWeight(int layer, float weight) => animator.SetLayerWeight(layer, weight);
 
     public void Animator_PlaySkill(SkillBase skill, float crossFadeDuration = 0.1f)
     {

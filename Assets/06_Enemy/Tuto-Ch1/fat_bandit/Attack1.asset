@@ -70,7 +70,7 @@ MonoBehaviour:
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 7
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
     effectDirection: 8
     playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
@@ -94,7 +94,7 @@ MonoBehaviour:
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 7
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
     effectDirection: 6
     playerHitEffect: {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}

@@ -13,6 +13,9 @@ public class EnemySound : MonoBehaviour
 
     private EnemyCore core;
 
+    private float lastFootstepTime = -1f;
+    private const float FootstepCooldown = 0.2f;
+
     private void Awake()
     {
         core = GetComponent<EnemyCore>();
@@ -20,13 +23,14 @@ public class EnemySound : MonoBehaviour
         if (sources.Length > 0) footstepAS = sources[0];
         if (sources.Length > 1) attackAS = sources[1];
         if (sources.Length > 2) etcAS = sources[2];
-        attackAS.spatialBlend = 0.2f;
+
+        if (attackAS != null) attackAS.spatialBlend = 0.2f;
+
         core.OnDeath += PlayDeathSound;
         core.OnPlayerDetected += PlayChaseSound;
 
         core.OnDeath += CancelAttackSound;
         core.OnStunned += CancelAttackSound;
-        core.OnDeath += CancelAttackSound;
         core.CmdCancelAttack += CancelAttackSound;
         core.PlayHitSound += PlayHitSound;
     }
@@ -40,7 +44,6 @@ public class EnemySound : MonoBehaviour
 
             core.OnDeath -= CancelAttackSound;
             core.OnStunned -= CancelAttackSound;
-            core.OnDeath -= CancelAttackSound;
             core.CmdCancelAttack -= CancelAttackSound;
             core.PlayHitSound -= PlayHitSound;
         }
@@ -54,8 +57,13 @@ public class EnemySound : MonoBehaviour
 
     public void PlayFootstepSound()
     {
+        if (Time.time - lastFootstepTime < FootstepCooldown) return;
+
         if (footstepSounds != null && footstepSounds.Length > 0 && footstepAS != null)
+        {
+            lastFootstepTime = Time.time;
             footstepAS.PlayOneShot(footstepSounds[Random.Range(0, footstepSounds.Length)]);
+        }
     }
 
     private void PlayChaseSound()
@@ -78,6 +86,7 @@ public class EnemySound : MonoBehaviour
 
     public void CancelAttackSound()
     {
+        if (attackAS != null)
             attackAS.Stop();
     }
 }

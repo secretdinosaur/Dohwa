@@ -38,7 +38,7 @@ public class EnemyMovement : MonoBehaviour
         core.CmdMoveDirection += MoveDirection;
         core.CmdWarpToOriginal += WarpToOriginal;
         core.CmdTrySnapToNavMesh += () => TrySnapToNavMesh();
-
+        core.CmdFasyLookAt += FastLookAtTarget;
         core.OnDeath += StopMovement;
         core.QueryIsPathPending = IsPathPendingOrMoving;
         core.QueryOriginalPosition = () => OriginalPosition;
@@ -54,6 +54,7 @@ public class EnemyMovement : MonoBehaviour
         core.CmdWarpToOriginal -= WarpToOriginal;
         core.CmdTrySnapToNavMesh -= () => TrySnapToNavMesh();
 
+        core.CmdFasyLookAt -= FastLookAtTarget;
         core.OnDeath -= StopMovement;
 
         core.QueryIsPathPending = null;
@@ -119,6 +120,14 @@ public class EnemyMovement : MonoBehaviour
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.1f)
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * rotationSpeed);
+    }
+
+    private void FastLookAtTarget(Vector3 targetPos)
+    {
+        Vector3 dir = (targetPos - transform.position).normalized;
+        dir.y = 0f;
+        if (dir.sqrMagnitude > 0.1f)
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * rotationSpeed * 2.5f);
     }
 
     private void MoveDirection(Vector3 direction, float speedMultiplier)

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
+public enum KnockdownType { None = 0, FacingUp = 1, FacingDown = 2 }
+
 #region Hit Data Structure
 [Serializable]
 public class MeleeHitData
@@ -11,7 +13,11 @@ public class MeleeHitData
     public Vector3 boxSize = Vector3.one;
     public Vector3 boxRotation;
     public float damageMultiplier = 1f;
-    public float knockbackForce = 0f;
+    public Vector3 knockbackForce = Vector3.zero;
+
+    public KnockdownType knockdownType = KnockdownType.None;
+    public float knockdownDuration = 1.5f; // 💡 넉다운 지속 시간 추가
+
     public AudioClip hitSound;
 
     public SkillBase.EnemyHitEffectDirection effectDirection;
@@ -52,7 +58,6 @@ public class Skill_Melee : SkillBase
         HitEffects = new HitEffectData[count];
         for (int i = 0; i < count; i++)
         {
-
             damageMultipliers[i] = hitDataList[i].damageMultiplier;
             HitSound[i] = hitDataList[i].hitSound;
             enemyHitEffectDirections[i] = hitDataList[i].effectDirection;
@@ -110,31 +115,27 @@ public class Skill_Melee : SkillBase
                 Vector3 hitPoint = col.ClosestPoint(worldCenter);
                 float finalDamage = baseDamage * hitData.damageMultiplier;
 
-                // 💡 적의 가드 상태 확인
                 bool isGuarding = false;
                 if (col.TryGetComponent(out EnemyCore enemyCore))
                 {
                     isGuarding = enemyCore.isGuarding;
                 }
-                if(col.TryGetComponent(out Player player))
+                if (col.TryGetComponent(out Player player))
                 {
-                    isGuarding = player.isParrying;
+                    isGuarding = player.isGuarding;
                 }
-                // 데미지 처리는 그대로 진행 (Health 스크립트에서 가드 성공 이벤트를 트리거할 수 있도록)
                 target.TakeDamage(finalDamage, this, casterTransform, hitData.playerHitEffect, hitIndex);
 
-                // 💡 가드 상태가 아닐 때만 힛 이펙트 및 넉백 적용
-                if (!isGuarding)
-                {
-                    if(enemyHitEffectDirections[hitIndex] != EnemyHitEffectDirection.None)
-                        SkillEffectManager.Instance.PlayHitEffect(col.gameObject, this, hitPoint, CalculateEffectRotation(enemyHitEffectDirections[hitIndex], casterTransform, hitPoint, col.transform), hitIndex);
+                if (enemyHitEffectDirections[hitIndex] != EnemyHitEffectDirection.None && !isGuarding)
+                    SkillEffectManager.Instance.PlayHitEffect(col.gameObject, this, hitPoint, CalculateEffectRotation(enemyHitEffectDirections[hitIndex], casterTransform, hitPoint, col.transform), hitIndex);
 
-                    if (hitData.knockbackForce > 0f)
+                if (hitData.knockbackForce.magnitude > 0f)
+                {
+                    if (target.transform.TryGetComponent<PlayerMove>(out var playerMove))
                     {
-                        if (target.transform.TryGetComponent<PlayerMove>(out var playerMove))
-                            playerMove.KnockBack(hitData.knockbackForce, casterTransform.forward);
-                        // else if (target.transform.TryGetComponent<EnemyCore>(out var enemy))
-                        //     enemy.KnockBack(hitData.knockbackForce, casterTransform.forward);
+                        Vector3 worldKnockback = casterTransform.rotation * hitData.knockbackForce;
+                        // 💡 넉다운 지속 시간을 추가로 전달
+                        playerMove.KnockBack(isGuarding ? worldKnockback / 2 : worldKnockback, (int)hitData.knockdownType, hitData.knockdownDuration);
                     }
                 }
 
