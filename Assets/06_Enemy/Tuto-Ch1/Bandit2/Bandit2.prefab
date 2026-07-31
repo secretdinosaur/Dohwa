@@ -324,7 +324,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1212714600863443769}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 96864233bce96d84da969e4f447e584e, type: 3}
+  m_Avatar: {fileID: 9000000, guid: 0eb3d421ebcec474a83417d1b6c95a64, type: 3}
   m_Controller: {fileID: 9100000, guid: f52c9a2e747013c42bc806583b49bb2b, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
@@ -972,6 +972,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e63a34cf104a9a04187b770379c863ba, type: 2}
     - {fileID: 0}
     isInstantCombo: 1
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   isNextSkillCombo: 0
