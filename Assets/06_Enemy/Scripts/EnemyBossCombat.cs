@@ -6,11 +6,10 @@ using System.Collections;
 public class EnemyBossCombat : MonoBehaviour
 {
     public float Power = 1f;
-    public SkillBase[] skillSet;
     public Vector2 attackCooldownRange;
 
-    private float hitStopTimeScale = 0.2f, hitStopDuration = 0.25f, hitStopRestoreDuration = 0.05f;
-    private float preAttackLookDelay = 0.2f;
+    private float hitStopTimeScale = 0.1f, hitStopDuration = 0.1f, hitStopRestoreDuration = 0.025f;
+    private float preAttackLookDelay = 0.25f;
 
     private EnemyCore core;
     private EnemySound sound;
@@ -40,7 +39,6 @@ public class EnemyBossCombat : MonoBehaviour
         core.OnDeath += CancelCurrentSkillAction;
         core.OnStunned += CancelCurrentSkillAction;
 
-        core.QueryGetSkill = GetSkill;
         core.CmdPerformAttack += InitiateAttack;
         core.CmdCancelAttack += CancelCurrentSkillAction;
     }
@@ -51,7 +49,6 @@ public class EnemyBossCombat : MonoBehaviour
         core.OnDeath -= CancelCurrentSkillAction;
         core.OnStunned -= CancelCurrentSkillAction;
 
-        core.QueryGetSkill = null;
         core.CmdPerformAttack -= InitiateAttack;
         core.CmdCancelAttack -= CancelCurrentSkillAction;
     }
@@ -75,7 +72,7 @@ public class EnemyBossCombat : MonoBehaviour
             float elapsed = 0f;
             while (elapsed < preAttackLookDelay)
             {
-                core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+                core.CmdFasyLookAt?.Invoke(Player.Instance.transform.position);
                 elapsed += Time.deltaTime;
                 yield return null;
             }
@@ -115,16 +112,12 @@ public class EnemyBossCombat : MonoBehaviour
 
     private void TriggerHitStop()
     {
-        DOTween.Kill(HITSTOP_ID);
-        Sequence seq = DOTween.Sequence().SetUpdate(true).SetId(HITSTOP_ID);
-        seq.AppendCallback(() => { Time.timeScale = hitStopTimeScale; });
-        seq.AppendInterval(hitStopDuration);
-        seq.Append(DOVirtual.Float(hitStopTimeScale, 1f, hitStopRestoreDuration, value => Time.timeScale = value).SetEase(Ease.OutQuad));
     }
 
     public void OnAttackHitEvent(int index)
     {
         if (processedHitIndices.Contains(index) || currentActiveSkill == null) return;
+        if (core.animator.IsInTransition(0)) return;
 
         var target = currentActiveSkill.ExecuteHitCheck(transform, Power, index);
         if (target.Count > 0) processedHitIndices.Add(index);
@@ -148,6 +141,4 @@ public class EnemyBossCombat : MonoBehaviour
 
         currentActiveSkill = null;
     }
-
-    private SkillBase GetSkill() => skillSet.Length > 0 ? skillSet[UnityEngine.Random.Range(0, skillSet.Length)] : null;
 }

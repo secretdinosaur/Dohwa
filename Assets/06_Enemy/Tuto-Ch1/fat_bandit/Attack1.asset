@@ -15,13 +15,11 @@ MonoBehaviour:
   isEnemySkill: 1
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
-  IsAdvancedSkill: 0
   commands: 
   MP_cost: 15
   clip: {fileID: 7400000, guid: 6271501738e1ae3478ac7808baa55ddb, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: b4024e021d15507409648e4e8275c177, type: 3}
-  enemyHitEffect: {fileID: 0}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -57,10 +55,10 @@ MonoBehaviour:
   HitSound:
   - {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
   - {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
-  playerHitEffects:
+  HitEffects:
   - {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
   - {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
-  enemyHitEffectDirections: 0000000000000000
+  enemyHitEffectDirections: 0800000006000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -72,9 +70,9 @@ MonoBehaviour:
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 7
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
-    effectDirection: 0
+    effectDirection: 8
     playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -96,9 +94,9 @@ MonoBehaviour:
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 7
-    knockbackForce: 5
+    knockbackForce: {x: 0, y: 0, z: 5}
     hitSound: {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
-    effectDirection: 0
+    effectDirection: 6
     playerHitEffect: {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

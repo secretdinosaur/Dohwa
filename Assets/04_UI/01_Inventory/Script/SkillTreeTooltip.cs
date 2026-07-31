@@ -24,16 +24,19 @@ public class SkillTreeTooltip : MonoBehaviour
     [Tooltip("더 이상 텍스트를 표시하는 용도로 사용되지 않으나, 기존 연결 유지 및 비활성화를 위해 남겨둡니다.")]
     public TextMeshProUGUI conditionText;
 
+    [Header("Blind UI Settings")]
+    public int blindHeightPerNode = 100; // 블라인드를 제어할 단위 수치
+
     [Header("Localization Settings")]
     private string statStringTableName = "UI";
     public LocalizedString defaultStatNodeDesc;
 
     [Header("Localized Strings for Hardcoded Texts")]
-    public LocalizedString statIncreaseFormat; // 예: "{0} 증가"
-    public LocalizedString conditionTitle; // 예: "[해금 조건]"
-    public LocalizedString conditionReachGradeFormat; // 예: "- {0} 달성"
-    public LocalizedString conditionEventCleared; // 예: "- 특수 조건 필요"
-    public LocalizedString conditionNeedTeatherFormat; // 예: "- 필요 조각: {0}개"
+    public LocalizedString statIncreaseFormat;
+    public LocalizedString conditionTitle;
+    public LocalizedString conditionReachGradeFormat;
+    public LocalizedString conditionEventCleared;
+    public LocalizedString conditionNeedTeatherFormat;
 
     [HideInInspector] public SkillBookBase currentSkillBook;
     [HideInInspector] public int currentNodeIndex;
@@ -62,7 +65,7 @@ public class SkillTreeTooltip : MonoBehaviour
         Command.text = data.activeSkill != null ? CommandsToString(data.activeSkill.commands) : " ";
         bool hasCommand = data.activeSkill != null;
         Vector2 currentSize = effectDescText.rectTransform.sizeDelta;
-        effectDescText.rectTransform.sizeDelta = new Vector2(currentSize.x, hasCommand ? 420f : 480f);
+
         string GetStatEffectString()
         {
             if (data.statModifiers == null || data.statModifiers.Length == 0) return "";
@@ -81,7 +84,6 @@ public class SkillTreeTooltip : MonoBehaviour
             return string.Join("\n", statStrings);
         }
 
-        // 1. Effect Desc 깔끔하게 가져오기
         string currentEffectDesc = data.GetNodeEffectDesc();
 
         if (data.nodeType == SkillBookBase.NodeType.StatSkill)
@@ -89,7 +91,6 @@ public class SkillTreeTooltip : MonoBehaviour
             currentEffectDesc = GetStatEffectString();
         }
 
-        // 해금 조건을 effectDesc 텍스트 뒤에 병합
         if (data.useCondition && data.conditions != null && data.conditions.Length > 0)
         {
             List<string> conditionStrings = new List<string>();
@@ -123,16 +124,13 @@ public class SkillTreeTooltip : MonoBehaviour
                 currentEffectDesc = $"{titleStr}\n{conditionStr}";
         }
 
-        // 2. Base Desc(Item Desc) 깔끔하게 가져오기
         string baseDesc = data.GetNodeBaseDesc();
 
-        // 사용자가 로컬라이즈를 할당하지 않은 스탯 스킬을 위해 기본값 fallback 처리
         if (data.nodeType == SkillBookBase.NodeType.StatSkill && (data.localizeStatNodeDesc == null || data.localizeStatNodeDesc.IsEmpty))
         {
             baseDesc = defaultStatNodeDesc != null && !defaultStatNodeDesc.IsEmpty ? defaultStatNodeDesc.GetLocalizedString() : "능력치 상승.";
         }
 
-        // 💡 3. 노드 타입이 StatSkill일 경우에만 UI 출력 위치를 서로 스왑
         if (data.nodeType == SkillBookBase.NodeType.StatSkill)
         {
             effectDescText.text = baseDesc;
@@ -156,6 +154,9 @@ public class SkillTreeTooltip : MonoBehaviour
         SetAlpha(icon.transform.parent.GetComponent<Image>(), targetAlpha);
         SetAlpha(descText, targetAlpha);
         SetAlpha(icon, targetAlpha);
+
+        // 조건 자동 해금 노드들을 위해 UI 갱신 시 블라인드도 함께 업데이트
+        UpdateBlindState();
     }
 
     public void AnimateTooltipUnlock()
@@ -216,8 +217,34 @@ public class SkillTreeTooltip : MonoBehaviour
     {
         if (currentSkillBook != null)
         {
-            currentSkillBook.UnlockNode(currentNodeIndex);
+            if (currentSkillBook.UnlockNode(currentNodeIndex))
+            {
+                UpdateBlindState();
+            }
         }
+    }
+
+    public void UpdateBlindState()
+    {
+        if (currentSkillBook == null || currentSkillBook.skillTree == null) return;
+
+        if (currentSkillBook.Id != "4a9a5dcc-df4c-4f47-940d-04d12d054268") return;
+
+        B0_Blind activeBlind = FindAnyObjectByType<B0_Blind>();
+
+        if (activeBlind == null) return;
+
+        int unlockedCount = 0;
+        foreach (var node in currentSkillBook.skillTree)
+        {
+            if (node.unlocked)
+            {
+                unlockedCount++;
+            }
+        }
+
+        int calculatedIdx = unlockedCount * blindHeightPerNode;
+        activeBlind.SetBlind(calculatedIdx);
     }
 
     private string CommandsToString(IEnumerable<SkillBase.Command> cmds, bool forText = true)

@@ -24,18 +24,29 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float JumpForce = 5f;
     [SerializeField] private float sprintLockoutDuration = 3f;
     [SerializeField] private float jumpHorizontalVelocityMultiplier = 12f;
+    [SerializeField] private float jumpCooldown = 0.5f;
     #endregion
 
     #region State Flags & Internal Variables
     [Header("Status Flags")]
     public bool isGrounded = true;
-
+    private float _lastJumpTime = 0f;
     private Vector2 _inputMove;
     private Vector2 _smoothInput;
     private bool _isSprinting;
+
+    private bool _prevIsSprinting = false;
+    private Vector2 _prevInputMove = Vector2.zero;
+
+    private int _currentSprintDir = 0;
+    private bool _isSprintTransitionActive = false;
+    private float _sprintTransitionStartTime = 0f;
+
     private bool _isStopping = false;
     private float _animSpeed;
-    private bool _isKnockedBack = false;
+
+    public bool isKnockedBack = false;
+
     private bool _isWalkingRequested = false;
     private bool _isWalking = false;
     private bool _isFallingDown = false;
@@ -63,6 +74,7 @@ public class PlayerMove : MonoBehaviour
     private float landingPredictThresholdDefault = 0.1f;
     private float landingPredictThresholdLockOn = 0.12f;
     private float landingAnimBufferTime = 0.5f;
+    private float wakeUpAnimDuration = 2f;
     [HideInInspector] public float knockbackForceThreshold = 9f;
     private float knockbackGuardReduction = 0.7f;
     private float knockbackDurationDivisor = 30f;
@@ -123,20 +135,6 @@ public class PlayerMove : MonoBehaviour
             return;
         }
 
-        if (_isSprintBtnHeld)
-        {
-            bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
-            bool considerLockedOn = isLockedOn || Player.Instance.PlayerAttack.lastLockOffTime + 1 > Time.time;
-
-            if (considerLockedOn && Time.time - _sprintPressTime > 0.25f)
-            {
-                if (Player.Instance.CanDash() && _inputMove.magnitude > InputThresholdMin && _inputMove.y >= 0 && sprintLockoutTimer <= 0f && Player.Instance.MP > 0f)
-                {
-                    _isSprinting = true;
-                }
-            }
-        }
-
         bool ctrlPressed = Keyboard.current != null && (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
         _isWalking = _isWalkingRequested || ctrlPressed;
 
@@ -148,7 +146,8 @@ public class PlayerMove : MonoBehaviour
         CheckFallDamage();
         CheckLedgeFall();
         bool isAttacking = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isAttacking;
-        if (isAttacking || _isKnockedBack || Player.Instance.IsGrabbed)
+
+        if (isAttacking || isKnockedBack || Player.Instance.IsGrabbed || Player.Instance.isWakingUp)
         {
             return;
         }
@@ -194,25 +193,16 @@ public class PlayerMove : MonoBehaviour
         {
             _isSprintBtnHeld = true;
             _sprintPressTime = Time.time;
-
-            if (!considerLockedOn)
-            {
-                if (Player.Instance.CanDash() && _inputMove.magnitude > InputThresholdMin && _inputMove.y >= 0 && sprintLockoutTimer <= 0f && Player.Instance.MP > 0f)
-                {
-                    _isSprinting = true;
-                }
-            }
         }
         else if (context.canceled)
         {
             _isSprintBtnHeld = false;
-            _isSprinting = false;
 
             if (considerLockedOn && Time.time - _sprintPressTime <= 0.25f)
             {
                 if (!_isDashCooldown && isGrounded &&
                     Player.Instance.IsAlive && !Player.Instance.isCinematic &&
-                    !Player.Instance.IsStunned && !Player.Instance.isEating)
+                    !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp)
                 {
                     Player.Instance.CancelCurrentAction();
                     StartCoroutine(DashRoutine());
@@ -223,13 +213,16 @@ public class PlayerMove : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.performed && Player.Instance != null && Player.Instance.CanJump() && isGrounded && !DialogueManager.Instance.IsDialogueActive)
+        if (context.performed && Player.Instance != null && Player.Instance.CanJump() && isGrounded && !Player.Instance.isWakingUp && !DialogueManager.Instance.IsDialogueActive)
         {
+            if (Time.time - _lastJumpTime < jumpCooldown) return;
+
             if (Physics.Raycast(transform.position + Vector3.up * slopeRaycastOffset, Vector3.down, out RaycastHit hit, slopeRaycastDistance, groundLayer))
             {
                 if (Vector3.Angle(Vector3.up, hit.normal) >= maxJumpSlopeAngle) return;
             }
 
+            _lastJumpTime = Time.time;
             StartCoroutine(JumpRoutine());
         }
     }
@@ -240,14 +233,56 @@ public class PlayerMove : MonoBehaviour
     {
         if (_isDashing) return;
 
-        if (_inputMove.y < 0 || _inputMove.magnitude < InputMagnitudeZeroCheck)
+        bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
+        bool considerLockedOn = isLockedOn || Player.Instance.PlayerAttack.lastLockOffTime + 1 > Time.time;
+
+        bool canSprint = _isSprintBtnHeld
+                         && _inputMove.y >= 0
+                         && _inputMove.magnitude > InputMagnitudeZeroCheck
+                         && sprintLockoutTimer <= 0f
+                         && Player.Instance.MP > 0f
+                         && Player.Instance.CanDash();
+
+        if (considerLockedOn && Time.time - _sprintPressTime <= 0.25f)
         {
-            _isSprinting = false;
+            canSprint = false;
+        }
+
+        _isSprinting = canSprint;
+
+        bool justStartedSprinting = !_prevIsSprinting && _isSprinting;
+        bool wasMoving = _prevInputMove.magnitude > InputThresholdMin;
+
+        int targetSprintDir = 0;
+        if (_isSprinting)
+        {
+            if (_inputMove.x <= -InputThresholdMin) targetSprintDir = -1;
+            else if (_inputMove.x >= InputThresholdMin) targetSprintDir = 1;
+        }
+
+        if (targetSprintDir != _currentSprintDir)
+        {
+            if (_isSprintTransitionActive)
+            {
+                _isSprintTransitionActive = false;
+            }
+
+            if (targetSprintDir != 0 && justStartedSprinting && wasMoving)
+            {
+                _sprintTransitionStartTime = Time.time;
+                _isSprintTransitionActive = true;
+            }
+
+            _currentSprintDir = targetSprintDir;
+        }
+
+        if (_isSprintTransitionActive && Time.time - _sprintTransitionStartTime >= 0.5f)
+        {
+            _isSprintTransitionActive = false;
         }
 
         _smoothInput = Vector2.Lerp(_smoothInput, _inputMove, Time.fixedDeltaTime * acceleration);
 
-        bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
         Transform target = Player.Instance.PlayerAttack != null ? Player.Instance.PlayerAttack.currentTarget : null;
 
         if (isLockedOn && target == null)
@@ -367,6 +402,9 @@ public class PlayerMove : MonoBehaviour
             transform.position += targetVelocity * Time.fixedDeltaTime;
             transform.rotation = nextRotation;
         }
+
+        _prevIsSprinting = _isSprinting;
+        _prevInputMove = _inputMove;
     }
     public LayerMask groundLayer;
     private bool OnSlope()
@@ -447,7 +485,7 @@ public class PlayerMove : MonoBehaviour
     }
     private void CheckLedgeFall()
     {
-        if (isGrounded && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !_isKnockedBack && !Player.Instance.IsStunned)
+        if (isGrounded && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
         {
             int layerMask = ~LayerMask.GetMask("Player");
             Vector3 castOrigin = transform.position + Vector3.up * (sphereCastRadius + sphereCastHeightOffset);
@@ -455,7 +493,7 @@ public class PlayerMove : MonoBehaviour
             if (!Physics.SphereCast(castOrigin, sphereCastRadius, Vector3.down, out RaycastHit hit, sphereCastHeightOffset + 1.5f, layerMask))
             {
                 isGrounded = false;
-                Player.Instance.Animator_SetTrigger("isJump");
+                Player.Instance.Animator_SetBool("IsJump", true);
                 StartCoroutine(WaitAndDetectLandingRoutine());
             }
         }
@@ -491,13 +529,22 @@ public class PlayerMove : MonoBehaviour
 
                 if (isHighLanding || isPredictLanded)
                 {
-                    Player.Instance.Animator_SetTrigger("isLand");
+                    Player.Instance.Animator_SetBool("IsJump", false);
 
-                    _isStopping = true;
+                    if (Player.Instance.isAirborne)
+                    {
+                        Player.Instance.StartWakeUp(wakeUpAnimDuration);
+                        _isStopping = true;
+                        yield return new WaitForSeconds(wakeUpAnimDuration);
+                        _isStopping = false;
+                    }
+                    else
+                    {
+                        _isStopping = true;
+                        yield return new WaitForSeconds(landingAnimBufferTime);
+                        _isStopping = false;
+                    }
 
-                    yield return new WaitForSeconds(landingAnimBufferTime);
-
-                    _isStopping = false;
                     isGrounded = true;
                     break;
                 }
@@ -509,8 +556,7 @@ public class PlayerMove : MonoBehaviour
     {
         _isStopping = false;
         isGrounded = false;
-        Player.Instance.Animator_SetTrigger("isJump");
-
+        Player.Instance.Animator_SetBool("IsJump", true);
         yield return new WaitForSeconds(jumpDelayBeforeForce);
 
         if (_rb != null)
@@ -527,10 +573,10 @@ public class PlayerMove : MonoBehaviour
     #region Knockback & Dash Mechanics
     private Coroutine currentKnockBackRoutine;
 
-    public void KnockBack(float force, Vector3 dir)
+    // 💡 넉다운 지속 시간(knockdownDuration) 매개변수 추가
+    public void KnockBack(Vector3 force, int knockdownType = 0, float knockdownDuration = 1.5f)
     {
-        if (force == 0) return;
-        if (dir == Vector3.zero) dir = -transform.forward;
+        if (force.magnitude == 0 && knockdownType == 0) return;
 
         Player.Instance.CancelCurrentAction();
 
@@ -540,19 +586,49 @@ public class PlayerMove : MonoBehaviour
         {
             StopCoroutine(currentKnockBackRoutine);
         }
-        currentKnockBackRoutine = StartCoroutine(KnockBackRoutine(force, dir));
+        currentKnockBackRoutine = StartCoroutine(KnockBackRoutine(force, knockdownType, knockdownDuration));
     }
 
-    private IEnumerator KnockBackRoutine(float originalForce, Vector3 dir)
+    private IEnumerator KnockBackRoutine(Vector3 force, int knockdownType, float knockdownDuration)
     {
-        float applyForce = originalForce;
+        Vector3 applyForce = force;
+        float forceMag = applyForce.magnitude;
 
-        bool shouldPlayAnim = (originalForce > knockbackForceThreshold) && !Player.Instance.IsStunned && !Player.Instance.isGuarding;
+        bool becomeAirborne = force.y >= 10f;
+        bool shouldPlayAnim = (forceMag > knockbackForceThreshold || knockdownType > 0) && (!Player.Instance.IsStunned || knockdownType > 0) && !Player.Instance.isGuarding;
 
-        if (shouldPlayAnim)
-            Player.Instance.Animator_SetTrigger("KnockBack");
+        isKnockedBack = true;
 
-        _isKnockedBack = true;
+        if (becomeAirborne || shouldPlayAnim)
+        {
+            // 그랩(리얼타임 팔로우) 중 넉다운이 겹치더라도 강제로 풀지 않고 유지합니다.
+            Player.Instance.animator.ResetTrigger("Hitted1");
+            Player.Instance.animator.ResetTrigger("Hitted2");
+            Player.Instance.animator.ResetTrigger("Stagger");
+            Player.Instance.animator.ResetTrigger("AirborneHit");
+            Player.Instance.animator.ResetTrigger("KnockBack");
+            Player.Instance.animator.ResetTrigger("KnockDown1");
+            Player.Instance.animator.ResetTrigger("KnockDown2");
+        }
+
+        if (becomeAirborne)
+        {
+            Player.Instance.isAirborne = true;
+            isGrounded = false;
+            Player.Instance.Animator_SetTrigger("Airborne");
+            StartCoroutine(WaitAndDetectLandingRoutine());
+        }
+        else if (shouldPlayAnim)
+        {
+            if (knockdownType > 0)
+            {
+                Player.Instance.Animator_SetTrigger("KnockDown" + knockdownType);
+            }
+            else
+            {
+                Player.Instance.Animator_SetTrigger("KnockBack");
+            }
+        }
 
         if (Player.Instance != null && (Player.Instance.isGuarding || Player.Instance.isParrying))
             applyForce *= knockbackGuardReduction;
@@ -560,20 +636,48 @@ public class PlayerMove : MonoBehaviour
         if (_rb != null)
         {
             _rb.linearVelocity = Vector3.zero;
-            _rb.AddForce(dir * applyForce, ForceMode.Impulse);
+
+            if (!Player.Instance.IsGrabbed)
+            {
+                _rb.AddForce(applyForce, ForceMode.Impulse);
+            }
         }
 
-        if (originalForce > knockbackForceThreshold)
+        if (!becomeAirborne && (forceMag > knockbackForceThreshold || knockdownType > 0))
         {
-            yield return new WaitForSeconds(originalForce / knockbackDurationDivisor);
-            Player.Instance.Animator_SetTrigger("KnockBackEnd");
+            if (knockdownType > 0)
+            {
+                // 💡 인스펙터에서 설정한 넉다운 시간만큼 대기
+                yield return new WaitForSeconds(knockdownDuration);
+
+                // 💡 넉다운 지속시간이 끝나면 그랩도 강제 해제하고 자동으로 WakeUp 애니메이션 전환
+                Player.Instance.ClearStun();
+                Player.Instance.StartWakeUp(wakeUpAnimDuration);
+
+                string kdName = "KnockDown" + knockdownType;
+                Player.Instance.animator.ResetTrigger(kdName);
+                Player.Instance.Animator_SetTrigger(kdName + "End");
+            }
+            else
+            {
+                yield return new WaitForSeconds(forceMag / knockbackDurationDivisor);
+
+                Player.Instance.animator.ResetTrigger("KnockBack");
+                Player.Instance.Animator_SetTrigger("KnockBackEnd");
+            }
+        }
+        else if (becomeAirborne)
+        {
+            yield return new WaitWhile(() => Player.Instance.isAirborne || Player.Instance.isWakingUp);
         }
 
-        yield return new WaitForSeconds(knockbackResetDelay);
+        if (!becomeAirborne)
+        {
+            yield return new WaitForSeconds(knockbackResetDelay);
+            if (_rb != null) _rb.linearVelocity = Vector3.zero;
+        }
 
-        if (_rb != null) _rb.linearVelocity = Vector3.zero;
-
-        _isKnockedBack = false;
+        isKnockedBack = false;
 
         if (Player.Instance != null && Player.Instance.currentStunRoutine == null)
         {
@@ -582,6 +686,21 @@ public class PlayerMove : MonoBehaviour
         }
 
         currentKnockBackRoutine = null;
+    }
+
+    public void TriggerAirborneHit()
+    {
+        if (Player.Instance.isAirborne && Player.Instance != null)
+        {
+            StartCoroutine(DelayedAirborneHitRoutine());
+        }
+    }
+
+    private IEnumerator DelayedAirborneHitRoutine()
+    {
+        yield return null;
+        Player.Instance.animator.ResetTrigger("AirborneHit");
+        Player.Instance.Animator_SetTrigger("AirborneHit");
     }
 
     private IEnumerator DashRoutine()

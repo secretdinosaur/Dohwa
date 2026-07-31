@@ -18,11 +18,16 @@ public class EnemyBossHealth : MonoBehaviour
 
     private float currentHp, currentMp;
     private EnemyCore core;
+    private DecalGenerator decalGenerator;
     private bool isTransitioningPhase = false;
+
+    private bool hasTriggered66 = false;
+    private bool hasTriggered33 = false;
 
     private void Awake()
     {
         core = GetComponent<EnemyCore>();
+        decalGenerator = GetComponent<DecalGenerator>();
         currentHp = maxHP;
         currentMp = maxMP;
         currentPhase = 1;
@@ -58,7 +63,6 @@ public class EnemyBossHealth : MonoBehaviour
     {
         if (isTransitioningPhase) return;
 
-        // 💡 범용 가드 상태 체크
         if (core.isGuarding)
         {
             core.TriggerGuardSuccess();
@@ -66,6 +70,19 @@ public class EnemyBossHealth : MonoBehaviour
         }
 
         currentHp -= damage;
+
+        float hpPercentage = currentHp / maxHP;
+        if (!hasTriggered66 && hpPercentage <= 0.66f)
+        {
+            hasTriggered66 = true;
+            if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+        }
+        if (!hasTriggered33 && hpPercentage <= 0.33f)
+        {
+            hasTriggered33 = true;
+            if (decalGenerator != null) decalGenerator.GenerateWoundsByPercentage(0.3f);
+        }
+
         core.TriggerHpChanged(currentHp, maxHP);
         UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
         core.PlayHitSound(core.HittedSkill, core.HitIndex);
@@ -103,6 +120,9 @@ public class EnemyBossHealth : MonoBehaviour
         core.CmdStopMovement?.Invoke();
 
         currentPhase += 1;
+        hasTriggered66 = false;
+        hasTriggered33 = false;
+
         core.TriggerPhaseTransitionStart(currentPhase);
         OnPhaseChanged(currentPhase);
 
@@ -118,7 +138,6 @@ public class EnemyBossHealth : MonoBehaviour
 
     protected virtual void OnPhaseChanged(int newPhase)
     {
-        // 특정 보스의 애니메이션, 모델 교체, 이펙트 재생 등을 여기에 구현
     }
 
     private IEnumerator RecoverStatusRoutine(float targetHP, float targetMP, float duration)
@@ -183,6 +202,9 @@ public class EnemyBossHealth : MonoBehaviour
         currentPhase = 1;
         currentHp = maxHP;
         currentMp = maxMP;
+
+        hasTriggered66 = false;
+        hasTriggered33 = false;
 
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);

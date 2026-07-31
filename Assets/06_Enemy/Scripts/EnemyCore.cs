@@ -4,17 +4,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static UnityEngine.Analytics.IAnalytic;
 
 public enum EnemyState { Idle, Chase, Attack, Stun, Dead, BackWalk, CooldownWalk }
 
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(SkillSelector))]
 public class EnemyCore : MonoBehaviour, IDamageable
 {
     public EnemyState currentState = EnemyState.Idle;
     [HideInInspector] public Transform cameraTarget;
     public Item dropItem;
+
     public GameObject[] EnemyWeapons;
+    public GameObject[] FakeWeapons;
 
     [Header("Core Settings")]
     public SkillBase ViewSkill;
@@ -28,6 +30,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Action<Vector3, float> CmdMoveTo;
     public Action CmdStopMovement;
     public Action<Vector3> CmdLookAt;
+    public Action<Vector3> CmdFasyLookAt;
     public Action<Vector3, float> CmdMoveDirection;
     public Action CmdWarpToOriginal;
     public Action CmdTrySnapToNavMesh;
@@ -39,10 +42,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Action<SkillBase> CmdPerformAttack;
     public Action CmdCancelAttack;
     public Action<float> OnAttackCompleted;
-    public Func<SkillBase> QueryGetSkill;
     public Action<SkillBase, int> PlayHitSound;
 
-    public Action<SkillBase> OnPlayerHit;
+    public Action<SkillBase, int> OnPlayerHit;
 
     public Action<float> CmdConsumeMP;
     public Func<float, bool> QueryHasEnoughMP;
@@ -67,12 +69,16 @@ public class EnemyCore : MonoBehaviour, IDamageable
     [HideInInspector] public bool isForceDetected = false;
     [HideInInspector] public bool isIgnoringPlayer = false;
 
+    [HideInInspector] public SkillSelector skillSelector;
+
     private float destroyDelay = 60f;
     private Material unifiedMaterial;
     private float originalStep1, originalStep2, originalStep3;
     private Dictionary<string, GameObject> _skillEffects = new Dictionary<string, GameObject>();
     [HideInInspector] public SkillBase HittedSkill;
     [HideInInspector] public int HitIndex;
+
+    private DecalGenerator decalGenerator;
 
     private struct WeaponOriginData
     {
@@ -81,11 +87,18 @@ public class EnemyCore : MonoBehaviour, IDamageable
         public Quaternion LocalRotation;
         public Vector3 LocalScale;
     }
-    private Dictionary<GameObject, WeaponOriginData> weaponOriginMap = new Dictionary<GameObject, WeaponOriginData>();
+    private Dictionary<GameObject, WeaponOriginData> fakeWeaponOriginMap = new Dictionary<GameObject, WeaponOriginData>();
+
+    private float targetMoveX;
+    private float targetMoveZ;
+    private float targetRun;
 
     protected virtual void Awake()
     {
         animator = GetComponent<Animator>();
+        decalGenerator = GetComponent<DecalGenerator>();
+        skillSelector = GetComponent<SkillSelector>();
+
         CreateCameraTarget();
         InitializeEffects();
         CacheAndUnifyMaterials();
@@ -101,21 +114,30 @@ public class EnemyCore : MonoBehaviour, IDamageable
             {
                 if (weapon != null)
                 {
-                    weaponOriginMap[weapon] = new WeaponOriginData
-                    {
-                        Parent = weapon.transform.parent,
-                        LocalPosition = weapon.transform.localPosition,
-                        LocalRotation = weapon.transform.localRotation,
-                        LocalScale = weapon.transform.localScale
-                    };
-
-                    if (weapon.TryGetComponent<Collider>(out Collider col))
-                    {
-                        col.enabled = false;
-                    }
+                    Collider[] cols = weapon.GetComponentsInChildren<Collider>();
+                    foreach (var col in cols) col.enabled = false;
                 }
             }
         }
+
+        if (FakeWeapons != null)
+        {
+            foreach (var fakeWeapon in FakeWeapons)
+            {
+                if (fakeWeapon != null)
+                {
+                    fakeWeaponOriginMap[fakeWeapon] = new WeaponOriginData
+                    {
+                        Parent = fakeWeapon.transform.parent,
+                        LocalPosition = fakeWeapon.transform.localPosition,
+                        LocalRotation = fakeWeapon.transform.localRotation,
+                        LocalScale = fakeWeapon.transform.localScale
+                    };
+                    fakeWeapon.SetActive(false);
+                }
+            }
+        }
+
         CmdSetIgnorePlayerCollision += HandleSetIgnorePlayerCollision;
     }
 
@@ -125,10 +147,22 @@ public class EnemyCore : MonoBehaviour, IDamageable
         CmdSetIgnorePlayerCollision -= HandleSetIgnorePlayerCollision;
         SetPlayerDetection(false);
     }
+
+    private void Update()
+    {
+        if (animator != null && animator.gameObject.activeInHierarchy)
+        {
+            animator.SetFloat("MoveX", targetMoveX, 0.1f, Time.deltaTime);
+            animator.SetFloat("MoveZ", targetMoveZ, 0.1f, Time.deltaTime);
+            animator.SetFloat("Speed", targetRun, 0.1f, Time.deltaTime);
+        }
+    }
+
     private void HandleSetIgnorePlayerCollision(bool ignore)
     {
         isIgnoringPlayer = ignore;
     }
+
     private void HandleForceDetect()
     {
         if (IsDead) return;
@@ -158,7 +192,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
 
     public void ChangeState(EnemyState newState)
     {
-        if (currentState == EnemyState.Dead && newState != EnemyState.Idle) return; // 추가
+        if (currentState == EnemyState.Dead && newState != EnemyState.Idle) return;
 
         if (currentState == newState) return;
         currentState = newState;
@@ -177,6 +211,14 @@ public class EnemyCore : MonoBehaviour, IDamageable
     {
         if (IsDead) return;
 
+        if (UnityEngine.Random.value < 0.3f && decalGenerator != null)
+        {
+            if (decalGenerator.GetActiveDecalCount() < (decalGenerator.maxDecals * 0.5f))
+            {
+                decalGenerator.GenerateWound();
+            }
+        }
+
         HittedSkill = skill;
         HitIndex = hitIndex;
         OnDamageTaken?.Invoke(damageValue);
@@ -194,7 +236,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
         SetPlayerDetection(false);
 
         ChangeState(EnemyState.Dead);
-        SetMoveAnimations(false, false, false);
+        SetMoveAnimations(0f, 0f, 0f);
         animator.ResetTrigger("Hitted1");
         animator.ResetTrigger("Hitted2");
         animator.ResetTrigger("Parried");
@@ -204,30 +246,30 @@ public class EnemyCore : MonoBehaviour, IDamageable
         GetComponent<Collider>().enabled = false;
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.enabled = false;
-        }
+        if (agent != null) agent.enabled = false;
 
         if (EnemyWeapons != null)
         {
             foreach (var weapon in EnemyWeapons)
             {
-                if (weapon != null)
+                if (weapon != null) weapon.SetActive(false);
+            }
+        }
+
+        if (FakeWeapons != null)
+        {
+            foreach (var fakeWeapon in FakeWeapons)
+            {
+                if (fakeWeapon != null)
                 {
-                    weapon.transform.SetParent(null);
+                    fakeWeapon.SetActive(true);
+                    fakeWeapon.transform.SetParent(null);
 
-                    if (!weapon.TryGetComponent<Collider>(out Collider col))
-                    {
-                        col = weapon.AddComponent<BoxCollider>();
-                    }
-                    col.enabled = true;
-
-                    Rigidbody rb = weapon.GetComponent<Rigidbody>();
-                    if (rb == null) rb = weapon.AddComponent<Rigidbody>();
-
+                    Rigidbody rb = fakeWeapon.GetComponent<Rigidbody>();
+                    if (rb == null) rb = fakeWeapon.AddComponent<Rigidbody>();
                     rb.isKinematic = false;
                     rb.useGravity = true;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
                     Vector3 randomForce = UnityEngine.Random.onUnitSphere * 5f;
                     randomForce.y = Mathf.Abs(randomForce.y) + 3f;
@@ -238,15 +280,14 @@ public class EnemyCore : MonoBehaviour, IDamageable
         }
 
         StartCoroutine(AlignToGroundRotation());
-
         StartCoroutine(FadeShaderPropertiesToZero(10f));
+
         if (dropItem != null)
         {
             dropItem.Interact(false);
             DOVirtual.DelayedCall(3f, () => { if (dropItem != null) dropItem.ShowItemGainPanel(); }).SetTarget(gameObject);
         }
         OnDeath?.Invoke();
-        Invoke(nameof(DeactivateObject), destroyDelay);
     }
 
     private IEnumerator AlignToGroundRotation()
@@ -263,7 +304,6 @@ public class EnemyCore : MonoBehaviour, IDamageable
                 forwardOnPlane = transform.forward;
 
             Quaternion targetRot = Quaternion.LookRotation(forwardOnPlane, hit.normal);
-
             Vector3 startPos = transform.position;
             Vector3 targetPos = new Vector3(transform.position.x, hit.point.y, transform.position.z);
 
@@ -274,12 +314,10 @@ public class EnemyCore : MonoBehaviour, IDamageable
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-
                 float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
                 transform.rotation = Quaternion.Lerp(startRot, targetRot, smoothT);
                 transform.position = Vector3.Lerp(startPos, targetPos, smoothT);
-
                 yield return null;
             }
 
@@ -323,9 +361,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
         OnPlayerDetected?.Invoke();
     }
 
-    public void TriggerPlayerHit(SkillBase hitSkill)
+    public void TriggerPlayerHit(SkillBase hitSkill, int hitIndex)
     {
-        OnPlayerHit?.Invoke(hitSkill);
+        OnPlayerHit?.Invoke(hitSkill, hitIndex);
     }
 
     public void TriggerHpChanged(float currentHp, float maxHp) => OnHpChanged?.Invoke(currentHp, maxHp);
@@ -346,15 +384,12 @@ public class EnemyCore : MonoBehaviour, IDamageable
         GetComponent<Collider>().enabled = true;
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.enabled = true;
-        }
+        if (agent != null) agent.enabled = true;
 
         animator.enabled = true;
         animator.Rebind();
         animator.Update(0f);
-        SetMoveAnimations(false, false, false);
+        SetMoveAnimations(0f, 0f, 0f);
         animator.ResetTrigger("Parried");
         animator.ResetTrigger("Hitted1");
         animator.ResetTrigger("Hitted2");
@@ -364,20 +399,25 @@ public class EnemyCore : MonoBehaviour, IDamageable
         {
             foreach (var weapon in EnemyWeapons)
             {
-                if (weapon != null && weaponOriginMap.TryGetValue(weapon, out var originData))
+                if (weapon != null) weapon.SetActive(true);
+            }
+        }
+
+        if (FakeWeapons != null)
+        {
+            foreach (var fakeWeapon in FakeWeapons)
+            {
+                if (fakeWeapon != null && fakeWeaponOriginMap.TryGetValue(fakeWeapon, out var originData))
                 {
-                    Rigidbody rb = weapon.GetComponent<Rigidbody>();
+                    Rigidbody rb = fakeWeapon.GetComponent<Rigidbody>();
                     if (rb != null) Destroy(rb);
 
-                    if (weapon.TryGetComponent<Collider>(out Collider col))
-                    {
-                        col.enabled = false;
-                    }
+                    fakeWeapon.transform.SetParent(originData.Parent);
+                    fakeWeapon.transform.localPosition = originData.LocalPosition;
+                    fakeWeapon.transform.localRotation = originData.LocalRotation;
+                    fakeWeapon.transform.localScale = originData.LocalScale;
 
-                    weapon.transform.SetParent(originData.Parent);
-                    weapon.transform.localPosition = originData.LocalPosition;
-                    weapon.transform.localRotation = originData.LocalRotation;
-                    weapon.transform.localScale = originData.LocalScale;
+                    fakeWeapon.SetActive(false);
                 }
             }
         }
@@ -385,10 +425,10 @@ public class EnemyCore : MonoBehaviour, IDamageable
         StopAllSkillEffects();
         StartCoroutine(RestoreShaderProperties(0f, 0.1f));
 
+        decalGenerator?.ClearDecals();
+
         OnRevived?.Invoke();
     }
-
-    private void DeactivateObject() => gameObject.SetActive(false);
 
     private void CreateCameraTarget()
     {
@@ -490,11 +530,11 @@ public class EnemyCore : MonoBehaviour, IDamageable
         unifiedMaterial.SetFloat("_Step3", originalStep3);
     }
 
-    public void SetMoveAnimations(bool run, bool walk, bool back)
+    public void SetMoveAnimations(float moveX, float moveZ, float run = 0f)
     {
-        animator.SetBool("isRun", run);
-        animator.SetBool("isWalk", walk);
-        animator.SetBool("isBackWalk", back);
+        targetMoveX = moveX;
+        targetMoveZ = moveZ;
+        targetRun = run / 2;
     }
 
     public void OnDrawGizmos()
@@ -512,7 +552,6 @@ public class EnemyCore : MonoBehaviour, IDamageable
             Quaternion worldRotation = transform.rotation * Quaternion.Euler(hitData.boxRotation);
 
             Gizmos.matrix = Matrix4x4.TRS(worldCenter, worldRotation, Vector3.one);
-
             Gizmos.DrawWireCube(Vector3.zero, hitData.boxSize);
         }
         Gizmos.matrix = originalMatrix;

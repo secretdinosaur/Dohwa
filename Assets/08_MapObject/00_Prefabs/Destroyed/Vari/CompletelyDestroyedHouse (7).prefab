@@ -3345,6 +3345,7 @@ GameObject:
   - component: {fileID: 1642962309384668096}
   - component: {fileID: 5318101938292160279}
   - component: {fileID: 4524322752580497160}
+  - component: {fileID: 8099837814272857271}
   m_Layer: 0
   m_Name: DestroyedWoodFence
   m_TagString: Untagged
@@ -3361,7 +3362,7 @@ Transform:
   m_GameObject: {fileID: 5543779287252329627}
   serializedVersion: 2
   m_LocalRotation: {x: 0.70682937, y: -0.019805193, z: -0.019805193, w: -0.70682937}
-  m_LocalPosition: {x: 10.399095, y: 1.1169996, z: 4.617277}
+  m_LocalPosition: {x: 10.399095, y: 0.55, z: 4.617277}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3424,6 +3425,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &8099837814272857271
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5543779287252329627}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.014422016, y: 0.07336457, z: 0.015736511}
+  m_Center: {x: 0.0017547674, y: 0.04244226, z: 0.00037272065}
 --- !u!1 &5574452010068188637
 GameObject:
   m_ObjectHideFlags: 0
@@ -4078,7 +4100,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6746110533843668086}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.85806495, z: -0, w: -0.5135413}
+  m_LocalRotation: {x: -0, y: -0.85806495, z: 0, w: -0.5135413}
   m_LocalPosition: {x: 106.9615, y: 41.387, z: 513.85657}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0

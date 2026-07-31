@@ -2,13 +2,18 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-[RequireComponent(typeof(BossSkillSelector))]
+[RequireComponent(typeof(SkillSelector))]
 public class FatBanditAI : EnemyAIBase
 {
     [Header("Behavior Tuning")]
     public float walkApproachFactor = 1.5f;
-    public float closeWanderMin = 1.5f;
-    public float closeWanderMax = 3.5f;
+    [Range(0f, 1f)] public float walkApproachChance = 0.2f;
+    private bool isChoosingWalkApproach = false;
+
+    [Header("Strafe & Evasion Specific")]
+    public float backWalkTriggerFactor = 0.7f;
+    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    private bool lastActionWasBackWalk = false;
 
     [Header("Run Attack Specific")]
     public SkillBase runAttackSkill;
@@ -16,15 +21,13 @@ public class FatBanditAI : EnemyAIBase
     public float runAttackChancePerSec = 15f;
     public float runAttackCooldown = 8f;
 
-    private BossSkillSelector skillSelector;
-    private float nextWanderTime = 0f;
-    private Vector3 cooldownWanderTarget;
+    private SkillSelector skillSelector;
     private float lastRunAttackTime = -9999f;
 
     protected override void Awake()
     {
         base.Awake();
-        skillSelector = GetComponent<BossSkillSelector>();
+        skillSelector = GetComponent<SkillSelector>();
 
         if (runAttackCollider != null) runAttackCollider.enabled = false;
 
@@ -48,10 +51,12 @@ public class FatBanditAI : EnemyAIBase
     {
         if (runAttackCollider != null) runAttackCollider.enabled = false;
     }
+
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk) return;
+        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+
         if (isMemorizingPlayer)
         {
             StopActionRoutine();
@@ -61,24 +66,22 @@ public class FatBanditAI : EnemyAIBase
                 selectedSkill = skillSelector.GetNextSkill(distToLastPos);
             }
 
-            // 1. 스킬을 찾지 못했을 때(쿨타임이거나 거리가 멂)
             if (selectedSkill == null)
             {
-                // 플레이어가 멀면 뛰어서 쫓아가고, 가까우면 배회(걷기)
                 if (distToLastPos > 5f)
                 {
                     UpdateChaseTarget();
                 }
                 else
                 {
-                    float optimalDist = skillSelector.GetOptimalDistance(null);
-                    HandleCooldownWalk(optimalDist);
+                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                 }
                 return;
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
+            bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
             if (canAttackGlobal && distToLastPos > executeRange)
             {
@@ -96,33 +99,47 @@ public class FatBanditAI : EnemyAIBase
                 }
             }
 
-            bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
-
             if (canAttackGlobal && hasEnoughMP)
             {
                 if (distToLastPos <= executeRange)
                 {
                     actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
                 }
-                else if (distToLastPos <= executeRange * walkApproachFactor) // 걷기 접근 거리
+                else if (distToLastPos <= executeRange * walkApproachFactor)
                 {
                     UpdateWalkApproachTarget();
                 }
                 else
                 {
-                    UpdateChaseTarget();
+                    HandleDistantApproach(executeRange);
                 }
             }
             else
             {
                 if (distToLastPos > executeRange * walkApproachFactor)
                 {
-                    UpdateChaseTarget();
+                    HandleDistantApproach(executeRange);
                 }
                 else
                 {
-                    float optimalDist = skillSelector.GetOptimalDistance(selectedSkill);
-                    HandleCooldownWalk(optimalDist);
+                    float backWalkRange = executeRange * backWalkTriggerFactor;
+                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk)
+                    {
+                        if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
+                        {
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        }
+                        else
+                        {
+                            actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        }
+                        lastActionWasBackWalk = true;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
                 }
             }
         }
@@ -133,44 +150,29 @@ public class FatBanditAI : EnemyAIBase
         }
     }
 
-    private void UpdateChaseTarget()
+    private void HandleDistantApproach(float executeRange)
     {
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(true, false, false);
+        float currentDist = Vector3.Distance(transform.position, lastKnownPlayerPos);
 
         if (Time.time >= nextTargetUpdateTime)
         {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
+            if (currentDist > executeRange * walkApproachFactor * 1.5f)
+            {
+                isChoosingWalkApproach = UnityEngine.Random.value < walkApproachChance;
+            }
+            else
+            {
+                isChoosingWalkApproach = true;
+            }
         }
-    }
 
-    private void UpdateWalkApproachTarget()
-    {
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(false, true, false);
-
-        if (Time.time >= nextTargetUpdateTime)
+        if (isChoosingWalkApproach)
         {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, 1f);
+            UpdateWalkApproachTarget();
         }
-    }
-
-    private void HandleCooldownWalk(float optimalDistance)
-    {
-        core.ChangeState(EnemyState.CooldownWalk);
-        core.SetMoveAnimations(false, true, false);
-
-        bool isPathPending = core.QueryIsPathPending?.Invoke() ?? false;
-
-        if (Time.time > nextWanderTime || !isPathPending)
+        else
         {
-            Vector3 dirToMe = (transform.position - lastKnownPlayerPos).normalized;
-            cooldownWanderTarget = lastKnownPlayerPos + (dirToMe * optimalDistance);
-            nextWanderTime = Time.time + UnityEngine.Random.Range(closeWanderMin, closeWanderMax);
-
-            core.CmdMoveTo?.Invoke(cooldownWanderTarget, 1f);
+            UpdateChaseTarget();
         }
     }
 
@@ -258,24 +260,5 @@ public class FatBanditAI : EnemyAIBase
         }
 
         ChainNextAttackOrIdle();
-    }
-
-    protected float GetSkillRange(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            float maxDist = 0f;
-            foreach (var h in m.hitDataList)
-            {
-                float dist = Mathf.Abs(h.centerOffset.z) + (h.boxSize.z / 2f);
-                if (dist > maxDist) maxDist = dist;
-            }
-            return maxDist;
-        }
-        else if (skill is Skill_Range r)
-        {
-            return r.range;
-        }
-        return 2.5f;
     }
 }

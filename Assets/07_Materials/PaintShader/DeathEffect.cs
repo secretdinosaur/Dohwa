@@ -193,10 +193,11 @@ public class InkBrushEffectManager : MonoBehaviour
         yield return new WaitForSeconds(data.stayDuration);
 
         float fadeTimer = 0f;
-        while (fadeTimer < data.fadeDuration)
+        float randomDuration = data.fadeDuration + Random.Range(-data.fadeDuration * 0.8f, data.fadeDuration * 1f);
+        while (fadeTimer < randomDuration)
         {
             fadeTimer += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, fadeTimer / data.fadeDuration);
+            float alpha = Mathf.Lerp(1f, 0f, fadeTimer / randomDuration);
             if (img != null) { Color c = img.color; c.a = alpha; img.color = c; }
             if (img2 != null) { Color c2 = img2.color; c2.a = alpha; img2.color = c2; }
             yield return null;

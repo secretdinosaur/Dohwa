@@ -9,7 +9,7 @@ public class RangeHitData
 {
     public Vector3 spawnOffset;
     public float damageMultiplier = 1f;
-    public float knockbackForce = 0f;
+    public Vector3 knockbackForce = Vector3.zero;
     public AudioClip hitSound;
     public HitEffectData playerHitEffect;
 
@@ -38,20 +38,19 @@ public class Skill_Range : SkillBase
 
         int count = hitDataList.Count;
         damageMultipliers = new float[count];
-        playerHitEffects = new HitEffectData[count];
+        HitEffects = new HitEffectData[count];
         for (int i = 0; i < count; i++)
         {
             damageMultipliers[i] = hitDataList[i].damageMultiplier;
-            playerHitEffects[i] = hitDataList[i].playerHitEffect;
+            HitEffects[i] = hitDataList[i].playerHitEffect;
         }
     }
     #endregion
 
     #region Core Logic
-    public override SoundObject Activate(Transform casterTransform)
+    public override SkillEffect Activate(Transform casterTransform)
     {
-        if (sound) return SoundManager.Instance.PlaySound(sound);
-        return null;
+        return SkillEffectManager.Instance.PlaySkillEffect(casterTransform, this);
     }
 
     public override GuardableData GetGuardData(int hitIndex)
@@ -76,15 +75,15 @@ public class Skill_Range : SkillBase
             return new List<IDamageable>();
 
         RangeHitData hitData = hitDataList[hitIndex];
+        Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
         Vector3 shootDirection = casterTransform.forward;
         if (casterTransform.TryGetComponent<EnemyCore>(out var enemy) && Player.Instance != null)
         {
-            shootDirection = (Player.Instance.transform.position - enemy.transform.position).normalized;
+            shootDirection = ((Player.Instance.transform.position + Vector3.up * 1.5f) - spawnPos);
         }
 
         float finalDamage = baseDamage * hitData.damageMultiplier;
-        Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
         GameObject go = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(shootDirection));
         if (go.TryGetComponent<Projectile>(out var proj))
@@ -103,26 +102,24 @@ public class Skill_Range : SkillBase
 
         if (targetCollider.TryGetComponent<IDamageable>(out var target))
         {
-
             Vector3 hitPoint = targetCollider.ClosestPoint(projectileGo.transform.position);
             bool isCasterPlayer = casterTransform.GetComponent<Player>() != null;
 
-            if(isCasterPlayer)
+            if (isCasterPlayer)
                 SkillEffectManager.Instance.PlayHitEffect(targetCollider.gameObject, this, hitPoint, projectileGo.transform.rotation, hitIndex);
 
             float finalDamage = baseDamage * hitData.damageMultiplier;
             target.TakeDamage(finalDamage, this, casterTransform, hitData.playerHitEffect, hitIndex);
 
-            if (hitData.knockbackForce > 0f)
+            if (hitData.knockbackForce.magnitude > 0f)
             {
-                Vector3 pushDirection = projectileGo.transform.forward;
-                pushDirection.y = 0f;
-
                 if (targetCollider.transform.TryGetComponent<PlayerMove>(out var playerMove))
-                    playerMove.KnockBack(hitData.knockbackForce, pushDirection);
+                {
+                    Vector3 worldKnockback = projectileGo.transform.rotation * hitData.knockbackForce;
+                    playerMove.KnockBack(worldKnockback);
+                }
                 //else if (targetCollider.transform.TryGetComponent<EnemyCore>(out var enemy))
-                    //enemy.KnockBack(hitData.knockbackForce);
-
+                //    enemy.KnockBack(hitData.knockbackForce);
             }
         }
     }
