@@ -12,7 +12,7 @@ public class Player : MonoBehaviour, IDamageable
     public static Player Instance;
     [HideInInspector] public Animator animator;
     [HideInInspector] public CinemachineImpulseSource impulseSource;
-    [HideInInspector] public Material LowHPMat;
+    public Material LowHPMat;
     [HideInInspector] public GameObject Sword;
 
     [HideInInspector] public PlayerAttack PlayerAttack;
@@ -663,6 +663,14 @@ public class Player : MonoBehaviour, IDamageable
         if (context.performed)
         {
             StartCoroutine(CaptureCoroutine());
+        }
+    }
+
+    public void OnScroll(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            Vector2 scroll = context.ReadValue<Vector2>();
         }
     }
 
