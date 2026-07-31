@@ -27,6 +27,12 @@ public class QueenBanditAI : EnemyAIBase
     public float closeWanderMin = 1.5f;
     public float closeWanderMax = 3.5f;
 
+    [Header("Melee Behavior Adjustments")]
+    public float parriedBackStepChance = 60f;
+    public float normalBackStepChance = 20f;
+    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    private bool lastActionWasBackStep = false;
+
     [Header("Special Skill Logic (Step Before Attack)")]
     public SkillBase[] leftStepSkills;
     public SkillBase[] rightStepSkills;
@@ -110,6 +116,7 @@ public class QueenBanditAI : EnemyAIBase
         isAttacking = false;
         isStepping = false;
         isMemorizingPlayer = false;
+        lastActionWasBackStep = false;
         selectedSkill = null;
         StopActionRoutine();
 
@@ -239,11 +246,8 @@ public class QueenBanditAI : EnemyAIBase
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking) return;
-        if (isStepping) return;
-        if (isTransitioning) return;
-        if (isStartingFight) return;
-        if (core.IsDead) return;
+        if (isAttacking || isStepping || isTransitioning || isStartingFight || core.IsDead) return;
+        if (core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
 
         if (isMemorizingPlayer)
         {
@@ -262,88 +266,96 @@ public class QueenBanditAI : EnemyAIBase
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
+            float evadeRange = executeRange * evasionTriggerFactor;
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
             bool isWithinAttackBox = CheckPlayerInSkillBox(selectedSkill);
 
-            if (canAttackGlobal && hasEnoughMP)
+            if (distToLastPos <= executeRange)
             {
-                if (isWithinAttackBox)
+                if (distToLastPos < evadeRange && !lastActionWasBackStep && !skillSelector.HasPendingCombo && UnityEngine.Random.value <= evasionProbability)
                 {
-                    float evasionRange = executeRange * evasionTriggerFactor;
-                    bool canEvade = Time.time >= lastEvasionTime + evasionCooldown && UnityEngine.Random.value <= evasionProbability;
-
-                    if (distToLastPos < evasionRange && canEvade)
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                     {
-                        actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(0.5f, 1.0f), 1f));
                     }
                     else
                     {
+                        actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
+                    }
+                    lastActionWasBackStep = true;
+                }
+                else if (canAttackGlobal && hasEnoughMP)
+                {
+                    if (isWithinAttackBox)
+                    {
                         if (leftStepSkills.Contains(selectedSkill))
-                        {
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, sideStepDistance, -35f, "leftStep", sideStepDuration));
-                        }
                         else if (rightStepSkills.Contains(selectedSkill))
-                        {
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, sideStepDistance, 35f, "rightStep", sideStepDuration));
-                        }
                         else if (preBackStepSkills.Contains(selectedSkill))
-                        {
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, attackBackStepDistance, 180f, "backStep", attackBackStepDuration));
+                        else
+                            actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+
+                        lastActionWasBackStep = false;
+                    }
+                    else
+                    {
+                        float optimalDist = 2.5f;
+                        float boxDepth = 1.0f;
+
+                        if (selectedSkill is Skill_Melee m && m.hitDataList.Count > 0)
+                        {
+                            optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z);
+                            boxDepth = m.hitDataList[0].boxSize.z / 2f;
+                        }
+                        else if (selectedSkill is Skill_Range r)
+                        {
+                            optimalDist = r.range * 0.8f;
+                            boxDepth = r.range * 0.2f;
+                        }
+
+                        float minDist = optimalDist - boxDepth;
+                        float maxDist = optimalDist + boxDepth;
+
+                        if (distToLastPos < minDist)
+                        {
+                            // 💡 뒷걸음(BackWalk) 대신 뒷스텝(EvasiveBackStepSequence) 사용
+                            actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
+                            lastActionWasBackStep = true;
+                        }
+                        else if (distToLastPos > maxDist)
+                        {
+                            if (distToLastPos <= executeRange * walkApproachFactor)
+                                UpdateWalkApproachTarget(optimalDist);
+                            else
+                                UpdateChaseTarget(optimalDist);
+
+                            lastActionWasBackStep = false;
                         }
                         else
                         {
-                            actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(0.5f, 1.0f), 1f));
+                            lastActionWasBackStep = false;
                         }
                     }
                 }
                 else
                 {
-                    float optimalDist = 2.5f;
-                    float boxDepth = 1.0f;
-
-                    if (selectedSkill is Skill_Melee m && m.hitDataList.Count > 0)
+                    if (distToLastPos < evadeRange)
                     {
-                        optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z);
-                        boxDepth = m.hitDataList[0].boxSize.z / 2f;
-                    }
-                    else if (selectedSkill is Skill_Range r)
-                    {
-                        optimalDist = r.range * 0.8f;
-                        boxDepth = r.range * 0.2f;
-                    }
-
-                    float minDist = optimalDist - boxDepth;
-                    float maxDist = optimalDist + boxDepth;
-
-                    if (distToLastPos < minDist)
-                    {
-                        if (agent != null) agent.updateRotation = false;
-                        core.ChangeState(EnemyState.BackWalk);
-                        core.SetMoveAnimations(0f, -1f);
-                        core.CmdLookAt?.Invoke(lastKnownPlayerPos);
-
-                        if (Time.time >= nextTargetUpdateTime)
-                        {
-                            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-                            Vector3 dirFromPlayer = (transform.position - lastKnownPlayerPos).normalized;
-                            Vector3 targetPos = lastKnownPlayerPos + (dirFromPlayer * optimalDist);
-                            core.CmdMoveTo?.Invoke(targetPos, 1f);
-                        }
-                    }
-                    else if (distToLastPos > maxDist)
-                    {
-                        if (distToLastPos <= executeRange * walkApproachFactor)
-                            UpdateWalkApproachTarget(optimalDist);
+                        if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(0.5f, 1.0f), 1f));
                         else
-                            UpdateChaseTarget(optimalDist);
+                            actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
+
+                        lastActionWasBackStep = true;
                     }
                     else
                     {
-                        core.ChangeState(EnemyState.Chase);
-                        core.SetMoveAnimations(1f, 0f);
-                        core.CmdLookAt?.Invoke(lastKnownPlayerPos);
-                        core.CmdStopMovement?.Invoke();
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(0.5f, 1.0f), 1f));
+                        lastActionWasBackStep = false;
                     }
                 }
             }
@@ -353,8 +365,10 @@ public class QueenBanditAI : EnemyAIBase
                     ? (executeRange * walkApproachFactor) + chaseBuffer
                     : (executeRange * walkApproachFactor);
 
-                if (distToLastPos > threshold) UpdateChaseTarget(1f);
+                if (distToLastPos > threshold) UpdateChaseTarget(executeRange * 0.8f);
                 else HandleCooldownWalk(skillSelector.GetOptimalDistance(selectedSkill));
+
+                lastActionWasBackStep = false;
             }
         }
         else
@@ -421,32 +435,6 @@ public class QueenBanditAI : EnemyAIBase
             core.CmdMoveTo?.Invoke(cooldownWanderTarget, 1f);
         }
     }
-
-    private void ChainNextAttackOrIdle()
-    {
-        if (skillSelector.HasPendingCombo)
-        {
-            float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
-            selectedSkill = skillSelector.GetNextSkill(currentDist);
-
-            if (leftStepSkills.Contains(selectedSkill))
-                actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, sideStepDistance, -35f, "leftStep", sideStepDuration));
-            else if (rightStepSkills.Contains(selectedSkill))
-                actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, sideStepDistance, 35f, "rightStep", sideStepDuration));
-            else if (preBackStepSkills.Contains(selectedSkill))
-                actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, attackBackStepDistance, 180f, "backStep", attackBackStepDuration));
-            else
-                actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-        }
-        else
-        {
-            isAttacking = false;
-            selectedSkill = null;
-            core.ChangeState(EnemyState.Idle);
-            actionCoroutine = null;
-        }
-    }
-
     private IEnumerator StepAttackSequence(SkillBase skill, float distance, float angle, string stepAnimName, float stepDuration)
     {
         isAttacking = true;
@@ -511,12 +499,24 @@ public class QueenBanditAI : EnemyAIBase
         core.OnAttackCompleted += onComplete;
         core.CmdPerformAttack?.Invoke(skill);
 
-        float timeout = Time.time + 7f;
+        float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
+        float timeout = Time.time + clipLength + 0.2f;
+
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
 
         core.OnAttackCompleted -= onComplete;
 
         if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
+
+        // 💡 공격 종료 후 MeleeEnemyAI 와 동일하게 확률적 뒷스텝
+        float chance = core.wasParried ? parriedBackStepChance : normalBackStepChance;
+        core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(EvasiveBackStepSequence());
+            lastActionWasBackStep = true;
+        }
 
         ChainNextAttackOrIdle();
     }
@@ -606,7 +606,8 @@ public class QueenBanditAI : EnemyAIBase
 
         core.CmdPerformAttack?.Invoke(skill);
 
-        float timeout = Time.time + 7f;
+        float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
+        float timeout = Time.time + clipLength + 0.1f;
 
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
 
@@ -637,6 +638,16 @@ public class QueenBanditAI : EnemyAIBase
 
         if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
 
+        // 💡 공격 종료 후 MeleeEnemyAI 와 동일하게 확률적 뒷스텝
+        float chance = core.wasParried ? parriedBackStepChance : normalBackStepChance;
+        core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(EvasiveBackStepSequence());
+            lastActionWasBackStep = true;
+        }
+
         ChainNextAttackOrIdle();
     }
 
@@ -646,6 +657,13 @@ public class QueenBanditAI : EnemyAIBase
 
         Vector3 startPos = transform.position;
         Vector3 playerPos = Player.Instance.transform.position;
+
+        Vector3 dirToPlayer = (playerPos - startPos);
+        dirToPlayer.y = 0;
+        if (dirToPlayer.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(dirToPlayer.normalized);
+        }
 
         Vector3 forwardDir = transform.forward;
         forwardDir.y = 0f;
