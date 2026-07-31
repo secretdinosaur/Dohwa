@@ -704,6 +704,10 @@ public class PlayerAttack : MonoBehaviour
 
             currentTarget = target;
             isLockedOn = true;
+
+            if(EnemyLockOnImage.Instance != null)
+                EnemyLockOnImage.Instance.SetTarget(currentTarget);
+
             Camera.main.GetComponent<CameraController>().SetLockOn(currentTarget);
             StartCoroutine(LockOnTransition());
         }
@@ -727,6 +731,9 @@ public class PlayerAttack : MonoBehaviour
         isLockedOn = false;
         currentTarget = null;
         lastLockOffTime = Time.time;
+
+        if (EnemyLockOnImage.Instance != null)
+            EnemyLockOnImage.Instance.SetTarget(null);
 
         Camera.main.GetComponent<CameraController>().DisableLockOn();
         Player.Instance.Animator_SetBool("isStep", false);

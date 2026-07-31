@@ -32552,7 +32552,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.08110386, y: 0.36473915, z: 0.031910602, w: 0.92702174}
+  m_LocalRotation: {x: 0.014446632, y: 0.9824142, z: 0.08595009, w: -0.16512503}
   m_LocalPosition: {x: -1.9162235, y: -5.026884, z: -0.38560122}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -52683,6 +52683,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 2051108587}
+    - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: LowHPMat
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b87a97140a3f22419d878271b1b6821, type: 2}
     - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: RespawnSound
       value: 

@@ -65,7 +65,6 @@ public class SkillTreeTooltip : MonoBehaviour
         Command.text = data.activeSkill != null ? CommandsToString(data.activeSkill.commands) : " ";
         bool hasCommand = data.activeSkill != null;
         Vector2 currentSize = effectDescText.rectTransform.sizeDelta;
-        effectDescText.rectTransform.sizeDelta = new Vector2(currentSize.x, hasCommand ? 420f : 480f);
 
         string GetStatEffectString()
         {
