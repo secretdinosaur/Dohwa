@@ -10,8 +10,10 @@ public class SkillEffect : MonoBehaviour
     public IEnumerator ReturnToPool()
     {
         yield return new WaitForSeconds(returnTime);
-        if (skill == null)
-            SkillEffectManager.Instance.ReturnSkillEffect(this, "GuardPS");
+        if (skill == null && name.Contains("ParryEffect"))
+            SkillEffectManager.Instance.ReturnSkillEffect(this, "ParryEffect");
+        else if (skill == null && name.Contains("GuardEffect"))
+            SkillEffectManager.Instance.ReturnSkillEffect(this, "GuardEffect");
         else
             SkillEffectManager.Instance.ReturnSkillEffect(this, skill.name);
     }

@@ -500,6 +500,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         isAttacking = false;
         selectedSkill = null;
         core.ChangeState(EnemyState.Idle);
+        core.SetMoveAnimations(0f, 0f, 0f);
         actionCoroutine = null;
     }
 

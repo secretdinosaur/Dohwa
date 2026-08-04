@@ -389,19 +389,20 @@ MonoBehaviour:
   chaseSpeedMultiplier: 1.5
   backWalkSpeedMultiplier: 0.6
   backWalkDist: 3
-  backWalkMaxDuration: 5
+  backWalkMaxDuration: 3
   strafeSpeedMultiplier: 0.7
-  strafeMinDuration: 1
-  strafeMaxDuration: 3
+  strafeMinDuration: 0.5
+  strafeMaxDuration: 2
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
+  moveBeforeAttackChance: 0.5
   parriedBackWalkChance: 60
-  normalBackWalkChance: 20
+  normalBackWalkChance: 15
   backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 30
+  strafeOnCloseChance: 20
 --- !u!114 &488358157802232839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -431,7 +432,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 50
+  rotationSpeed: 100
 --- !u!114 &5056422532345200166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -964,8 +965,8 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
-    cooldown: 1
+    nextAttackDelay: 0
+    cooldown: 0
     minPhase: 0
     maxPhase: 99
     comboSkills:

@@ -152,9 +152,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
     {
         if (animator != null && animator.gameObject.activeInHierarchy)
         {
-            animator.SetFloat("MoveX", targetMoveX, 0.1f, Time.deltaTime);
-            animator.SetFloat("MoveZ", targetMoveZ, 0.1f, Time.deltaTime);
-            animator.SetFloat("Speed", targetRun, 0.1f, Time.deltaTime);
+            animator.SetFloat("MoveX", targetMoveX, 0.25f, Time.deltaTime);
+            animator.SetFloat("MoveZ", targetMoveZ, 0.25f, Time.deltaTime);
+            animator.SetFloat("Speed", targetRun, 0.25f, Time.deltaTime);
         }
     }
 
