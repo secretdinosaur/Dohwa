@@ -67,7 +67,7 @@ public class EnemyCombat : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < preAttackLookDelay)
         {
-            core.CmdFasyLookAt?.Invoke(Player.Instance.transform.position);
+            core.CmdFastLookAt?.Invoke(Player.Instance.transform.position);
             elapsed += Time.deltaTime;
             yield return null;
         }

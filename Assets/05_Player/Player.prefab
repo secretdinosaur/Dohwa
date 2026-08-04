@@ -2548,7 +2548,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Player
   animator: {fileID: 5146815660333871651}
   impulseSource: {fileID: -8511287848086298310}
-  LowHPMat: {fileID: 2100000, guid: faf91e93e5728204dabc4f661966e02d, type: 2}
+  LowHPMat: {fileID: 2100000, guid: 5b87a97140a3f22419d878271b1b6821, type: 2}
   Sword: {fileID: 4644576430510800901}
   PlayerAttack: {fileID: 7620489288216040080}
   PlayerMove: {fileID: 3121847018818824819}
@@ -2564,6 +2564,8 @@ MonoBehaviour:
   isInteracting: 0
   isCinematic: 0
   isDeathPanelOn: 0
+  isAirborne: 0
+  isWakingUp: 0
   guardBreakShakePower: 1.5
   parryMpReductionMultiplier: 7
   grabLookSpeed: 35
@@ -2636,6 +2638,7 @@ MonoBehaviour:
   jumpHorizontalVelocityMultiplier: 12
   jumpCooldown: 0.5
   isGrounded: 1
+  isKnockedBack: 0
   knockbackForceThreshold: 9
   SprintMP: 5
   groundLayer:
@@ -3018,6 +3021,10 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 140c371c-3484-4f68-8c78-430c9f4c37f8
     m_ActionName: 'Player/TestButton[/Keyboard/p]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: fc7b2fd1-8368-43ec-bf46-da7216a2e606
+    m_ActionName: 'Player/Scroll[/Mouse/scroll]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -3234,6 +3241,8 @@ MonoBehaviour:
     offsetMin: {x: -0.01, y: -0.005, z: -0.02}
     offsetMax: {x: -0.01, y: 0.01, z: 0.02}
   maxDecals: 50
+  depth: 0.3
+  fadeDuration: 0.2
 --- !u!1 &3096056574466273459
 GameObject:
   m_ObjectHideFlags: 0
@@ -7958,7 +7967,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 10b715fe0b72fdb4c92de3150a407de3, type: 2}
+  - {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

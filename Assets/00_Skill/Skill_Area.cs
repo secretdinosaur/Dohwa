@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Skills/Area")]
@@ -12,19 +12,48 @@ public class Skill_Area : SkillBase
     [SerializeField] private float defaultDuration = 6f;
     [SerializeField] private float defaultTickInterval = 1f;
 
+    [Header("Hit Settings (Required to prevent AI Freeze)")]
+    public float damageMultiplier = 1f;
+    public AudioClip hitSound;
+    public HitEffectData playerHitEffect;
+    public EnemyHitEffectDirection effectDirection;
+    public GuardableData guardData;
+    public StunEffectData stunData;
+
+    // 💡 런타임 시에도 무조건 배열이 초기화되도록 보장
+    private void OnEnable()
+    {
+        InitArrays();
+    }
+
+    private void OnValidate()
+    {
+        InitArrays();
+    }
+
+    private void InitArrays()
+    {
+        damageMultipliers = new float[1] { damageMultiplier };
+        HitSound = new AudioClip[1] { hitSound };
+        HitEffects = new HitEffectData[1] { playerHitEffect };
+        enemyHitEffectDirections = new EnemyHitEffectDirection[1] { effectDirection };
+    }
+
     public override SkillEffect Activate(Transform casterTransform)
     {
         return SkillEffectManager.Instance.PlaySkillEffect(casterTransform, this);
     }
+
     public override GuardableData GetGuardData(int hitIndex)
     {
-        return null;
+        return guardData;
     }
 
     public override StunEffectData GetStunData(int hitIndex)
     {
-        return null;
+        return stunData;
     }
+
     public override List<IDamageable> ExecuteHitCheck(Transform casterTransform, float baseDamage, int hitIndex)
     {
         if (casterTransform == null) return new List<IDamageable>();

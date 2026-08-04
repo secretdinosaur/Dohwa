@@ -25750,7 +25750,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.056595095, y: 0.7575908, z: 0.066280596, w: -0.646885}
+  m_LocalRotation: {x: 0.0708287, y: 0.5805092, z: 0.050787967, w: -0.80957586}
   m_LocalPosition: {x: -1.9409055, y: -10.194166, z: -1.042947}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -45845,6 +45845,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2437192315852718815, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 5a4cce9c948763f4c8d2b8a6d041ebfb, type: 2}
     - target: {fileID: 3079094167445059853, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: m_Name
       value: Player
@@ -45881,6 +45885,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 2051108587}
+    - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: LowHPMat
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b87a97140a3f22419d878271b1b6821, type: 2}
     - target: {fileID: 6742928283798488383, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: RespawnSound
       value: 
