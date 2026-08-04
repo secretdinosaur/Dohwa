@@ -5,6 +5,7 @@ using UnityEngine;
 public class MeleeEnemyAI : EnemyAIBase
 {
     [Header("Melee Specific")]
+    public float moveBeforeAttackChance = 0.5f;
     public float parriedBackWalkChance = 60f;
     public float normalBackWalkChance = 20f;
     public float backWalkTriggerFactor = 0.7f;
@@ -41,7 +42,7 @@ public class MeleeEnemyAI : EnemyAIBase
 
             if (dist <= executeRange)
             {
-                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo)
+                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.value < moveBeforeAttackChance)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                     {

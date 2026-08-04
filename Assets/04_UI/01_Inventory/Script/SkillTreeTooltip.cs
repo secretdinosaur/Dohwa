@@ -25,7 +25,7 @@ public class SkillTreeTooltip : MonoBehaviour
     public TextMeshProUGUI conditionText;
 
     [Header("Blind UI Settings")]
-    public int blindHeightPerNode = 100; // 블라인드를 제어할 단위 수치
+    public int blindHeightPerNode = 100;
 
     [Header("Localization Settings")]
     private string statStringTableName = "UI";
@@ -58,7 +58,23 @@ public class SkillTreeTooltip : MonoBehaviour
 
         tooltipPanel.SetActive(true);
 
-        nameText.text = data.GetNodeName();
+        bool isBlindedNode = false;
+        if (skillBook.Id == "4a9a5dcc-df4c-4f47-940d-04d12d054268")
+        {
+            int unlockedCount = 0;
+            foreach (var node in skillBook.skillTree)
+            {
+                if (node.unlocked) unlockedCount++;
+            }
+
+            if (index > unlockedCount)
+            {
+                isBlindedNode = true;
+            }
+        }
+
+        nameText.text = isBlindedNode ? "???" : data.GetNodeName();
+
         icon.sprite = data.activeSkill != null ? data.activeSkill.icon : (data.passiveSkill != null ? data.passiveSkill.icon : InventoryManager.Instance.StatIcon);
         Cost.text = data.cost.ToString();
 
@@ -131,6 +147,12 @@ public class SkillTreeTooltip : MonoBehaviour
             baseDesc = defaultStatNodeDesc != null && !defaultStatNodeDesc.IsEmpty ? defaultStatNodeDesc.GetLocalizedString() : "능력치 상승.";
         }
 
+        if (isBlindedNode)
+        {
+            baseDesc = "???";
+            currentEffectDesc = "???";
+        }
+
         if (data.nodeType == SkillBookBase.NodeType.StatSkill)
         {
             effectDescText.text = baseDesc;
@@ -155,7 +177,6 @@ public class SkillTreeTooltip : MonoBehaviour
         SetAlpha(descText, targetAlpha);
         SetAlpha(icon, targetAlpha);
 
-        // 조건 자동 해금 노드들을 위해 UI 갱신 시 블라인드도 함께 업데이트
         UpdateBlindState();
     }
 
@@ -224,13 +245,13 @@ public class SkillTreeTooltip : MonoBehaviour
         }
     }
 
-    public void UpdateBlindState()
+    public void UpdateBlindState(B0_Blind specificBlind = null)
     {
         if (currentSkillBook == null || currentSkillBook.skillTree == null) return;
 
         if (currentSkillBook.Id != "4a9a5dcc-df4c-4f47-940d-04d12d054268") return;
 
-        B0_Blind activeBlind = FindAnyObjectByType<B0_Blind>();
+        B0_Blind activeBlind = specificBlind != null ? specificBlind : FindAnyObjectByType<B0_Blind>();
 
         if (activeBlind == null) return;
 

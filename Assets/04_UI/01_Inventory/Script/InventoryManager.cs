@@ -688,10 +688,30 @@ public class InventoryManager : MonoBehaviour
 
             if (item.skillBook.skillTree != null)
             {
-                foreach (var node in item.skillBook.skillTree)
+                bool isB0 = item.skillBook.Id == "4a9a5dcc-df4c-4f47-940d-04d12d054268";
+                int unlockedCount = 0;
+
+                if (isB0)
                 {
+                    foreach (var node in item.skillBook.skillTree)
+                    {
+                        if (node.unlocked) unlockedCount++;
+                    }
+                }
+
+                for (int i = 0; i < item.skillBook.skillTree.Length; i++)
+                {
+                    var node = item.skillBook.skillTree[i];
                     string alphaTag = node.unlocked ? "#FF" : "#80";
-                    effectBuilder.AppendLine($"<alpha={alphaTag}>{node.GetNodeName()}");
+
+                    string displayName = node.GetNodeName();
+
+                    if (isB0 && i >= unlockedCount)
+                    {
+                        displayName = "???";
+                    }
+
+                    effectBuilder.AppendLine($"<alpha={alphaTag}>{displayName}");
                 }
             }
 
@@ -777,7 +797,8 @@ public class InventoryManager : MonoBehaviour
         LastSkillTree = Instantiate(skillBook.SkillTreePrefab, SkillBookPanel);
         SkillTreeTooltip.Instance.currentSkillBook = skillBook;
 
-        SkillTreeTooltip.Instance.UpdateBlindState();
+        B0_Blind newBlind = LastSkillTree.GetComponentInChildren<B0_Blind>();
+        SkillTreeTooltip.Instance.UpdateBlindState(newBlind);
 
         BookInfo.SetActive(true);
         TreeInfo.SetActive(false);
