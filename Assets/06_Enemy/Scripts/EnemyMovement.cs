@@ -38,7 +38,7 @@ public class EnemyMovement : MonoBehaviour
         core.CmdMoveDirection += MoveDirection;
         core.CmdWarpToOriginal += WarpToOriginal;
         core.CmdTrySnapToNavMesh += () => TrySnapToNavMesh();
-        core.CmdFasyLookAt += FastLookAtTarget;
+        core.CmdFastLookAt += FastLookAtTarget;
         core.OnDeath += StopMovement;
         core.QueryIsPathPending = IsPathPendingOrMoving;
         core.QueryOriginalPosition = () => OriginalPosition;
@@ -54,7 +54,7 @@ public class EnemyMovement : MonoBehaviour
         core.CmdWarpToOriginal -= WarpToOriginal;
         core.CmdTrySnapToNavMesh -= () => TrySnapToNavMesh();
 
-        core.CmdFasyLookAt -= FastLookAtTarget;
+        core.CmdFastLookAt -= FastLookAtTarget;
         core.OnDeath -= StopMovement;
 
         core.QueryIsPathPending = null;

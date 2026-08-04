@@ -61,7 +61,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
   - {fileID: 11400000, guid: 8851eab0b25f62742af5ad0131c0b3cf, type: 2}
-  enemyHitEffectDirections: 000000000000000000000000
+  enemyHitEffectDirections: 000000000e00000001000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -69,11 +69,13 @@ MonoBehaviour:
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
   hitDataList:
-  - centerOffset: {x: 0, y: 1.5, z: 2}
-    boxSize: {x: 2, y: 2, z: 3.5}
+  - centerOffset: {x: 0, y: 1.5, z: 1.5}
+    boxSize: {x: 2, y: 2, z: 3}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 0
     knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 0}
     effectDirection: 0
     playerHitEffect: {fileID: 0}
@@ -93,13 +95,15 @@ MonoBehaviour:
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1.5, z: 1.5}
-    boxSize: {x: 1.5, y: 2, z: 3}
+  - centerOffset: {x: 0, y: 1.5, z: 1}
+    boxSize: {x: 1.5, y: 2, z: 2.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 29f67c4b99ce7db4e8e01924d78bc495, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -117,13 +121,15 @@ MonoBehaviour:
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1.5, z: 1.5}
-    boxSize: {x: 1.5, y: 2, z: 3}
+  - centerOffset: {x: 0, y: 1.5, z: 1}
+    boxSize: {x: 1.5, y: 2, z: 2.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
     knockbackForce: {x: 0, y: 10, z: 1.5}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: ca036e0a602872c47a7bff8223b15154, type: 3}
-    effectDirection: 0
+    effectDirection: 1
     playerHitEffect: {fileID: 11400000, guid: 8851eab0b25f62742af5ad0131c0b3cf, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

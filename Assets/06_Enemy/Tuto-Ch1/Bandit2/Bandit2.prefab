@@ -390,9 +390,9 @@ MonoBehaviour:
   backWalkSpeedMultiplier: 0.6
   backWalkDist: 3
   backWalkMaxDuration: 5
-  strafeSpeedMultiplier: 1
+  strafeSpeedMultiplier: 0.7
   strafeMinDuration: 1
-  strafeMaxDuration: 5
+  strafeMaxDuration: 3
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
@@ -431,7 +431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 5
+  rotationSpeed: 50
 --- !u!114 &5056422532345200166
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -71,11 +71,12 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 80a44ad528a2fe6459c616940d64d894, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
-    useGuardSettings: 0
+    useGuardSettings: 1
     useStunSettings: 1
     guardData:
       guardable: 0
@@ -96,11 +97,12 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 80a44ad528a2fe6459c616940d64d894, type: 3}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
-    useGuardSettings: 0
+    useGuardSettings: 1
     useStunSettings: 1
     guardData:
       guardable: 0
