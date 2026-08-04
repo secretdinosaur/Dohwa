@@ -2343,7 +2343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 1.5
-  rotationSpeed: 5
+  rotationSpeed: 50
 --- !u!114 &201044918033872313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2408,6 +2408,7 @@ MonoBehaviour:
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 1d961e437d2e03b409cc48116bc85c71, type: 2}
@@ -2421,6 +2422,7 @@ MonoBehaviour:
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: b39df80ffdf56a94890f621224eec0af, type: 2}
@@ -2434,6 +2436,7 @@ MonoBehaviour:
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 038ed8387e49cda439a6a8c172864a9d, type: 2}
@@ -2448,6 +2451,7 @@ MonoBehaviour:
     comboSkills:
     - {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 38be8cb02cea5324087e7013472d0ead, type: 2}
@@ -2462,6 +2466,7 @@ MonoBehaviour:
     comboSkills:
     - {fileID: 11400000, guid: ee4aef4311a6612438658f994a7689f4, type: 2}
     isInstantCombo: 1
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
@@ -2475,6 +2480,7 @@ MonoBehaviour:
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 48cbd1c25ff4f4846ba4cf84dd9e9c1b, type: 2}
@@ -2489,6 +2495,7 @@ MonoBehaviour:
     comboSkills:
     - {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   isNextSkillCombo: 0
@@ -2546,9 +2553,9 @@ MonoBehaviour:
   backWalkSpeedMultiplier: 0.6
   backWalkDist: 3
   backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 1
+  strafeSpeedMultiplier: 0.7
   strafeMinDuration: 1
-  strafeMaxDuration: 5
+  strafeMaxDuration: 3
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1

@@ -67204,7 +67204,7 @@ Transform:
   m_GameObject: {fileID: 2899510126445612393}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 13, z: 0}
+  m_LocalPosition: {x: 0, y: 4.83, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -102691,7 +102691,7 @@ Transform:
   m_GameObject: {fileID: 4848819987157035301}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.86570406, z: -0, w: 0.5005562}
-  m_LocalPosition: {x: 0, y: 13.863005, z: 0}
+  m_LocalPosition: {x: 0, y: 5.6930046, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -118377,7 +118377,7 @@ Transform:
   m_GameObject: {fileID: 5729440219907765681}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 13, z: 0}
+  m_LocalPosition: {x: 0, y: 4.83, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -203332,9 +203332,6 @@ PrefabInstance:
       addedObject: {fileID: 4151997378450646857}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6385173285447277425}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 3164744418710231379}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       insertIndex: -1
@@ -203345,6 +203342,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8512306531215312526}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1655669104425160687}
   m_SourcePrefab: {fileID: 100100000, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
 --- !u!4 &253298804069386717 stripped
 Transform:
@@ -203760,7 +203760,7 @@ MonoBehaviour:
   dropItem: {fileID: 0}
   EnemyWeapons: []
   FakeWeapons: []
-  ViewSkill: {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
+  ViewSkill: {fileID: 11400000, guid: 60a9f407c8ba08b4387394fe514a800c, type: 2}
   animator: {fileID: 0}
   wasParried: 0
   BaseMovementSpeed: 1
@@ -203824,192 +203824,6 @@ MonoBehaviour:
   phaseTransitionDelay: 11
   afterPhaseTransitionDelay: 3
   phaseTransitionHealDuration: 0.25
---- !u!114 &6385173285447277425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 632814326908326759}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ee2c5d5338a29f41a40e774670d17dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSkillSelector
-  skillProfiles:
-  - skill: {fileID: 11400000, guid: 577b992340be42145aed15892df01710, type: 2}
-    minDistance: 3
-    maxDistance: 8
-    baseWeight: 1
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: f6b19cd333221f3419f7590ad0102597, type: 2}
-    minDistance: 0
-    maxDistance: 5
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: de2eed06119ef4043af6c0e29a7eecb9, type: 2}
-    minDistance: 0
-    maxDistance: 3
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 14b19efdf73205b48b69e9dfa7684095, type: 2}
-    minDistance: 0
-    maxDistance: 4
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 6de9878f64ce6994da7b23aa22b4ca11, type: 2}
-    minDistance: 3
-    maxDistance: 8
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 390ced98e23bed547aff6cb657c87fe0, type: 2}
-    minDistance: 3
-    maxDistance: 8
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 60a9f407c8ba08b4387394fe514a800c, type: 2}
-    minDistance: 0
-    maxDistance: 5
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills:
-    - {fileID: 11400000, guid: 098603e56b1da3c40aa93bc0905023b1, type: 2}
-    isInstantCombo: 1
-    instantComboTriggerIndex: 2
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 453ded69928385a46b5f69950e64ec42, type: 2}
-    minDistance: 0
-    maxDistance: 5
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 54557036e957d1344bd075f75e4ca4b1, type: 2}
-    minDistance: 25
-    maxDistance: 50
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 0
-    minPhase: 1
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: b1c96a3a1fd8445439ed98685501452e, type: 2}
-    minDistance: 3
-    maxDistance: 15
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 15
-    minPhase: 1
-    maxPhase: 1
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: e84bbc753658f1940b146caaf775e59c, type: 2}
-    minDistance: 5
-    maxDistance: 25
-    baseWeight: 0
-    weightIncreaseAmount: 0
-    nextAttackDelay: 0
-    cooldown: 15
-    minPhase: 2
-    maxPhase: 2
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
-    lastUsedTime: 0
-    currentWeight: 0
-  - skill: {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
-    minDistance: 20
-    maxDistance: 45
-    baseWeight: 1
-    weightIncreaseAmount: 1
-    nextAttackDelay: 1
-    cooldown: 1
-    minPhase: 1
-    maxPhase: 2
-    comboSkills:
-    - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
-    isInstantCombo: 1
-    instantComboTriggerIndex: 1
-    lastUsedTime: 0
-    currentWeight: 0
-  isNextSkillCombo: 0
-  isInstantComboTriggered: 0
-  currentPhase: 1
 --- !u!114 &3164744418710231379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -204035,7 +203849,7 @@ MonoBehaviour:
   backWalkMaxDuration: 3
   strafeSpeedMultiplier: 1
   strafeMinDuration: 1
-  strafeMaxDuration: 5
+  strafeMaxDuration: 3
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
@@ -204063,24 +203877,27 @@ MonoBehaviour:
   chaseBuffer: 1
   closeWanderMin: 2
   closeWanderMax: 4
+  stateChangeDelay: 2
+  parriedBackStepChance: 60
+  normalBackStepChance: 20
+  strafeOnCloseChance: 30
+  idleStrafeChance: 15
   leftStepSkills:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 577b992340be42145aed15892df01710, type: 2}
+  - {fileID: 11400000, guid: de2eed06119ef4043af6c0e29a7eecb9, type: 2}
   rightStepSkills:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 60a9f407c8ba08b4387394fe514a800c, type: 2}
   preBackStepSkills:
   - {fileID: 11400000, guid: 54557036e957d1344bd075f75e4ca4b1, type: 2}
+  - {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
   earthquakeSkills:
   - {fileID: 11400000, guid: b1c96a3a1fd8445439ed98685501452e, type: 2}
   - {fileID: 11400000, guid: e84bbc753658f1940b146caaf775e59c, type: 2}
   earthquakeEffectDelay: 10
   PushSkill: {fileID: 11400000, guid: 2cdfb0b924149624a817f0350a320b39, type: 2}
-  sideStepDistance: 4.5
   sideStepDuration: 0.6
-  attackBackStepDistance: 7
   attackBackStepDuration: 1.151
   evasionTriggerFactor: 0.5
-  evasionDistance: 7
   evasionDuration: 1.151
   evasionCooldown: 5
   evasionProbability: 0.7
@@ -204219,6 +204036,198 @@ MonoBehaviour:
   maxDecals: 50
   depth: 0.3
   fadeDuration: 0.2
+--- !u!114 &1655669104425160687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632814326908326759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ee2c5d5338a29f41a40e774670d17dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSkillSelector
+  skillProfiles:
+  - skill: {fileID: 11400000, guid: 577b992340be42145aed15892df01710, type: 2}
+    minDistance: 3
+    maxDistance: 8
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 27.279297
+    currentWeight: 4
+  - skill: {fileID: 11400000, guid: f6b19cd333221f3419f7590ad0102597, type: 2}
+    minDistance: 0
+    maxDistance: 5
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 13.410406
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: de2eed06119ef4043af6c0e29a7eecb9, type: 2}
+    minDistance: 0
+    maxDistance: 3
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills:
+    - {fileID: 11400000, guid: 390ced98e23bed547aff6cb657c87fe0, type: 2}
+    isInstantCombo: 0
+    instantComboTriggerIndex: 2
+    lastUsedTime: 40.025833
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 14b19efdf73205b48b69e9dfa7684095, type: 2}
+    minDistance: 0
+    maxDistance: 4
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills:
+    - {fileID: 11400000, guid: f6b19cd333221f3419f7590ad0102597, type: 2}
+    isInstantCombo: 1
+    instantComboTriggerIndex: 3
+    lastUsedTime: 9.455434
+    currentWeight: 5560
+  - skill: {fileID: 11400000, guid: 6de9878f64ce6994da7b23aa22b4ca11, type: 2}
+    minDistance: 3
+    maxDistance: 8
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills:
+    - {fileID: 11400000, guid: de2eed06119ef4043af6c0e29a7eecb9, type: 2}
+    - {fileID: 11400000, guid: 577b992340be42145aed15892df01710, type: 2}
+    - {fileID: 11400000, guid: f6b19cd333221f3419f7590ad0102597, type: 2}
+    - {fileID: 11400000, guid: 390ced98e23bed547aff6cb657c87fe0, type: 2}
+    isInstantCombo: 1
+    instantComboTriggerIndex: 1
+    lastUsedTime: 36.36649
+    currentWeight: 2
+  - skill: {fileID: 11400000, guid: 390ced98e23bed547aff6cb657c87fe0, type: 2}
+    minDistance: 3
+    maxDistance: 8
+    baseWeight: 1
+    weightIncreaseAmount: 0
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 43.2744
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 60a9f407c8ba08b4387394fe514a800c, type: 2}
+    minDistance: 0
+    maxDistance: 5
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills:
+    - {fileID: 11400000, guid: 098603e56b1da3c40aa93bc0905023b1, type: 2}
+    isInstantCombo: 1
+    instantComboTriggerIndex: 2
+    lastUsedTime: 0
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 453ded69928385a46b5f69950e64ec42, type: 2}
+    minDistance: 0
+    maxDistance: 5
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 1
+    minPhase: 1
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 54557036e957d1344bd075f75e4ca4b1, type: 2}
+    minDistance: 25
+    maxDistance: 50
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 15
+    minPhase: 2
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: b1c96a3a1fd8445439ed98685501452e, type: 2}
+    minDistance: 3
+    maxDistance: 15
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 0
+    cooldown: 15
+    minPhase: 1
+    maxPhase: 1
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 46.14683
+    currentWeight: 1
+  - skill: {fileID: 11400000, guid: e84bbc753658f1940b146caaf775e59c, type: 2}
+    minDistance: 5
+    maxDistance: 25
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 0
+    cooldown: 15
+    minPhase: 2
+    maxPhase: 2
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
+    minDistance: 20
+    maxDistance: 45
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 1
+    cooldown: 10
+    minPhase: 2
+    maxPhase: 2
+    comboSkills:
+    - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
+    isInstantCombo: 1
+    instantComboTriggerIndex: 1
+    lastUsedTime: 0
+    currentWeight: 8
+  isNextSkillCombo: 0
+  isInstantComboTriggered: 0
+  currentPhase: 1
 --- !u!1001 &359758390017243316
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -204584,7 +204593,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6804025082219752964, guid: 9aa95701d0dcbe6478a9d8253238d3db, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 14.63
+      value: 6.460001
       objectReference: {fileID: 0}
     - target: {fileID: 6804025082219752964, guid: 9aa95701d0dcbe6478a9d8253238d3db, type: 3}
       propertyPath: m_LocalPosition.z
@@ -204767,7 +204776,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6804025082219752964, guid: 9aa95701d0dcbe6478a9d8253238d3db, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 14.63
+      value: 6.46
       objectReference: {fileID: 0}
     - target: {fileID: 6804025082219752964, guid: 9aa95701d0dcbe6478a9d8253238d3db, type: 3}
       propertyPath: m_LocalPosition.z

@@ -64,7 +64,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
   - {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
   - {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
-  enemyHitEffectDirections: 00000000000000000000000000000000
+  enemyHitEffectDirections: 000000000a000000040000000e000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -106,7 +106,7 @@ MonoBehaviour:
     knockdownType: 0
     knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 10
     playerHitEffect: {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -132,7 +132,7 @@ MonoBehaviour:
     knockdownType: 0
     knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 4
     playerHitEffect: {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -158,7 +158,7 @@ MonoBehaviour:
     knockdownType: 0
     knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: f704babf880e39e44b1607394f0f455b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

@@ -63,8 +63,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
   - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
   - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
-  - {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
-  enemyHitEffectDirections: 00000000000000000000000000000000
+  - {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
+  enemyHitEffectDirections: 000000000e0000000e00000006000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -76,7 +76,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 2, z: 3}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 0
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 0}
     effectDirection: 0
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
@@ -100,9 +102,11 @@ MonoBehaviour:
     boxSize: {x: 1, y: 2, z: 2.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -124,9 +128,11 @@ MonoBehaviour:
     boxSize: {x: 1, y: 2, z: 2.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -148,10 +154,12 @@ MonoBehaviour:
     boxSize: {x: 2, y: 2, z: 1}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
-    effectDirection: 0
-    playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
+    effectDirection: 6
+    playerHitEffect: {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
     guardData:

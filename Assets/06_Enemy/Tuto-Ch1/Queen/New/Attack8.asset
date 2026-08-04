@@ -97,7 +97,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 95af15bf30bbc2c45b79508d63f5567c, type: 2}
   - {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
   - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
-  enemyHitEffectDirections: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  enemyHitEffectDirections: 0e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e0000000e00000007000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -110,9 +110,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -135,9 +136,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 1ed75c78ed1530a49b06ac26d728921d, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -160,9 +162,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -185,9 +188,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 6269dda2ff57b6249a0b412438a21b4e, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -210,9 +214,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: a38f7579fd019cf49b234e3e3364ca3c, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -235,9 +240,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: cd5d159b3840a044a816e12d9c9b101f, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -260,9 +266,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8c0c319ba7e867646bf2f08cfbb83c11, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -285,9 +292,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -310,9 +318,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 3523778363414bb4ca904d3fd7d6d820, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -335,9 +344,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: c6bfc859889114b4ab190a0711d6c52a, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -360,9 +370,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 872232835ce9d0c478f795ef5abaa39a, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -385,9 +396,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -410,9 +422,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: 95af15bf30bbc2c45b79508d63f5567c, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -435,9 +448,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: a9d981577fd66944f93a24f7ad9c945a, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: ef7180bee30da494d8d8768defa68c03, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
@@ -460,9 +474,10 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
-    useKnockdown: 0
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 8eee2d16541c6744e83770776e156dfc, type: 3}
-    effectDirection: 0
+    effectDirection: 7
     playerHitEffect: {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

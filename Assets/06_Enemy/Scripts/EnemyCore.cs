@@ -30,7 +30,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Action<Vector3, float> CmdMoveTo;
     public Action CmdStopMovement;
     public Action<Vector3> CmdLookAt;
-    public Action<Vector3> CmdFasyLookAt;
+    public Action<Vector3> CmdFastLookAt;
     public Action<Vector3, float> CmdMoveDirection;
     public Action CmdWarpToOriginal;
     public Action CmdTrySnapToNavMesh;

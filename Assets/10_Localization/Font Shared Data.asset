@@ -21,7 +21,7 @@ MonoBehaviour:
       m_Items: []
   m_Metadata:
     m_Items:
-    - rid: 4119652920970707138
+    - rid: 3736904770096201802
   m_KeyGenerator:
     rid: 3661810823825719303
   references:
@@ -31,15 +31,15 @@ MonoBehaviour:
       type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
       data:
         m_CustomEpoch: 1774515366388
-    - rid: 4119652920970707138
+    - rid: 3736904770096201802
       type: {class: AssetTypeMetadata, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
       data:
         m_Entries:
         - m_KeyId: 10945363968
           m_TableCodes:
-          - en
           - ko
-          - zh-Hans
+          - en
           - ja
-        m_TypeString: UnityEngine.Font, UnityEngine.TextRenderingModule, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
+          - zh-Hans
+        m_TypeString: TMPro.TMP_FontAsset, Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
