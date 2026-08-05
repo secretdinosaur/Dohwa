@@ -145,12 +145,14 @@ public class UIManager : MonoBehaviour
         // 입력 차단 조건 검사 (context 관련 조건 제거)
         if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
 
-        InkBrushEffectManager.Instance.ClearHitEffects();
+
 
         bool nextState = !Inventory.activeSelf; // 전환될 인벤토리 상태
 
         if (Player.Instance.CanAttack())
         {
+            InkBrushEffectManager.Instance.ClearHitEffects();
+
             Time.timeScale = nextState ? 0f : 1f;
 
             InventoryManager.Instance.uiMap.SetActive(nextState);

@@ -77,7 +77,7 @@ public class Player : MonoBehaviour, IDamageable
             }
 
             if (hp <= 0 && DeathRoutine == null) DeathRoutine = StartCoroutine(PlayerDead());
-            UIManager.Instance.HpText.text = $"{(int)hp} / {(int)StatManager.Instance.MaxHp}";
+            UIManager.Instance.HpText.text = StatManager.Instance.MaxHp.ToString();
         }
     }
 
@@ -89,7 +89,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             mp = Mathf.Clamp(value, 0, StatManager.Instance.MaxMp);
             UIManager.Instance.UpdateMpUI(mp / StatManager.Instance.MaxMp);
-            UIManager.Instance.MpText.text = $"{(int)mp} / {(int)StatManager.Instance.MaxMp}";
+            UIManager.Instance.MpText.text = StatManager.Instance.MaxMp.ToString();
         }
     }
 
@@ -320,7 +320,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             ShakePower = 2f;
             MP += StatManager.Instance.ParryMpRecovery;
-            string effectName = skill.SpecialGuardEffect ? skill.SpecialGuardEffect.name : "GuardPS";
+            string effectName = skill.SpecialGuardEffect ? skill.SpecialGuardEffect.name : "ParryEffect";
             SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, effectName);
 
             SoundManager.Instance.PlayMovementSound(11);
@@ -339,7 +339,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             ShakePower = 2f;
             if (skill.SpecialGuardEffect) SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, skill.SpecialGuardEffect.name);
-
+            else SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, "GuardEffect");
             float RemainingDamage = 0;
             if (MP > StatManager.Instance.GuardSuccessCostMpMult * damage)
                 MP -= StatManager.Instance.GuardSuccessCostMpMult * damage;

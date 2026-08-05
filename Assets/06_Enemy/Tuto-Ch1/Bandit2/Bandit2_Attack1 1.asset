@@ -55,7 +55,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
   HitEffects:
   - {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
-  enemyHitEffectDirections: 08000000
+  enemyHitEffectDirections: 04000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -67,9 +67,11 @@ MonoBehaviour:
     boxSize: {x: 2.5, y: 1, z: 1.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 10
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
-    effectDirection: 8
+    effectDirection: 4
     playerHitEffect: {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0

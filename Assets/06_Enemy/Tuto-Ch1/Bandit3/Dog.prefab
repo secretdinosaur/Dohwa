@@ -752,7 +752,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 10
+  rotationSpeed: 125
 --- !u!114 &7431884652099070222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -870,12 +870,13 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 1
     minPhase: 0
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 503a65a857c1c734cb4f2ad965560a4d, type: 2}
@@ -883,12 +884,13 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 1
     minPhase: 0
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: eec1bd9f50f99a04396267656fb54b84, type: 2}
@@ -896,12 +898,13 @@ MonoBehaviour:
     maxDistance: 6
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 1
     minPhase: 0
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   isNextSkillCombo: 0

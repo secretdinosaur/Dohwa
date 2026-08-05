@@ -1,11 +1,15 @@
-﻿using Unity.Cinemachine;
-using UnityEngine;
-using UnityEngine.Localization.Settings;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Collections;
+﻿using System.Collections;
+using System.Globalization;
 using TMPro;
+using Unity.Cinemachine;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.EventSystems;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.Tables;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class SettingManager : MonoBehaviour
 {
@@ -26,6 +30,10 @@ public class SettingManager : MonoBehaviour
     public TMP_Dropdown resoltionDropdown;
     public TMP_Dropdown screenDropdown;
     public TMP_Dropdown languageDropdown;
+    [SerializeField]
+    private TableReference fontTable;
+    [SerializeField]
+    private TableEntryReference fontKey;
     private bool isChangingLanguage = false;
 
     private bool isUIReady = false;
@@ -256,7 +264,34 @@ public class SettingManager : MonoBehaviour
             LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[localeIndex];
         }
 
+        ChangeAllFonts();
+
         isChangingLanguage = false;
+    }
+
+    public async void ChangeAllFonts()
+    {
+        var handle = LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TMP_FontAsset>(
+            fontTable,
+            fontKey);
+
+        await handle.Task;
+
+        TMP_FontAsset font = handle.Result;
+
+        if (font == null)
+        {
+            Debug.LogError("Font not found.");
+            return;
+        }
+
+        TextMeshProUGUI[] texts = FindObjectsOfType<TextMeshProUGUI>(true);
+
+        foreach (var text in texts)
+        {
+            text.font = font;
+            text.UpdateFontAsset();
+        }
     }
 
     public void OnClickResetButton() => ResetPanel.SetActive(true);

@@ -30,7 +30,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Action<Vector3, float> CmdMoveTo;
     public Action CmdStopMovement;
     public Action<Vector3> CmdLookAt;
-    public Action<Vector3> CmdFasyLookAt;
+    public Action<Vector3> CmdFastLookAt;
     public Action<Vector3, float> CmdMoveDirection;
     public Action CmdWarpToOriginal;
     public Action CmdTrySnapToNavMesh;
@@ -152,9 +152,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
     {
         if (animator != null && animator.gameObject.activeInHierarchy)
         {
-            animator.SetFloat("MoveX", targetMoveX, 0.1f, Time.deltaTime);
-            animator.SetFloat("MoveZ", targetMoveZ, 0.1f, Time.deltaTime);
-            animator.SetFloat("Speed", targetRun, 0.1f, Time.deltaTime);
+            animator.SetFloat("MoveX", targetMoveX, 0.25f, Time.deltaTime);
+            animator.SetFloat("MoveZ", targetMoveZ, 0.25f, Time.deltaTime);
+            animator.SetFloat("Speed", targetRun, 0.25f, Time.deltaTime);
         }
     }
 

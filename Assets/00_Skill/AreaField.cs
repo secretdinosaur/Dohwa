@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -84,8 +84,10 @@ public class AreaField : MonoBehaviour
         while (elapsed < duration)
         {
             ApplyTick();
-            yield return new WaitForSeconds(tickInterval);
-            elapsed += tickInterval;
+
+            float randomTickInterval = tickInterval * UnityEngine.Random.Range(0.9f, 1.1f);
+            yield return new WaitForSeconds(randomTickInterval);
+            elapsed += randomTickInterval;
         }
     }
 
@@ -131,10 +133,19 @@ public class AreaField : MonoBehaviour
             if (col == null) continue;
             if (col.TryGetComponent<IDamageable>(out var target))
             {
-                if (caster != null && col.transform == caster) continue;
+                // 💡 자신 타격 방지 (하위 충돌체도 안전하게 걸러냄)
+                if (caster != null && target.transform == caster) continue;
 
                 PlayHitSound();
-                target.TakeDamage(tickDamage, ownerSkill, caster, null, hitindex);
+
+                // 💡 NRE 방지: 하드코딩된 null 대신 실제 스킬의 HitEffectData를 안전하게 넘김
+                HitEffectData effect = null;
+                if (ownerSkill != null && ownerSkill.HitEffects != null && hitindex < ownerSkill.HitEffects.Length)
+                {
+                    effect = ownerSkill.HitEffects[hitindex];
+                }
+
+                target.TakeDamage(tickDamage, ownerSkill, caster, effect, hitindex);
             }
         }
     }

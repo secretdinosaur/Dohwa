@@ -2343,7 +2343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 1.5
-  rotationSpeed: 5
+  rotationSpeed: 100
 --- !u!114 &201044918033872313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2402,12 +2402,13 @@ MonoBehaviour:
     maxDistance: 4
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 1d961e437d2e03b409cc48116bc85c71, type: 2}
@@ -2415,12 +2416,13 @@ MonoBehaviour:
     maxDistance: 6
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 5
     minPhase: 1
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: b39df80ffdf56a94890f621224eec0af, type: 2}
@@ -2428,12 +2430,13 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 038ed8387e49cda439a6a8c172864a9d, type: 2}
@@ -2441,13 +2444,14 @@ MonoBehaviour:
     maxDistance: 5
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
     comboSkills:
     - {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 38be8cb02cea5324087e7013472d0ead, type: 2}
@@ -2455,13 +2459,14 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
     comboSkills:
     - {fileID: 11400000, guid: ee4aef4311a6612438658f994a7689f4, type: 2}
     isInstantCombo: 1
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
@@ -2469,12 +2474,13 @@ MonoBehaviour:
     maxDistance: 999
     baseWeight: 0
     weightIncreaseAmount: 0
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 30
     minPhase: 1
     maxPhase: 99
     comboSkills: []
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: 48cbd1c25ff4f4846ba4cf84dd9e9c1b, type: 2}
@@ -2482,13 +2488,14 @@ MonoBehaviour:
     maxDistance: 30
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 30
     minPhase: 1
     maxPhase: 99
     comboSkills:
     - {fileID: 11400000, guid: 033b5529f38b2944ea381c3d6ecce114, type: 2}
     isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
   isNextSkillCombo: 0
@@ -2544,11 +2551,11 @@ MonoBehaviour:
   fieldOfView: 90
   chaseSpeedMultiplier: 1.75
   backWalkSpeedMultiplier: 0.6
-  backWalkDist: 3
-  backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 1
+  backWalkDist: 2
+  backWalkMaxDuration: 2
+  strafeSpeedMultiplier: 0.7
   strafeMinDuration: 1
-  strafeMaxDuration: 5
+  strafeMaxDuration: 3
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
@@ -2557,7 +2564,7 @@ MonoBehaviour:
   walkApproachFactor: 1.5
   walkApproachChance: 0.2
   backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 30
+  strafeOnCloseChance: 15.2
   runAttackSkill: {fileID: 11400000, guid: 48cbd1c25ff4f4846ba4cf84dd9e9c1b, type: 2}
   runDuration: 2
   runStopOffset: 1.5

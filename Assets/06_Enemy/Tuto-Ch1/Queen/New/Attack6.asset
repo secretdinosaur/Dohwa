@@ -61,7 +61,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
   - {fileID: 0}
-  enemyHitEffectDirections: 000000000000000000000000
+  enemyHitEffectDirections: 000000000e00000000000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -103,7 +103,7 @@ MonoBehaviour:
     knockdownType: 0
     knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
-    effectDirection: 0
+    effectDirection: 14
     playerHitEffect: {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
     useGuardSettings: 0
     useStunSettings: 1
