@@ -97,7 +97,7 @@ public class DialogueManager : MonoBehaviour
         Debug.Log($"ShowDialogue called with DialogueSet: {CurrentDialogueSet.name}");
         IsDialogueActive = true;
         DialoguePanel.SetActive(true);
-
+        if (CurrentDialogueSet.name.Contains("Teacher")) SoundManager.Instance.PlayTeacherSound();
         DialoguePanel.GetComponent<Image>().DOKill();
         DIalogueArea.DOKill();
         Sequence OpenfadeSequence = DOTween.Sequence();

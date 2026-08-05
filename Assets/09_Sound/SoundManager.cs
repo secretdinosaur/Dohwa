@@ -12,7 +12,7 @@ public class SoundManager : MonoBehaviour
     public AudioClip[] UIsounds;
     public AudioClip[] MovementSounds;
     public AudioClip[] bgmClips;
-
+    public AudioClip teacherSound;
     public AudioSource bgmSource;
     [Range(0f, 1f)] public float masterVolume = 0.5f;
     [Range(0f, 1f)] public float sfxVolume = 0.5f;
@@ -72,6 +72,10 @@ public class SoundManager : MonoBehaviour
         }
     }
 
+    public void PlayTeacherSound()
+    {
+        PlaySound(teacherSound);
+    }
     public void SetMasterVolume(float volume)
     {
         masterVolume = volume;

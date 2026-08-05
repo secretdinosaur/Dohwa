@@ -22,6 +22,7 @@ public class TeacherPiece : NonConsumable
             {
                 DialogueManager.Instance.StartShowDialogue(dialogueSets[0]);
             }
+            SoundManager.Instance.PlayTeacherSound();
         }
     }
 }

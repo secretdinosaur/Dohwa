@@ -242,6 +242,9 @@ public class QueenBanditAI : EnemyAIBase
         isTransitioning = false;
         skillSelector.SetPhase(2);
         isAttacking = false;
+
+        selectedSkill = null;
+        skillSelector.isInstantComboTriggered = false;
     }
 
     public void PhaseTransitionKnockback()
