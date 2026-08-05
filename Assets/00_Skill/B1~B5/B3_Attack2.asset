@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 0000000000000000
   MP_cost: 20
-  clip: {fileID: 7400000, guid: afecb7834dfaa9146af4c3fa7698404c, type: 2}
+  clip: {fileID: 7400000, guid: 23f8c4ae7e9f7ef4981bae5813ca4144, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: 3af7d9205d833d94cad69227ccaa58d0, type: 3}
   effect: {fileID: 0}
@@ -67,7 +67,9 @@ MonoBehaviour:
     boxSize: {x: 1.25, y: 0.5, z: 5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 35
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
     effectDirection: 14
     playerHitEffect: {fileID: 0}

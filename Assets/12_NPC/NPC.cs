@@ -14,7 +14,7 @@ public class NPC : InteractableObj
     public DialogueSet[] dialogueSet;
     public Coroutine Talk;
     private Coroutine LookCoroutine;
-
+    public AudioClip TalkSound;
     [Header("Dialogue")]
     public List<UnityEvent> ExecutionFunctionSet = new List<UnityEvent>();
 
@@ -39,6 +39,10 @@ public class NPC : InteractableObj
             Talk = StartCoroutine(DialogueManager.Instance.ShowDialogue(dialogueSet[dialogueSet.Length - 1], this));
         }
         TalkCount++;
+        if(TalkSound != null)
+        {
+            SoundManager.Instance.PlaySound(TalkSound);
+        }
     }
 
     private IEnumerator LookRoutine()
