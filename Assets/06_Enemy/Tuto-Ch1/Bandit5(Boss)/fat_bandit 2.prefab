@@ -2343,7 +2343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 1.5
-  rotationSpeed: 50
+  rotationSpeed: 100
 --- !u!114 &201044918033872313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2402,7 +2402,7 @@ MonoBehaviour:
     maxDistance: 4
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
@@ -2416,7 +2416,7 @@ MonoBehaviour:
     maxDistance: 6
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 5
     minPhase: 1
     maxPhase: 99
@@ -2430,7 +2430,7 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
@@ -2444,7 +2444,7 @@ MonoBehaviour:
     maxDistance: 5
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
@@ -2459,7 +2459,7 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 3
     minPhase: 1
     maxPhase: 99
@@ -2474,7 +2474,7 @@ MonoBehaviour:
     maxDistance: 999
     baseWeight: 0
     weightIncreaseAmount: 0
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 30
     minPhase: 1
     maxPhase: 99
@@ -2488,7 +2488,7 @@ MonoBehaviour:
     maxDistance: 30
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 30
     minPhase: 1
     maxPhase: 99
@@ -2551,8 +2551,8 @@ MonoBehaviour:
   fieldOfView: 90
   chaseSpeedMultiplier: 1.75
   backWalkSpeedMultiplier: 0.6
-  backWalkDist: 3
-  backWalkMaxDuration: 3
+  backWalkDist: 2
+  backWalkMaxDuration: 2
   strafeSpeedMultiplier: 0.7
   strafeMinDuration: 1
   strafeMaxDuration: 3
@@ -2564,7 +2564,7 @@ MonoBehaviour:
   walkApproachFactor: 1.5
   walkApproachChance: 0.2
   backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 30
+  strafeOnCloseChance: 15.2
   runAttackSkill: {fileID: 11400000, guid: 48cbd1c25ff4f4846ba4cf84dd9e9c1b, type: 2}
   runDuration: 2
   runStopOffset: 1.5

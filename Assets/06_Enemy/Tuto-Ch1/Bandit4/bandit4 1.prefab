@@ -5631,7 +5631,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 3
-  rotationSpeed: 50
+  rotationSpeed: 100
 --- !u!114 &7734924399391952381
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5681,10 +5681,11 @@ MonoBehaviour:
   firstDetectionDelay: 1
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
+  moveBeforeAttackChance: 0.5
   parriedBackWalkChance: 40
   normalBackWalkChance: 10
   backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 30
+  strafeOnCloseChance: 14.7
 --- !u!114 &5136574433419525462
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5790,7 +5791,7 @@ MonoBehaviour:
     maxDistance: 5
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 1
     minPhase: 1
     maxPhase: 1
@@ -5804,7 +5805,7 @@ MonoBehaviour:
     maxDistance: 3
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
+    nextAttackDelay: 0
     cooldown: 1
     minPhase: 1
     maxPhase: 1
