@@ -556,9 +556,11 @@ public class Player : MonoBehaviour, IDamageable
 
     private IEnumerator WakeUpRoutine(float duration)
     {
-        // 💡 기존의 불필요한 3초 대기 시간을 삭제했습니다.
+        yield return new WaitForSeconds(2.5f);
+
         isWakingUp = true;
         isAirborne = false;
+
 
         Animator_SetTrigger("WakeUp");
 

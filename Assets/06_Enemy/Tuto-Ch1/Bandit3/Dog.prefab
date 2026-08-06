@@ -789,7 +789,7 @@ MonoBehaviour:
   chaseRange: 50
   wanderSearchRadius: 15
   fieldOfView: 90
-  chaseSpeedMultiplier: 3
+  chaseSpeedMultiplier: 5
   backWalkSpeedMultiplier: 1.5
   backWalkDist: 1
   backWalkMaxDuration: 2
@@ -894,9 +894,9 @@ MonoBehaviour:
     lastUsedTime: 0
     currentWeight: 0
   - skill: {fileID: 11400000, guid: eec1bd9f50f99a04396267656fb54b84, type: 2}
-    minDistance: 2
-    maxDistance: 6
-    baseWeight: 1
+    minDistance: 3
+    maxDistance: 8
+    baseWeight: 5
     weightIncreaseAmount: 1
     nextAttackDelay: 0
     cooldown: 1
