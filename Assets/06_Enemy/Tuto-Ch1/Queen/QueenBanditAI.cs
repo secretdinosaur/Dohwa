@@ -254,7 +254,6 @@ public class QueenBanditAI : EnemyAIBase
         Vector3 myPos = transform.position;
         Vector3 playerPos = Player.Instance.transform.position;
 
-        // Y축 높이 차이 무시 (평면 기준 각도 계산)
         Vector3 dirToPlayer = playerPos - myPos;
         dirToPlayer.y = 0f;
 
@@ -265,22 +264,15 @@ public class QueenBanditAI : EnemyAIBase
         myForward.y = 0f;
         myForward.Normalize();
 
-        // 내 정면과 플레이어 사이의 각도 계산
         float angle = Vector3.Angle(myForward, dirToPlayer);
 
-        // 각도가 30도 미만(좌우 합쳐서 60도 부채꼴 범위)일 경우 넉백 실행
         if (angle < 30f)
         {
-            float knockbackPower = 15f; // 밀려나는 힘 (필요에 따라 조절)
-            float upwardPower = 2f;     // 살짝 띄우는 힘
+            float knockbackPower = 15f;
+            float upwardPower = 2f;
 
             Vector3 knockbackForce = (dirToPlayer * knockbackPower) + (Vector3.up * upwardPower);
-
-            // 앞서 수정했던 넉다운 로직을 활용 (Type: 1, Duration: 1.5초)
             Player.Instance.PlayerMove.KnockBack(knockbackForce, 1, 1.5f);
-
-            // 원한다면 데미지를 주거나 효과음을 재생하는 코드를 추가할 수 있습니다.
-            // Player.Instance.TakeArbitraryDamage(10);
         }
     }
 
@@ -326,6 +318,10 @@ public class QueenBanditAI : EnemyAIBase
             if (selectedSkill == null)
             {
                 selectedSkill = skillSelector.GetNextSkill(distToLastPos);
+                if (selectedSkill != null)
+                {
+                    Debug.Log($"[HandleBehaviorLogic] 스킬 선택됨: {selectedSkill.name}");
+                }
             }
 
             if (selectedSkill == null)
@@ -352,13 +348,9 @@ public class QueenBanditAI : EnemyAIBase
                 if (distToLastPos < evadeRange && !lastActionWasBackStep && !skillSelector.HasPendingCombo && UnityEngine.Random.value <= evasionProbability)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
-                    {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                    }
                     else
-                    {
                         actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
-                    }
                     lastActionWasBackStep = true;
                 }
                 else if (canAttackGlobal && hasEnoughMP)
@@ -366,13 +358,25 @@ public class QueenBanditAI : EnemyAIBase
                     if (isWithinAttackBox)
                     {
                         if (leftStepSkills.Contains(selectedSkill))
+                        {
+                            Debug.Log($"[HandleBehaviorLogic] {selectedSkill.name} -> Step_Left 진입");
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Left", sideStepDuration));
+                        }
                         else if (rightStepSkills.Contains(selectedSkill))
+                        {
+                            Debug.Log($"[HandleBehaviorLogic] {selectedSkill.name} -> Step_Right 진입");
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Right", sideStepDuration));
+                        }
                         else if (preBackStepSkills.Contains(selectedSkill))
+                        {
+                            Debug.Log($"[HandleBehaviorLogic] {selectedSkill.name} -> Step_Back 진입");
                             actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Back", attackBackStepDuration));
+                        }
                         else
+                        {
+                            Debug.Log($"[HandleBehaviorLogic] {selectedSkill.name} -> 일반 AttackSequence 진입");
                             actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+                        }
 
                         lastActionWasBackStep = false;
                     }
@@ -386,9 +390,7 @@ public class QueenBanditAI : EnemyAIBase
                     if (distToLastPos < evadeRange)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
-                        {
                             actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        }
                         else
                         {
                             actionCoroutine = StartCoroutine(EvasiveBackStepSequence());
@@ -404,6 +406,7 @@ public class QueenBanditAI : EnemyAIBase
             }
             else
             {
+                // ... 기존 밖으로 빠졌을때 이동 로직 생략 없이 동일하게 유지
                 if (UnityEngine.Random.Range(0f, 100f) < idleStrafeChance && Time.time > nextWanderTime)
                 {
                     actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
@@ -417,22 +420,14 @@ public class QueenBanditAI : EnemyAIBase
                 bool shouldRun = distToLastPos > currentThreshold;
 
                 if (shouldRun != isRunningForward && Time.time >= nextStateChangeTime)
-                {
                     nextStateChangeTime = Time.time + stateChangeDelay;
-                }
                 else if (Time.time < nextStateChangeTime)
-                {
                     shouldRun = isRunningForward;
-                }
 
                 if (shouldRun)
-                {
                     UpdateChaseTarget(executeRange * 0.8f);
-                }
                 else
-                {
                     HandleCooldownWalk(skillSelector.GetOptimalDistance(selectedSkill));
-                }
 
                 lastActionWasBackStep = false;
             }
@@ -450,6 +445,7 @@ public class QueenBanditAI : EnemyAIBase
         }
     }
 
+    // AdjustPositionRoutine, StrafeRoutine, UpdateChaseTarget, UpdateWalkApproachTarget, HandleCooldownWalk 등은 기존과 100% 동일
     private IEnumerator AdjustPositionRoutine(SkillBase skill)
     {
         isStepping = true;
@@ -460,7 +456,7 @@ public class QueenBanditAI : EnemyAIBase
 
         if (skill is Skill_Melee m && m.hitDataList.Count > 0)
         {
-            optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z);
+            optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z / 2f);
             boxDepth = m.hitDataList[0].boxSize.z / 2f;
         }
         else if (skill is Skill_Range r)
@@ -476,24 +472,19 @@ public class QueenBanditAI : EnemyAIBase
 
         while (elapsed < 1.5f)
         {
-            if (core.IsDead || CheckPlayerInSkillBox(skill))
-            {
-                break;
-            }
+            if (core.IsDead || CheckPlayerInSkillBox(skill)) break;
 
             Vector3 myPos = transform.position;
             Vector3 playerPosPlane = new Vector3(lastKnownPlayerPos.x, myPos.y, lastKnownPlayerPos.z);
             float currentDist = Vector3.Distance(myPos, playerPosPlane);
 
             elapsed += Time.deltaTime;
-
             core.CmdLookAt?.Invoke(lastKnownPlayerPos);
 
             if (currentDist < minDist)
             {
                 core.ChangeState(EnemyState.BackWalk);
                 core.SetMoveAnimations(0f, -1f, 1f);
-
                 Vector3 dirFromPlayer = (myPos - playerPosPlane).normalized;
                 core.CmdMoveDirection?.Invoke(dirFromPlayer, 1f);
             }
@@ -501,7 +492,6 @@ public class QueenBanditAI : EnemyAIBase
             {
                 core.ChangeState(EnemyState.Chase);
                 core.SetMoveAnimations(0f, 1f, 1f);
-
                 Vector3 dirToPlayer = (playerPosPlane - myPos).normalized;
                 core.CmdMoveDirection?.Invoke(dirToPlayer, 1f);
             }
@@ -509,10 +499,8 @@ public class QueenBanditAI : EnemyAIBase
             {
                 break;
             }
-
             yield return null;
         }
-
         core.CmdStopMovement?.Invoke();
         isStepping = false;
         actionCoroutine = null;
@@ -522,7 +510,6 @@ public class QueenBanditAI : EnemyAIBase
     {
         isStepping = true;
         float elapsed = 0f;
-
         if (agent != null) agent.updateRotation = false;
 
         core.CmdStopMovement?.Invoke();
@@ -535,10 +522,7 @@ public class QueenBanditAI : EnemyAIBase
 
         while (elapsed < duration)
         {
-            if (core.IsDead || isTransitioning)
-            {
-                break;
-            }
+            if (core.IsDead || isTransitioning) break;
 
             elapsed += Time.deltaTime;
 
@@ -569,19 +553,15 @@ public class QueenBanditAI : EnemyAIBase
             else
             {
                 float distError = currentDist - targetDist;
-
                 if (Mathf.Abs(distError) > 0.4f)
                 {
                     float correctionForce = Mathf.Clamp(distError, -1f, 1f) * 0.5f;
                     finalMoveDir = (orbitDir + dirToPlayer * correctionForce).normalized;
                 }
             }
-
             core.CmdMoveDirection?.Invoke(finalMoveDir, strafeSpeedMultiplier);
-
             yield return null;
         }
-
         core.CmdStopMovement?.Invoke();
         isStepping = false;
         core.ChangeState(EnemyState.Idle);
@@ -591,10 +571,8 @@ public class QueenBanditAI : EnemyAIBase
     private void UpdateChaseTarget(float stopDist)
     {
         if (agent != null) agent.updateRotation = false;
-
         core.ChangeState(EnemyState.Chase);
         core.SetMoveAnimations(0f, 1f, 2f);
-
         isRunningForward = true;
         core.CmdLookAt?.Invoke(lastKnownPlayerPos);
 
@@ -603,37 +581,15 @@ public class QueenBanditAI : EnemyAIBase
             nextTargetUpdateTime = Time.time + targetUpdateInterval;
             Vector3 dirFromPlayer = (transform.position - lastKnownPlayerPos).normalized;
             Vector3 targetPos = lastKnownPlayerPos + (dirFromPlayer * stopDist);
-
             core.CmdMoveTo?.Invoke(targetPos, chaseSpeedMultiplier);
-        }
-    }
-
-    private void UpdateWalkApproachTarget(float stopDist)
-    {
-        if (agent != null) agent.updateRotation = false;
-
-        core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(0f, 1f, 1f);
-
-        isRunningForward = false;
-        core.CmdLookAt?.Invoke(lastKnownPlayerPos);
-
-        if (Time.time >= nextTargetUpdateTime)
-        {
-            nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            Vector3 dirFromPlayer = (transform.position - lastKnownPlayerPos).normalized;
-            Vector3 targetPos = lastKnownPlayerPos + (dirFromPlayer * stopDist);
-            core.CmdMoveTo?.Invoke(targetPos, 1f);
         }
     }
 
     private void HandleCooldownWalk(float optimalDistance)
     {
         if (agent != null) agent.updateRotation = false;
-
         core.ChangeState(EnemyState.CooldownWalk);
         core.SetMoveAnimations(0f, 1f, 1f);
-
         isRunningForward = false;
 
         bool isPathPending = core.QueryIsPathPending?.Invoke() ?? false;
@@ -644,7 +600,6 @@ public class QueenBanditAI : EnemyAIBase
             Vector3 dirToMe = (transform.position - lastKnownPlayerPos).normalized;
             cooldownWanderTarget = lastKnownPlayerPos + (dirToMe * optimalDistance);
             nextWanderTime = Time.time + UnityEngine.Random.Range(closeWanderMin, closeWanderMax);
-
             core.CmdMoveTo?.Invoke(cooldownWanderTarget, 1f);
         }
     }
@@ -664,14 +619,28 @@ public class QueenBanditAI : EnemyAIBase
                 return;
             }
 
+            Debug.Log($"[ChainNextAttackOrIdle] 콤보 스킬 호출됨: {selectedSkill.name}");
+
             if (leftStepSkills.Contains(selectedSkill))
+            {
+                Debug.Log($"[ChainNextAttackOrIdle] {selectedSkill.name} -> Step_Left 진입");
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Left", sideStepDuration));
+            }
             else if (rightStepSkills.Contains(selectedSkill))
+            {
+                Debug.Log($"[ChainNextAttackOrIdle] {selectedSkill.name} -> Step_Right 진입");
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Right", sideStepDuration));
+            }
             else if (preBackStepSkills.Contains(selectedSkill))
+            {
+                Debug.Log($"[ChainNextAttackOrIdle] {selectedSkill.name} -> Step_Back 진입");
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Back", attackBackStepDuration));
+            }
             else
+            {
+                Debug.Log($"[ChainNextAttackOrIdle] {selectedSkill.name} -> 일반 AttackSequence 진입");
                 actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+            }
         }
         else
         {
@@ -690,9 +659,9 @@ public class QueenBanditAI : EnemyAIBase
             yield break;
         }
 
+        Debug.Log($"[StepAttackSequence] 시작. 대상 스킬: {skill.name}");
         isAttacking = true;
         isStepping = true;
-
         yield return null;
 
         skillSelector.isInstantComboTriggered = false;
@@ -706,7 +675,7 @@ public class QueenBanditAI : EnemyAIBase
         float optimalDist = 2.5f;
         if (skill is Skill_Melee m && m.hitDataList.Count > 0)
         {
-            optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z);
+            optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z / 2f);
         }
         else if (skill is Skill_Range r)
         {
@@ -716,36 +685,54 @@ public class QueenBanditAI : EnemyAIBase
         while (elapsed < stepDuration)
         {
             elapsed += Time.deltaTime;
-
             if (Player.Instance != null)
             {
                 Vector3 playerPos = Player.Instance.transform.position;
                 core.CmdLookAt?.Invoke(playerPos);
-
                 Vector3 myPos = transform.position;
                 Vector3 playerPosPlane = new Vector3(playerPos.x, myPos.y, playerPos.z);
                 float currentDist = Vector3.Distance(myPos, playerPosPlane);
-
                 Vector3 dirToPlayer = (playerPosPlane - myPos).normalized;
                 Vector3 offset = dirToPlayer * (currentDist - optimalDist) * (Time.deltaTime * 10f);
 
-                if (agent != null && agent.enabled)
-                {
-                    agent.Move(offset);
-                }
-                else
-                {
-                    transform.position += offset;
-                }
+                if (agent != null && agent.enabled) agent.Move(offset);
+                else transform.position += offset;
             }
             yield return null;
         }
 
         if (!skillSelector.isInstantComboTriggered) core.CmdTrySnapToNavMesh?.Invoke();
         isStepping = false;
-
         core.ChangeState(EnemyState.Attack);
         skillSelector.isInstantComboTriggered = false;
+
+        bool isPushAttack = PushSkill != null && PushSkill == skill;
+        if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(false);
+
+        bool UseAnimRoot = skill.name.Contains("Attack7") || skill.name.Contains("Attack9") || skill.name.Contains("Attack10");
+        Debug.Log($"[StepAttackSequence] UseAnimRoot 검사 결과: {UseAnimRoot}");
+
+        if (agent != null)
+        {
+            Debug.Log($"[StepAttackSequence] Agent 끄기 전 상태: {agent.enabled}");
+            if (UseAnimRoot)
+            {
+                agent.enabled = false;
+                Debug.Log($"[StepAttackSequence] Agent 종료 완료");
+            }
+            else if (agent.enabled)
+            {
+                agent.updateRotation = false;
+                agent.velocity = Vector3.zero;
+            }
+        }
+
+        Coroutine dashCoroutine = null;
+        if (skill.name.Contains("Attack9") || skill.name.Contains("Attack10"))
+        {
+            Debug.Log($"[StepAttackSequence] {skill.name} 대쉬 코루틴 실행");
+            dashCoroutine = StartCoroutine(Attack9DashRoutine());
+        }
 
         bool attackFinished = false;
         Action<float> onComplete = (nextTime) => {
@@ -755,7 +742,14 @@ public class QueenBanditAI : EnemyAIBase
         };
 
         core.OnAttackCompleted += onComplete;
+        Debug.Log($"[StepAttackSequence] CmdPerformAttack 호출 직전");
         core.CmdPerformAttack?.Invoke(skill);
+
+        if (UseAnimRoot && agent != null && agent.enabled)
+        {
+            Debug.LogWarning($"[StepAttackSequence 경고] CmdPerformAttack 호출 후 Agent가 다시 켜져있음! 강제 종료합니다.");
+            agent.enabled = false;
+        }
 
         float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
         float timeout = Time.time + clipLength + 0.2f;
@@ -763,9 +757,18 @@ public class QueenBanditAI : EnemyAIBase
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
 
         core.OnAttackCompleted -= onComplete;
+        Debug.Log($"[StepAttackSequence] 스킬 종료 완료");
+
+        if (dashCoroutine != null) StopCoroutine(dashCoroutine);
+        if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(true);
+
+        if (UseAnimRoot)
+        {
+            if (agent != null) agent.enabled = true;
+            if (!skillSelector.isInstantComboTriggered) core.CmdTrySnapToNavMesh?.Invoke();
+        }
 
         if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
-
         float chance = core.wasParried ? parriedBackStepChance : normalBackStepChance;
         core.wasParried = false;
 
@@ -774,7 +777,6 @@ public class QueenBanditAI : EnemyAIBase
             yield return StartCoroutine(EvasiveBackStepSequence());
             lastActionWasBackStep = true;
         }
-
         ChainNextAttackOrIdle();
     }
 
@@ -782,14 +784,11 @@ public class QueenBanditAI : EnemyAIBase
     {
         isStepping = true;
         lastEvasionTime = Time.time;
-
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.BackWalk);
         core.SetMoveAnimations(0f, 0f, 0f);
         SoundManager.Instance.PlaySound(BackStepSound);
-
         core.animator.CrossFade("Step_Back", 0.1f);
-
         float elapsed = 0f;
         while (elapsed < evasionDuration)
         {
@@ -797,10 +796,8 @@ public class QueenBanditAI : EnemyAIBase
             core.CmdLookAt?.Invoke(lastKnownPlayerPos);
             yield return null;
         }
-
         core.CmdTrySnapToNavMesh?.Invoke();
         core.SetMoveAnimations(0f, 0f);
-
         isStepping = false;
         core.ChangeState(EnemyState.Idle);
         actionCoroutine = null;
@@ -814,34 +811,43 @@ public class QueenBanditAI : EnemyAIBase
             yield break;
         }
 
+        Debug.Log($"[AttackSequence] 시작. 대상 스킬: {skill.name}");
         isAttacking = true;
         yield return null;
 
         skillSelector.isInstantComboTriggered = false;
-
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
         bool isPushAttack = PushSkill != null && PushSkill == skill;
-        if (isPushAttack)
-        {
-            core.CmdSetIgnorePlayerCollision?.Invoke(false);
-        }
+        if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(false);
 
-        bool UseAnimRoot = skill.name.Contains("Attack7") || skill.name.Contains("Attack9");
-        if (UseAnimRoot && agent != null)
+        bool UseAnimRoot = skill.name.Contains("Attack7") || skill.name.Contains("Attack9") || skill.name.Contains("Attack10");
+        Debug.Log($"[AttackSequence] UseAnimRoot 검사 결과: {UseAnimRoot}");
+
+        if (agent != null)
         {
-            agent.enabled = false;
+            Debug.Log($"[AttackSequence] Agent 끄기 전 상태: {agent.enabled}");
+            if (UseAnimRoot)
+            {
+                agent.enabled = false;
+                Debug.Log($"[AttackSequence] Agent 종료 완료");
+            }
+            else if (agent.enabled)
+            {
+                agent.updateRotation = false;
+                agent.velocity = Vector3.zero;
+            }
         }
 
         Coroutine dashCoroutine = null;
-        if (skill.name.Contains("Attack9"))
+        if (skill.name.Contains("Attack9") || skill.name.Contains("Attack10"))
         {
+            Debug.Log($"[AttackSequence] {skill.name} 대쉬 코루틴 실행");
             dashCoroutine = StartCoroutine(Attack9DashRoutine());
         }
 
         bool attackFinished = false;
-
         Action<float> onComplete = (nextTime) => {
             float delay = skillSelector.GetLastSkillDelay();
             nextAttackTime = Time.time + delay;
@@ -849,7 +855,15 @@ public class QueenBanditAI : EnemyAIBase
         };
 
         core.OnAttackCompleted += onComplete;
+
+        Debug.Log($"[AttackSequence] CmdPerformAttack 호출 직전");
         core.CmdPerformAttack?.Invoke(skill);
+
+        if (UseAnimRoot && agent != null && agent.enabled)
+        {
+            Debug.LogWarning($"[AttackSequence 경고] CmdPerformAttack 호출 후 Agent가 다시 켜져있음! 강제 종료합니다.");
+            agent.enabled = false;
+        }
 
         float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
         float timeout = Time.time + clipLength + 0.1f;
@@ -857,24 +871,15 @@ public class QueenBanditAI : EnemyAIBase
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
 
         core.OnAttackCompleted -= onComplete;
+        Debug.Log($"[AttackSequence] 스킬 종료 완료");
 
-        if (dashCoroutine != null)
-        {
-            StopCoroutine(dashCoroutine);
-        }
-
-        if (isPushAttack)
-        {
-            core.CmdSetIgnorePlayerCollision?.Invoke(true);
-        }
+        if (dashCoroutine != null) StopCoroutine(dashCoroutine);
+        if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(true);
 
         if (UseAnimRoot)
         {
             if (agent != null) agent.enabled = true;
-            if (!skillSelector.isInstantComboTriggered)
-            {
-                core.CmdTrySnapToNavMesh?.Invoke();
-            }
+            if (!skillSelector.isInstantComboTriggered) core.CmdTrySnapToNavMesh?.Invoke();
         }
 
         bool isEarthquake = earthquakeSkills != null && earthquakeSkills.Contains(skill);
@@ -898,53 +903,67 @@ public class QueenBanditAI : EnemyAIBase
 
     private IEnumerator Attack9DashRoutine()
     {
-        yield return new WaitForSeconds(attack9DashDelay);
+        Debug.Log($"[Attack9DashRoutine] 대쉬 진입. 딜레이({attack9DashDelay}초) 대기 시작");
+        float delayElapsed = 0f;
+        while (delayElapsed < attack9DashDelay)
+        {
+            delayElapsed += Time.deltaTime;
+
+            if (Player.Instance != null)
+            {
+                Vector3 targetDir = Player.Instance.transform.position - transform.position;
+                targetDir.y = 0;
+
+                if (targetDir.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRot = Quaternion.LookRotation(targetDir.normalized);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 15f);
+                }
+            }
+            yield return null;
+        }
 
         Vector3 startPos = transform.position;
         Vector3 playerPos = Player.Instance.transform.position;
 
-        Vector3 dirToPlayer = (playerPos - startPos);
-        dirToPlayer.y = 0;
-        if (dirToPlayer.sqrMagnitude > 0.001f)
-        {
-            transform.rotation = Quaternion.LookRotation(dirToPlayer.normalized);
-        }
-
         Vector3 forwardDir = transform.forward;
         forwardDir.y = 0f;
-
-        if (forwardDir.sqrMagnitude > 0.001f)
-            forwardDir.Normalize();
-        else
-            forwardDir = transform.forward;
+        if (forwardDir.sqrMagnitude > 0.001f) forwardDir.Normalize();
+        else forwardDir = transform.forward;
 
         float distanceToPlayer = Vector3.Distance(new Vector3(startPos.x, 0, startPos.z), new Vector3(playerPos.x, 0, playerPos.z));
         float stopOffset = 1.5f;
-
         float targetDashDistance = Mathf.Max(0f, distanceToPlayer - stopOffset);
+
+        Debug.Log($"[Attack9DashRoutine] 이동 시작. 계산된 돌진 거리: {targetDashDistance}");
 
         float elapsed = 0f;
         while (elapsed < attack9DashDuration)
         {
-            if (core.IsDead || !isAttacking) yield break;
+            if (core.IsDead || !isAttacking)
+            {
+                Debug.Log($"[Attack9DashRoutine] 사망 또는 공격 취소로 돌진 중단");
+                yield break;
+            }
 
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / attack9DashDuration);
             float curveValue = attack9DashCurve.Evaluate(t);
 
             Vector3 nextPos = startPos + (forwardDir * (targetDashDistance * curveValue));
-
             Vector3 moveDir = (nextPos - transform.position).normalized;
             float moveDist = Vector3.Distance(transform.position, nextPos);
 
             if (moveDist > 0.001f && Physics.SphereCast(transform.position + Vector3.up, 0.3f, moveDir, out RaycastHit hit, moveDist, wallLayer))
             {
+                Debug.Log($"[Attack9DashRoutine] 벽 충돌 감지로 돌진 조기 종료");
                 break;
             }
 
             transform.position = nextPos;
             yield return null;
         }
+        Debug.Log($"[Attack9DashRoutine] 대쉬 로직 완전 종료");
     }
 
     public void LeftTrail(int status)

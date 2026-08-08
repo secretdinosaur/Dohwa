@@ -195262,15 +195262,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.29
+      value: -1.8
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5
+      value: -4.999998
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -8.89
+      value: -11.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -203784,7 +203784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 5
+  rotationSpeed: 100
 --- !u!114 &925715354623997776
 MonoBehaviour:
   m_ObjectHideFlags: 0
