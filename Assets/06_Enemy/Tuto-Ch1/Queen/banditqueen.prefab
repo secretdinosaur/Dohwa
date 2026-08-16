@@ -195262,15 +195262,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.8
+      value: -5.72
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.999998
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -11.3
+      value: 2.33
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -203784,7 +203784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 100
+  rotationSpeed: 10
 --- !u!114 &925715354623997776
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203818,7 +203818,7 @@ MonoBehaviour:
   maxHP: 1000
   maxMP: 100
   mpRecoveryPerSecond: 5
-  stunDuration: 9
+  stunDuration: 9.5
   maxPhase: 2
   currentPhase: 1
   phaseTransitionDelay: 11
@@ -203838,7 +203838,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QueenBanditAI
   disableLogicDistance: 200
   detectionRange: 0
-  detectionRangeWithoutWatch: 55
+  detectionRangeWithoutWatch: 0
   detectionMemoryDuration: 10
   chaseRange: 999
   wanderSearchRadius: 0
@@ -203853,6 +203853,7 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   AfterImages:
@@ -203879,7 +203880,7 @@ MonoBehaviour:
   closeWanderMax: 4
   stateChangeDelay: 2
   parriedBackStepChance: 60
-  normalBackStepChance: 20
+  normalBackStepChance: 10
   strafeOnCloseChance: 30
   idleStrafeChance: 15
   leftStepSkills:
@@ -203927,6 +203928,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  skillHoldTimeout: 5
 --- !u!114 &8510875478327195912
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -204169,12 +204171,12 @@ MonoBehaviour:
     lastUsedTime: 0
     currentWeight: 8
   - skill: {fileID: 11400000, guid: 54557036e957d1344bd075f75e4ca4b1, type: 2}
-    minDistance: 25
+    minDistance: 15
     maxDistance: 50
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 1
-    cooldown: 15
+    cooldown: 25
     minPhase: 2
     maxPhase: 2
     comboSkills: []
@@ -204188,7 +204190,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 15
+    cooldown: 25
     minPhase: 1
     maxPhase: 1
     comboSkills: []
@@ -204202,7 +204204,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 15
+    cooldown: 25
     minPhase: 2
     maxPhase: 2
     comboSkills: []
@@ -204211,7 +204213,7 @@ MonoBehaviour:
     lastUsedTime: 0
     currentWeight: 8
   - skill: {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
-    minDistance: 20
+    minDistance: 10
     maxDistance: 45
     baseWeight: 1
     weightIncreaseAmount: 1

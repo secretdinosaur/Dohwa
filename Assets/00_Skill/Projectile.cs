@@ -66,12 +66,33 @@ public class Projectile : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(moveDirection);
         }
 
-        transform.position += moveDirection * Speed * Time.deltaTime;
+        float moveDistance = Speed * Time.deltaTime;
+
+        // --- 추가된 부분: 이동하기 전에 이동할 경로(moveDistance)만큼 레이를 쏴서 충돌 검사 ---
+        if (Physics.Raycast(transform.position, moveDirection, out RaycastHit hit, moveDistance, Physics.AllLayers, QueryTriggerInteraction.Collide))
+        {
+            // 궤적 내에 충돌체가 감지되었다면 그 위치로 이동시킨 후 충돌 처리
+            transform.position = hit.point;
+            ProcessCollision(hit.collider);
+
+            // 충돌 처리 후 투사체가 파괴되었다면 더 이상 이동하지 않음
+            if (this == null || !gameObject.activeInHierarchy) return;
+        }
+
+        // 레이캐스트에 걸린 게 없다면 정상적으로 이동
+        transform.position += moveDirection * moveDistance;
     }
     #endregion
 
     #region Collision & Damage Logic
+    // 만약 투사체가 아주 느리거나 생성 직후 바로 겹쳤을 때를 대비해 OnTriggerEnter도 남겨둡니다.
     private void OnTriggerEnter(Collider other)
+    {
+        ProcessCollision(other);
+    }
+
+    // 기존 OnTriggerEnter에 있던 로직을 분리한 함수
+    private void ProcessCollision(Collider other)
     {
         if (Shooter != null && other.gameObject == Shooter) return;
 

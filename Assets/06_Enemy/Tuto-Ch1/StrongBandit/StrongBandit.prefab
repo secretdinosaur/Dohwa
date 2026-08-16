@@ -911,6 +911,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1281176516758775450}
   m_LocalEulerAnglesHint: {x: 65.901955, y: -12.292509, z: -18.959488}
+--- !u!1 &2145835116751554869
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4551433471187365018}
+  m_Layer: 7
+  m_Name: CameraTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4551433471187365018
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2145835116751554869}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 15, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3226412289062993797}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2280770262777067837
 GameObject:
   m_ObjectHideFlags: 0
@@ -3084,6 +3115,7 @@ Transform:
   - {fileID: 8754663406275405158}
   - {fileID: 2425667525618440437}
   - {fileID: 18979461378303389}
+  - {fileID: 4551433471187365018}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!95 &854992903061802926
@@ -3516,7 +3548,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 100
+  rotationSpeed: 10
 --- !u!114 &2027460816977967557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3672,10 +3704,11 @@ MonoBehaviour:
   backWalkMaxDuration: 3
   strafeSpeedMultiplier: 0.7
   strafeMinDuration: 1
-  strafeMaxDuration: 3
+  strafeMaxDuration: 2
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   FightWall: {fileID: 0}
@@ -3684,6 +3717,8 @@ MonoBehaviour:
   walkApproachFactor: 1.5
   backWalkTriggerFactor: 0.7
   strafeOnCloseChance: 30
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
   guardSkill: {fileID: 11400000, guid: a687a255a43ea024399bafb1b56b35a8, type: 2}
   counterSkill: {fileID: 11400000, guid: 7dab344497609af4885de1eaa6ae5046, type: 2}
   guardChancePerSec: 15
@@ -4735,6 +4770,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4268339900386639992, guid: e2bc78cc55aa22b4ea2badd3980de94c, type: 3}
       propertyPath: m_FillAmount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9178901833773296369, guid: e2bc78cc55aa22b4ea2badd3980de94c, type: 3}
+      propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []

@@ -99,11 +99,11 @@ public class Player : MonoBehaviour, IDamageable
     public bool isEating => animator.GetCurrentAnimatorStateInfo(1).IsTag("Eat");
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
-    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp;
+    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp && !isAirborne && !PlayerMove.isKnockedBack;
     public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
     public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp;
     public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
-    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isEating && !isWakingUp;
+    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isEating && !isWakingUp;
     public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
     public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating && !isWakingUp;
     public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isWakingUp;
@@ -309,7 +309,8 @@ public class Player : MonoBehaviour, IDamageable
 
         if ((isParrying || isGuarding) && skillIsGuardable)
         {
-            if (Mathf.Abs(Vector3.Dot(transform.forward, (caster.position - transform.position).normalized)) < GuardAngleThreshold)
+            // 수정됨: Mathf.Abs 제거 (후방 공격 방어 방지)
+            if (Vector3.Dot(transform.forward, (caster.position - transform.position).normalized) < GuardAngleThreshold)
             {
                 isParrying = false;
                 isGuarding = false;
@@ -382,14 +383,18 @@ public class Player : MonoBehaviour, IDamageable
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                Transform grabTarget = null;
-                if (stunData.stunType == StunType.Grabbed)
+                bool isDown = PlayerMove != null && (PlayerMove.isKnockedDown || isAirborne || isWakingUp);
+                if (!(isDown && stunData.stunType != StunType.Grabbed))
                 {
-                    grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    Transform grabTarget = null;
+                    if (stunData.stunType == StunType.Grabbed)
+                    {
+                        grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    }
+                    ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
+                    ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
+                    isStunApplied = true;
                 }
-                ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
-                ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
-                isStunApplied = true;
             }
         }
 
@@ -410,7 +415,8 @@ public class Player : MonoBehaviour, IDamageable
             AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
             bool isPlayingKnockMotion = state.IsName("KnockBack") || state.IsName("KnockBackEnd") ||
                                         state.IsName("KnockDown1") || state.IsName("KnockDown1End") ||
-                                        state.IsName("KnockDown2") || state.IsName("KnockDown2End");
+                                        state.IsName("KnockDown2") || state.IsName("KnockDown2End") ||
+                                        PlayerMove.isKnockedBack;
 
             if (animator != null && currentStunRoutine == null && !isAirborne && !isWakingUp && !isPlayingKnockMotion)
             {
@@ -547,26 +553,28 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    public void StartWakeUp(float wakeUpDuration)
+    public void StartWakeUp(float animDuration)
     {
         CancelCurrentAction();
         ClearStun();
-        StartCoroutine(WakeUpRoutine(wakeUpDuration));
+        StartCoroutine(WakeUpRoutine(animDuration));
     }
 
-    private IEnumerator WakeUpRoutine(float duration)
+    private IEnumerator WakeUpRoutine(float animDuration)
     {
-        yield return new WaitForSeconds(2.5f);
-
         isWakingUp = true;
         isAirborne = false;
 
-
         Animator_SetTrigger("WakeUp");
 
-        yield return new WaitForSeconds(duration);
+        yield return new WaitForSeconds(animDuration);
 
         isWakingUp = false;
+
+        if (animator != null && animator.layerCount > 1)
+        {
+            animator.SetLayerWeight(1, 1f);
+        }
     }
 
     private float mpRecoveryDelay;
@@ -799,6 +807,12 @@ public class Player : MonoBehaviour, IDamageable
         isParrying = false;
         isAirborne = false;
         isWakingUp = false;
+        if (PlayerMove != null)
+        {
+            PlayerMove.isKnockedBack = false;
+            PlayerMove.isKnockedDown = false;
+        }
+
         if (PlayerAttack != null)
         {
             PlayerAttack.isLockedOn = false;
@@ -809,6 +823,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             animator.Rebind();
             animator.Update(0f);
+            if (animator.layerCount > 1) animator.SetLayerWeight(1, 1f);
         }
 
         detectedByEnemyCount = 0;

@@ -9,23 +9,26 @@ public class AnimationDelayGhost : MonoBehaviour
     private List<Transform> sourceBones = new List<Transform>();
     private List<Transform> ghostBones = new List<Transform>();
 
-    private struct BoneData
+    // 필드 갱신을 위해 struct 대신 class 사용
+    private class FrameData
     {
-        public Vector3[] positions;
-        public Quaternion[] rotations;
+        public Vector3 rootPosition;
+        public Quaternion rootRotation;
+        public Vector3[] boneLocalPositions;
+        public Quaternion[] boneLocalRotations;
     }
 
-    private BoneData[] historyBuffer;
+    private FrameData[] historyBuffer;
     private int writeIndex = 0;
     private bool isBufferFilled = false;
 
     void Start()
     {
-        if (target == null)
-        {
-            Debug.LogError("Target이 할당되지 않았습니다.");
-            return;
-        }
+        if (target == null) return;
+
+        // 잔상 객체의 애니메이터 비활성화 (직접 조작과 충돌 방지)
+        Animator anim = GetComponent<Animator>();
+        if (anim != null) anim.enabled = false;
 
         SkinnedMeshRenderer[] sourceRenderers = target.GetComponentsInChildren<SkinnedMeshRenderer>();
         SkinnedMeshRenderer[] ghostRenderers = GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -46,13 +49,13 @@ public class AnimationDelayGhost : MonoBehaviour
             ghostBones.Add(gBone);
         }
 
-        historyBuffer = new BoneData[delayFrames + 1];
+        historyBuffer = new FrameData[delayFrames + 1];
         for (int i = 0; i < historyBuffer.Length; i++)
         {
-            historyBuffer[i] = new BoneData
+            historyBuffer[i] = new FrameData
             {
-                positions = new Vector3[sourceBones.Count],
-                rotations = new Quaternion[sourceBones.Count]
+                boneLocalPositions = new Vector3[sourceBones.Count],
+                boneLocalRotations = new Quaternion[sourceBones.Count]
             };
         }
     }
@@ -73,12 +76,17 @@ public class AnimationDelayGhost : MonoBehaviour
     {
         if (sourceBones.Count == 0) return;
 
-        BoneData currentData = historyBuffer[writeIndex];
+        FrameData currentData = historyBuffer[writeIndex];
 
+        // 루트의 월드 좌표 저장
+        currentData.rootPosition = target.position;
+        currentData.rootRotation = target.rotation;
+
+        // 뼈는 로컬 좌표로 저장하여 계층 구조 오작동 방지
         for (int i = 0; i < sourceBones.Count; i++)
         {
-            currentData.positions[i] = sourceBones[i].position;
-            currentData.rotations[i] = sourceBones[i].rotation;
+            currentData.boneLocalPositions[i] = sourceBones[i].localPosition;
+            currentData.boneLocalRotations[i] = sourceBones[i].localRotation;
         }
 
         writeIndex = (writeIndex + 1) % historyBuffer.Length;
@@ -90,14 +98,18 @@ public class AnimationDelayGhost : MonoBehaviour
 
         if (isBufferFilled)
         {
-            BoneData pastData = historyBuffer[writeIndex];
+            FrameData pastData = historyBuffer[writeIndex];
+
+            // 루트 이동
+            transform.position = pastData.rootPosition;
+            transform.rotation = pastData.rootRotation;
 
             for (int i = 0; i < ghostBones.Count; i++)
             {
                 if (ghostBones[i] != null)
                 {
-                    ghostBones[i].position = pastData.positions[i];
-                    ghostBones[i].rotation = pastData.rotations[i];
+                    ghostBones[i].localPosition = pastData.boneLocalPositions[i];
+                    ghostBones[i].localRotation = pastData.boneLocalRotations[i];
                 }
             }
         }

@@ -16,6 +16,8 @@ public class StrongBanditAI : EnemyAIBase
     [Header("Evasion Specific")]
     public float backWalkTriggerFactor = 0.7f;
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
+    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
     private bool lastActionWasBackWalk = false;
 
     [Header("Guard & Counter Specific")]
@@ -149,8 +151,12 @@ public class StrongBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                    if (UnityEngine.Random.Range(0f, 100f) < 60f)
+                    {
+                        float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                    }
+                    lastActionWasBackWalk = false;
                 }
                 return;
             }
@@ -188,7 +194,6 @@ public class StrongBanditAI : EnemyAIBase
                 }
                 else if (canAttackGlobal && hasEnoughMP)
                 {
-                    // 💡 공격이 가능한 상황에서도 20% 확률로 섣불리 공격하지 않고 간보기 (스텝, 게걸음 섞기)
                     if (UnityEngine.Random.Range(0f, 100f) < 20f && !skillSelector.HasPendingCombo)
                     {
                         if (UnityEngine.Random.value < 0.5f)
@@ -211,8 +216,11 @@ public class StrongBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                    if (UnityEngine.Random.Range(0f, 100f) < 60f)
+                    {
+                        float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                    }
                     lastActionWasBackWalk = false;
                 }
             }
@@ -233,8 +241,12 @@ public class StrongBanditAI : EnemyAIBase
                     }
                     else
                     {
-                        float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                        if (UnityEngine.Random.Range(0f, 100f) < 60f)
+                        {
+                            float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                        }
+                        lastActionWasBackWalk = false;
                     }
                 }
             }
@@ -332,7 +344,15 @@ public class StrongBanditAI : EnemyAIBase
             skillSelector.isInstantComboTriggered = false;
         }
 
+        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
         core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+            lastActionWasBackWalk = true;
+        }
+
         ChainNextAttackOrIdle();
     }
 
@@ -363,7 +383,15 @@ public class StrongBanditAI : EnemyAIBase
             core.CmdCancelAttack?.Invoke();
         }
 
+        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
         core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+            lastActionWasBackWalk = true;
+        }
+
         ChainNextAttackOrIdle();
     }
 }

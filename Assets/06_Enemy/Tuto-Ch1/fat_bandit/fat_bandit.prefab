@@ -327,15 +327,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3a3b3c018838b244f841650e8201f428, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.968444
+      value: -1.0846401
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3a3b3c018838b244f841650e8201f428, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.999998
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3a3b3c018838b244f841650e8201f428, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.7592597
+      value: 7.3851194
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3a3b3c018838b244f841650e8201f428, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1902,7 +1902,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 1.5
-  rotationSpeed: 100
+  rotationSpeed: 7.5
 --- !u!114 &7303581339294191014
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1935,8 +1935,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FatBanditAI
   disableLogicDistance: 100
-  detectionRange: 15
-  detectionRangeWithoutWatch: 5
+  detectionRange: 25
+  detectionRangeWithoutWatch: 15
   detectionMemoryDuration: 15
   chaseRange: 25
   wanderSearchRadius: 10
@@ -1951,6 +1951,7 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   walkApproachFactor: 1.5
@@ -2008,7 +2009,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 3
+    cooldown: 10
     minPhase: 1
     maxPhase: 99
     comboSkills: []

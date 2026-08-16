@@ -5,10 +5,18 @@ using UnityEngine;
 public class MeleeEnemyAI : EnemyAIBase
 {
     [Header("Melee Specific")]
-    public float moveBeforeAttackChance = 0.5f;
-    public float parriedBackWalkChance = 60f;
-    public float normalBackWalkChance = 20f;
+    [Tooltip("너무 가까울 때 공격 전 위치를 다시 잡을 확률 (0~100)")]
+    [Range(0f, 100f)] public float moveBeforeAttackChance = 50f;
+
+    [Tooltip("패링 당했을 때 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
+
+    [Tooltip("일반 공격 종료 후 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
+
     public float backWalkTriggerFactor = 0.7f;
+
+    [Tooltip("위치 다시 잡기 발동 시, 뒤로 안 가고 옆(Strafe)으로 걸을 확률 (0~100)")]
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
 
     private bool lastActionWasBackWalk = false;
@@ -42,7 +50,7 @@ public class MeleeEnemyAI : EnemyAIBase
 
             if (dist <= executeRange)
             {
-                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.value < moveBeforeAttackChance)
+                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                     {
@@ -61,7 +69,13 @@ public class MeleeEnemyAI : EnemyAIBase
                 }
                 else
                 {
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    float rand = UnityEngine.Random.Range(0f, 100f);
+
+                    if (rand < 60f)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    }
+
                     lastActionWasBackWalk = false;
                 }
             }
@@ -116,5 +130,14 @@ public class MeleeEnemyAI : EnemyAIBase
         }
 
         ChainNextAttackOrIdle();
+    }
+
+    protected void OnDisable()
+    {
+        if (currentAttackCompleteHandler != null && core != null)
+        {
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
+        }
     }
 }
