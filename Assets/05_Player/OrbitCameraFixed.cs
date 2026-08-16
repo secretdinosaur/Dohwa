@@ -17,6 +17,9 @@ public class CameraController : MonoBehaviour
     public float customLockOnBlendTime = 0.5f;
     public float customLockOffBlendTime = 0.5f;
 
+    public float manualYawOffset = 0f;
+    public float manualPitchOffset = 0f;
+
     Transform LastTarget;
     bool isLockedOn = false;
 
@@ -116,7 +119,6 @@ public class CameraController : MonoBehaviour
 
         lockOnCam.LookAt = finalTarget;
 
-        // 우선순위 변경 전 락온 블렌드 타임 적용
         if (cinemachineBrain != null)
         {
             var blend = cinemachineBrain.DefaultBlend;
@@ -140,14 +142,26 @@ public class CameraController : MonoBehaviour
         targetGroup.Targets = targets;
 
         var orbitalFollow = freeLookCam.GetComponent<CinemachineOrbitalFollow>();
-        if (orbitalFollow != null)
+        if (orbitalFollow != null && playerTargetGroup != null)
         {
-            Vector3 camAngles = Camera.main.transform.eulerAngles;
-            orbitalFollow.HorizontalAxis.Value = camAngles.y + 180f;
-            orbitalFollow.VerticalAxis.Value = camAngles.x;
-        }
+            Vector3 camEuler = Camera.main.transform.eulerAngles;
+            Vector3 playerEuler = playerTargetGroup.transform.eulerAngles;
 
-        // 우선순위 변경 전 락오프 블렌드 타임 적용
+            float targetYaw = camEuler.y - playerEuler.y + manualYawOffset;
+
+            float targetPitch = camEuler.x;
+            if (targetPitch > 180f) targetPitch -= 360f;
+            targetPitch += manualPitchOffset;
+
+            orbitalFollow.HorizontalAxis.Value = targetYaw;
+            orbitalFollow.VerticalAxis.Value = targetPitch;
+
+            // 시네머신 과거 위치 데이터 초기화 (슬링샷 현상 방지)
+            freeLookCam.PreviousStateIsValid = false;
+
+            // ForceCameraPosition 삭제 (오프셋 씹히는 문제 해결)
+        } 
+
         if (cinemachineBrain != null)
         {
             var blend = cinemachineBrain.DefaultBlend;

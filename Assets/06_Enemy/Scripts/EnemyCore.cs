@@ -7,8 +7,6 @@ using UnityEngine;
 
 public enum EnemyState { Idle, Chase, Attack, Stun, Dead, BackWalk, CooldownWalk }
 
-[RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(SkillSelector))]
 public class EnemyCore : MonoBehaviour, IDamageable
 {
     public EnemyState currentState = EnemyState.Idle;
@@ -535,6 +533,11 @@ public class EnemyCore : MonoBehaviour, IDamageable
         targetMoveX = moveX;
         targetMoveZ = moveZ;
         targetRun = run / 2;
+    }
+
+    public void ShakeCamera(float strength)
+    {
+        Player.Instance.impulseSource.GenerateImpulse(strength);
     }
 
     public void OnDrawGizmos()

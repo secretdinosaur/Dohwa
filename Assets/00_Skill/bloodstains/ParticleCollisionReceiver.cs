@@ -25,7 +25,7 @@ public class ParticleCollisionReceiver : MonoBehaviour
 
             if (MapDecalManager.Instance != null)
             {
-                MapDecalManager.Instance.SpawnDecal(hitPoint, hitNormal, velocity);
+                MapDecalManager.Instance.SpawnBloodDecal(hitPoint, hitNormal, velocity);
             }
         }
     }

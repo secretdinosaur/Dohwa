@@ -62,11 +62,35 @@ public class StrongBanditHealth : MonoBehaviour
     {
         if (isTransitioningPhase) return;
 
-        // 💡 범용 가드 상태 체크
+        // 💡 범용 가드 상태 체크 및 각도 판정 (150도)
         if (core.isGuarding)
         {
-            core.TriggerGuardSuccess();
-            return;
+            bool isFacingPlayer = false;
+
+            if (Player.Instance != null)
+            {
+                Vector3 dirToPlayer = (Player.Instance.transform.position - transform.position).normalized;
+                dirToPlayer.y = 0;
+                Vector3 forward = transform.forward;
+                forward.y = 0;
+
+                // 정면 기준 좌우 75도 (총 150도) 내에 플레이어가 있는지 체크
+                if (Vector3.Angle(forward, dirToPlayer) <= 75f)
+                {
+                    isFacingPlayer = true;
+                }
+            }
+
+            if (isFacingPlayer)
+            {
+                core.TriggerGuardSuccess();
+                return; // 가드 & 카운터 발동
+            }
+            else
+            {
+                // 뒤치기(또는 측면 타격) 시 가드가 강제로 풀리며 데미지 입음
+                core.isGuarding = false;
+            }
         }
 
         core.PlayHitSound(core.HittedSkill, core.HitIndex);

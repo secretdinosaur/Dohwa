@@ -7,8 +7,8 @@ public class Bandit5AI : EnemyAIBase
 {
     [Header("Behavior Tuning")]
     public float walkApproachFactor = 1.5f;
-    [Range(0f, 1f)] public float walkApproachChance = 0.2f; // 멀어졌을 때 걸어갈 확률
-    private bool isChoosingWalkApproach = false;            // 결정된 이동 방식 유지용
+    [Range(0f, 1f)] public float walkApproachChance = 0.2f;
+    private bool isChoosingWalkApproach = false;
 
     [Header("Strafe & Evasion Specific")]
     public float backWalkTriggerFactor = 0.7f;
@@ -26,6 +26,11 @@ public class Bandit5AI : EnemyAIBase
     public float jumpHeight = 3f;
     public float jumpDuration = 0.8f;
     public float jumpLandingOffset = 1.5f;
+
+    [Header("Weapon Decal Specific (무기 흔적)")]
+    public GameObject currentWeapon;
+    public Material[] customDecalMaterials;
+    public Vector2 customDecalSize = new Vector2(0.8f, 2.5f); // 데칼의 기본 가로세로 크기
 
     private SkillSelector skillSelector;
 
@@ -51,7 +56,7 @@ public class Bandit5AI : EnemyAIBase
 
             if (selectedSkill == null)
             {
-                if (distToLastPos > 5f)
+                if (distToLastPos > 2.5f)
                 {
                     UpdateChaseTarget();
                 }
@@ -77,14 +82,13 @@ public class Bandit5AI : EnemyAIBase
                 }
                 else if (selectedSkill == runAttackSkill)
                 {
-                    // Running Attack은 대상 방향으로 달리고 있을 때만 발동합니다.
                     if (distToLastPos <= executeRange && core.currentState == EnemyState.Chase && isRunningForward)
                     {
                         actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
                     }
                     else
                     {
-                        UpdateChaseTarget(); // 강제로 앞달리기 실행
+                        UpdateChaseTarget();
                     }
                 }
                 else if (distToLastPos <= executeRange)
@@ -100,9 +104,9 @@ public class Bandit5AI : EnemyAIBase
                     HandleDistantApproach(executeRange);
                 }
             }
-            else // 쿨타임 또는 마나 부족
+            else
             {
-                if (distToLastPos > executeRange * walkApproachFactor)
+                if (distToLastPos > executeRange)
                 {
                     HandleDistantApproach(executeRange);
                 }
@@ -161,6 +165,7 @@ public class Bandit5AI : EnemyAIBase
             UpdateChaseTarget();
         }
     }
+
     private void ChainNextAttackOrIdle()
     {
         if (skillSelector.HasPendingCombo)
@@ -256,6 +261,7 @@ public class Bandit5AI : EnemyAIBase
         {
             skillSelector.isInstantComboTriggered = false;
         }
+        core.StopEffects(skill.name);
 
         ChainNextAttackOrIdle();
     }
@@ -317,6 +323,9 @@ public class Bandit5AI : EnemyAIBase
             skillSelector.isInstantComboTriggered = false;
         }
 
+        // RunAttackSequence에도 누락되었던 이펙트 종료 로직 추가
+        core.StopEffects(skill.name);
+
         ChainNextAttackOrIdle();
     }
 
@@ -346,16 +355,36 @@ public class Bandit5AI : EnemyAIBase
         {
             skillSelector.isInstantComboTriggered = false;
         }
-
+        core.StopEffects(skill.name);
         ChainNextAttackOrIdle();
     }
 
-
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    // ============================================================
+    // 새로 추가된 무기 데칼 생성 함수 (애니메이션 이벤트 등에서 호출)
+    // ============================================================
+    public void SpawnWeaponGroundDecal()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        if (currentWeapon == null || customDecalMaterials == null || customDecalMaterials.Length == 0) return;
+        if (MapDecalManager.Instance == null) return;
+
+        Vector3 rayStart = currentWeapon.transform.position;
+        int groundLayer = LayerMask.GetMask("Ground");
+        // 무기 위치에서 수직 방향(아래)으로 레이캐스트
+        if (Physics.Raycast(rayStart + Vector3.up, Vector3.down, out RaycastHit hit, 15.0f, groundLayer))
+        {
+            Material selectedMat = customDecalMaterials[UnityEngine.Random.Range(0, customDecalMaterials.Length)];
+
+            // 데칼의 방향(velocity 인자)을 캐릭터가 바라보는 방향(transform.forward)으로 넘겨주어 
+            // 캐릭터의 전진/공격 방향에 맞춰 길쭉한 자국이 남도록 설정합니다.
+
+            MapDecalManager.Instance.SpawnCustomDecal(
+                hit.point,
+                hit.normal,
+                transform.forward,
+                selectedMat,
+                customDecalSize.x * UnityEngine.Random.Range(0.8f, 1.25f),
+                customDecalSize.y * UnityEngine.Random.Range(0.8f, 1.25f)
+            );
+        }
     }
-#endif
 }

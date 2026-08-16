@@ -31,7 +31,7 @@ public class MapDecalManager : MonoBehaviour
         }
     }
 
-    public void SpawnDecal(Vector3 hitPoint, Vector3 hitNormal, Vector3 velocity)
+    public void SpawnBloodDecal(Vector3 hitPoint, Vector3 hitNormal, Vector3 velocity)
     {
         if (decalPrefab == null || decalMaterials == null || decalMaterials.Length == 0) return;
         if (UnityEngine.Random.value > SpawnChance) return;
@@ -60,6 +60,40 @@ public class MapDecalManager : MonoBehaviour
             projector.size = new Vector3(randomWidth, calculatedHeight, depth);
 
             Material selectedMat = decalMaterials[Random.Range(0, decalMaterials.Length)];
+            projector.material = new Material(selectedMat);
+
+            StartCoroutine(FadeRoutine(decal, projector.material));
+        }
+        else
+        {
+            Destroy(decal);
+        }
+    }
+
+    // 수정됨: width와 height를 매개변수로 받아 직접 데칼 사이즈를 결정합니다.
+    public void SpawnCustomDecal(Vector3 hitPoint, Vector3 hitNormal, Vector3 velocity, Material Mat, float width, float height)
+    {
+        Quaternion rotation;
+        Vector3 projectedVelocity = Vector3.ProjectOnPlane(velocity, hitNormal);
+
+        if (projectedVelocity.sqrMagnitude > 0.001f)
+        {
+            rotation = Quaternion.LookRotation(-hitNormal, projectedVelocity);
+        }
+        else
+        {
+            rotation = Quaternion.LookRotation(-hitNormal) * Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+        }
+
+        GameObject decal = Instantiate(decalPrefab, hitPoint, rotation, transform);
+
+        DecalProjector projector = decal.GetComponent<DecalProjector>();
+        if (projector != null)
+        {
+            // 전달받은 width, height 적용
+            projector.size = new Vector3(width, height, depth);
+
+            Material selectedMat = Mat;
             projector.material = new Material(selectedMat);
 
             StartCoroutine(FadeRoutine(decal, projector.material));

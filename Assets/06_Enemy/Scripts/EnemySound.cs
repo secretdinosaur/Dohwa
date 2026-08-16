@@ -33,6 +33,8 @@ public class EnemySound : MonoBehaviour
         core.OnStunned += CancelAttackSound;
         core.CmdCancelAttack += CancelAttackSound;
         core.PlayHitSound += PlayHitSound;
+
+        footstepAS.spatialBlend = 1f;
     }
 
     private void OnDestroy()
@@ -58,10 +60,10 @@ public class EnemySound : MonoBehaviour
     public void PlayFootstepSound()
     {
         if (Time.time - lastFootstepTime < FootstepCooldown) return;
-
         if (footstepSounds != null && footstepSounds.Length > 0 && footstepAS != null)
         {
             lastFootstepTime = Time.time;
+
             footstepAS.PlayOneShot(footstepSounds[Random.Range(0, footstepSounds.Length)]);
         }
     }

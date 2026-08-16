@@ -11,6 +11,7 @@ public class Bandit3AI : EnemyAIBase
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
 
     private bool lastActionWasBackWalk = false;
+    private bool lastActionWasStep = false; // 추가: 연속 스텝 방지 플래그
     private Action<float> currentAttackCompleteHandler;
 
     protected override void HandleBehaviorLogic(float dist)
@@ -52,6 +53,7 @@ public class Bandit3AI : EnemyAIBase
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
                     }
                     lastActionWasBackWalk = true;
+                    lastActionWasStep = false; // 스텝이 아니므로 초기화
                 }
                 else if (canAttackGlobal && hasEnoughMP)
                 {
@@ -63,16 +65,18 @@ public class Bandit3AI : EnemyAIBase
                     float ran = UnityEngine.Random.value;
                     if (ran < 0.4f)
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
-                    else if(ran < 0.8f)
+                    else if (ran < 0.8f)
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
                     else
                     {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
                         lastActionWasBackWalk = true;
+                        lastActionWasStep = false; // 스텝이 아니므로 초기화
                         return;
                     }
 
                     lastActionWasBackWalk = false;
+                    lastActionWasStep = false; // 스텝이 아니므로 초기화
                 }
             }
             else
@@ -91,9 +95,12 @@ public class Bandit3AI : EnemyAIBase
     {
         isAttacking = true;
 
-        if (!core.skillSelector.isNextSkillCombo && UnityEngine.Random.value < 0.4f)
+        // 추가: lastActionWasStep이 false일 때만 스텝 실행 가능
+        if (!core.skillSelector.isNextSkillCombo && !lastActionWasStep && UnityEngine.Random.value < 0.4f)
         {
             yield return StartCoroutine(ExecuteStepRoutine(2.5f, 0.4f, 0.25f));
+
+            lastActionWasStep = true; // 스텝을 실행했으므로 플래그 켜기
 
             if (Player.Instance == null || core.IsDead) yield break;
 
@@ -108,6 +115,10 @@ public class Bandit3AI : EnemyAIBase
                 actionCoroutine = null;
                 yield break;
             }
+        }
+        else
+        {
+            lastActionWasStep = false; // 스텝을 뛰지 않고 공격했으므로 플래그 끄기
         }
 
         bool attackFinished = false;
@@ -143,6 +154,7 @@ public class Bandit3AI : EnemyAIBase
         {
             yield return StartCoroutine(BackWalkRoutine(backWalkDist));
             lastActionWasBackWalk = true;
+            lastActionWasStep = false; // 백워크를 했으므로 플래그 끄기
         }
 
         ChainNextAttackOrIdle();

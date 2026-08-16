@@ -751,8 +751,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb00462449827e947ab0bf47598f1b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  baseMoveSpeed: 2
-  rotationSpeed: 125
+  baseMoveSpeed: 3
+  rotationSpeed: 15
 --- !u!114 &7431884652099070222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -799,6 +799,7 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   parriedBackWalkChance: 60
@@ -874,8 +875,10 @@ MonoBehaviour:
     cooldown: 1
     minPhase: 0
     maxPhase: 99
-    comboSkills: []
-    isInstantCombo: 0
+    comboSkills:
+    - {fileID: 11400000, guid: 503a65a857c1c734cb4f2ad965560a4d, type: 2}
+    - {fileID: 0}
+    isInstantCombo: 1
     instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
@@ -888,8 +891,10 @@ MonoBehaviour:
     cooldown: 1
     minPhase: 0
     maxPhase: 99
-    comboSkills: []
-    isInstantCombo: 0
+    comboSkills:
+    - {fileID: 11400000, guid: 3668cf0f45ab4c341a3aef31578e615b, type: 2}
+    - {fileID: 0}
+    isInstantCombo: 1
     instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
@@ -902,9 +907,11 @@ MonoBehaviour:
     cooldown: 1
     minPhase: 0
     maxPhase: 99
-    comboSkills: []
-    isInstantCombo: 0
-    instantComboTriggerIndex: 0
+    comboSkills:
+    - {fileID: 11400000, guid: 3668cf0f45ab4c341a3aef31578e615b, type: 2}
+    - {fileID: 11400000, guid: 503a65a857c1c734cb4f2ad965560a4d, type: 2}
+    isInstantCombo: 1
+    instantComboTriggerIndex: 1
     lastUsedTime: 0
     currentWeight: 0
   isNextSkillCombo: 0

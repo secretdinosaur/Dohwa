@@ -78,11 +78,6 @@ public class Skill_Range : SkillBase
         Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
         Vector3 shootDirection = casterTransform.forward;
-        if (casterTransform.TryGetComponent<EnemyCore>(out var enemy) && Player.Instance != null)
-        {
-            shootDirection = ((Player.Instance.transform.position + Vector3.up * 1.5f) - spawnPos);
-        }
-
         float finalDamage = baseDamage * hitData.damageMultiplier;
 
         GameObject go = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(shootDirection));
@@ -118,8 +113,6 @@ public class Skill_Range : SkillBase
                     Vector3 worldKnockback = projectileGo.transform.rotation * hitData.knockbackForce;
                     playerMove.KnockBack(worldKnockback);
                 }
-                //else if (targetCollider.transform.TryGetComponent<EnemyCore>(out var enemy))
-                //    enemy.KnockBack(hitData.knockbackForce);
             }
         }
     }

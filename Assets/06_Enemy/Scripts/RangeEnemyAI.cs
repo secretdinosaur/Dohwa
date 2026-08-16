@@ -111,7 +111,7 @@ public class RangeEnemyAI : EnemyAIBase
         }
 
         core.wasParried = false;
-
+        yield return new WaitForSeconds(0.5f);
         ChainNextAttackOrIdle();
     }
 
