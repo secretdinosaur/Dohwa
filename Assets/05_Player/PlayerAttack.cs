@@ -55,8 +55,8 @@ public class PlayerAttack : MonoBehaviour
     #region Combat & Tuning Settings
     [Header("Lock-On Settings")]
     [SerializeField] private float detectionRadius = 15f;
-    private float lockOnMaintainTime = 2f;
-    private float lockOnCooldown = 2f;
+    private float lockOnMaintainTime = 0.5f;
+    private float lockOnCooldown = 0.5f;
     private float lockOnStepDelay = 0.6f;
 
     [Header("Auto Aim Settings")]

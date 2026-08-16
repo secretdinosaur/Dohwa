@@ -2497,7 +2497,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.8, y: 14.987, z: 145.53}
-  m_LocalScale: {x: 0.13499999, y: 0.13499999, z: 0.13499996}
+  m_LocalScale: {x: 0.13499999, y: 0.13499999, z: 0.13499998}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2655299265364879644}
@@ -2630,7 +2630,7 @@ MonoBehaviour:
   maxSlopeAngle: 40
   maxJumpSlopeAngle: 60
   dashForce: 10
-  sprintMultiplier: 1.75
+  sprintMultiplier: 2.25
   acceleration: 20
   walkMultiplier: 0.5
   JumpForce: 5
@@ -2638,9 +2638,10 @@ MonoBehaviour:
   jumpHorizontalVelocityMultiplier: 12
   jumpCooldown: 0.5
   isGrounded: 1
+  isKnockedDown: 0
   isKnockedBack: 0
   knockbackForceThreshold: 9
-  SprintMP: 5
+  SprintMP: 15
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -3454,7 +3455,7 @@ Transform:
   m_GameObject: {fileID: 3309679386805089171}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.15, y: 0.85, z: -1}
+  m_LocalPosition: {x: 0.15, y: 15, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

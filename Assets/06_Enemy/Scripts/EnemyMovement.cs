@@ -5,7 +5,7 @@ using UnityEngine.AI;
 public class EnemyMovement : MonoBehaviour
 {
     public float baseMoveSpeed = 3f;
-    public float rotationSpeed = 5f;
+    public float rotationSpeed = 10f;
 
     private NavMeshAgent agent;
     private Animator animator;
@@ -13,6 +13,9 @@ public class EnemyMovement : MonoBehaviour
 
     public Vector3 OriginalPosition { get; private set; }
     private Quaternion originalRotation;
+
+    // LookAt 명령이 들어올 때 자동 이동 회전을 막기 위한 타이머
+    private float overrideLookTimer = 0f;
 
     private void Awake()
     {
@@ -23,9 +26,18 @@ public class EnemyMovement : MonoBehaviour
         OriginalPosition = transform.position;
         originalRotation = transform.rotation;
 
-        if (agent != null) { agent.speed = baseMoveSpeed; agent.enabled = false; }
+        if (agent != null)
+        {
+            agent.speed = baseMoveSpeed;
+            agent.enabled = false;
+
+            // NavMeshAgent의 자동 회전 기능 비활성화
+            agent.updateRotation = false;
+        }
+
         core.BaseMovementSpeed = baseMoveSpeed;
         TrySnapToNavMesh();
+
         if (agent != null) agent.enabled = true;
     }
 
@@ -61,6 +73,25 @@ public class EnemyMovement : MonoBehaviour
         core.QueryOriginalPosition = null;
     }
 
+    private void Update()
+    {
+        if (overrideLookTimer > 0f)
+        {
+            overrideLookTimer -= Time.deltaTime;
+            return;
+        }
+
+        if (agent != null && agent.isActiveAndEnabled && !agent.isStopped && agent.desiredVelocity.sqrMagnitude > 0.1f)
+        {
+            Vector3 moveDir = agent.desiredVelocity.normalized;
+            moveDir.y = 0f;
+            if (moveDir != Vector3.zero)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(moveDir), Time.deltaTime * rotationSpeed);
+            }
+        }
+    }
+
     private float checkRadius = 0.1f;
     private float checkHeight = 1.0f;
     private void OnAnimatorMove()
@@ -74,6 +105,7 @@ public class EnemyMovement : MonoBehaviour
 
         Vector3 direction = delta / moveDist;
         Vector3 origin = transform.position + (Vector3.up * checkHeight);
+
         if (core == null || !core.isIgnoringPlayer)
         {
             if (Physics.SphereCast(origin, checkRadius, direction, out RaycastHit hit, moveDist, LayerMask.GetMask("Player")))
@@ -119,7 +151,10 @@ public class EnemyMovement : MonoBehaviour
         Vector3 dir = (targetPos - transform.position).normalized;
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.1f)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * rotationSpeed / 10);
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * rotationSpeed);
+            overrideLookTimer = 0.1f;
+        }
     }
 
     private void FastLookAtTarget(Vector3 targetPos)
@@ -127,7 +162,10 @@ public class EnemyMovement : MonoBehaviour
         Vector3 dir = (targetPos - transform.position).normalized;
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.1f)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * rotationSpeed / 5f);
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * (rotationSpeed * 2f));
+            overrideLookTimer = 0.1f;
+        }
     }
 
     private void MoveDirection(Vector3 direction, float speedMultiplier)

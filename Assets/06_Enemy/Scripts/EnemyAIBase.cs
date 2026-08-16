@@ -30,6 +30,12 @@ public abstract class EnemyAIBase : MonoBehaviour
     public float targetUpdateInterval = 0.2f;
     public float firstDetectionDelay = 1.0f;
 
+    // ★ 추가됨: 강강술래 방지용 예측 추적 변수
+    [Header("Predictive Chase (강강술래 방지)")]
+    public float maxPredictionTime = 0.7f;
+    protected Vector3 prevPlayerPos;
+    protected Vector3 playerVelocity;
+
     protected EnemyCore core;
     public bool isDetectedPlayer = false;
     public bool isMemorizingPlayer = false;
@@ -125,6 +131,15 @@ public abstract class EnemyAIBase : MonoBehaviour
             }
             return;
         }
+
+        // ★ 추가됨: 플레이어의 실시간 이동 속도(방향) 계산
+        if (prevPlayerPos == Vector3.zero) prevPlayerPos = Player.Instance.transform.position;
+        playerVelocity = (Player.Instance.transform.position - prevPlayerPos) / Time.deltaTime;
+
+        // 너무 빠른 비정상 속도(순간이동 등)는 무시하도록 제한
+        if (playerVelocity.magnitude > 20f) playerVelocity = playerVelocity.normalized * 20f;
+
+        prevPlayerPos = Player.Instance.transform.position;
 
         float sqrDistToPlayer = (Player.Instance.transform.position - transform.position).sqrMagnitude;
         float cullSqrDist = disableLogicDistance * disableLogicDistance;
@@ -293,6 +308,11 @@ public abstract class EnemyAIBase : MonoBehaviour
                 break;
             }
 
+            if (Player.Instance != null)
+            {
+                core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+            }
+
             yield return null;
         }
 
@@ -330,7 +350,26 @@ public abstract class EnemyAIBase : MonoBehaviour
         if (Time.time >= nextTargetUpdateTime)
         {
             nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
+
+            // ★ 수정됨: 플레이어의 이동 경로를 예측하여 앞길을 가로막음
+            Vector3 targetPos = lastKnownPlayerPos;
+
+            // 플레이어가 실제로 일정 속도 이상으로 움직이고 있을 때만 예측 적용
+            if (playerVelocity.sqrMagnitude > 1f)
+            {
+                Vector3 flatVelocity = new Vector3(playerVelocity.x, 0f, playerVelocity.z);
+
+                // 적과 플레이어 사이의 거리에 비례하여 얼마나 앞을 내다볼지 결정
+                float dist = Vector3.Distance(transform.position, targetPos);
+
+                // 멀리 있을수록 더 멀리 예측 (최대 maxPredictionTime까지만)
+                float predictionTime = Mathf.Clamp(dist / (core.BaseMovementSpeed * chaseSpeedMultiplier), 0f, maxPredictionTime);
+
+                // 플레이어가 가고 있는 방향의 앞쪽을 새로운 목적지로 설정
+                targetPos += flatVelocity * predictionTime;
+            }
+
+            core.CmdMoveTo?.Invoke(targetPos, chaseSpeedMultiplier);
         }
     }
 
@@ -375,7 +414,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
                 Vector3 orbitDir = Vector3.Cross(Vector3.up, dirToPlayer).normalized * dirSign;
 
-                float SpeedMultiplier = run >= 1.5f ? chaseSpeedMultiplier * 0.7f : strafeSpeedMultiplier;
+                float SpeedMultiplier = run >= 1.5f ? chaseSpeedMultiplier * 0.8f : strafeSpeedMultiplier;
                 float step = core.BaseMovementSpeed * SpeedMultiplier * Time.deltaTime;
 
                 if (!Physics.SphereCast(transform.position + Vector3.up, 0.3f, orbitDir, out _, step, wallLayer))
@@ -451,6 +490,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         return Vector3.Distance(transform.position, Player.Instance.transform.position) <= 2.5f * scale;
     }
+
     protected float GetSkillOptimalDistance(SkillBase skill)
     {
         if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
@@ -472,6 +512,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         }
         return 1.0f;
     }
+
     protected void CancelCurrentSkillAction()
     {
         core.animator.CrossFade("Idle", 0.25f);

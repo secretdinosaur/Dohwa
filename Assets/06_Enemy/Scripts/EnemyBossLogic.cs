@@ -99,7 +99,7 @@ public class EnemyBossLogic : MonoBehaviour
         if (BossName != null)
             UIManager.Instance.BossNameText.text = BossName.GetLocalizedString();
         else
-            UIManager.Instance.BossNameText.text = "???";
+            UIManager.Instance.BossNameText.text = "Null boss name";
     }
 
     protected virtual void PlayerDead()
