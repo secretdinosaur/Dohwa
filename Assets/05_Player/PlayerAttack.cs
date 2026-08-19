@@ -54,7 +54,7 @@ public class PlayerAttack : MonoBehaviour
 
     #region Combat & Tuning Settings
     [Header("Lock-On Settings")]
-    [SerializeField] private float detectionRadius = 15f;
+    [SerializeField] private float detectionRadius = 25f;
     private float lockOnMaintainTime = 0.5f;
     private float lockOnCooldown = 0.5f;
     private float lockOnStepDelay = 0.6f;
@@ -118,6 +118,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void AddCommand(SkillBase.Command cmd)
     {
+        if(Player.Instance.isAirborne || Player.Instance.isCinematic || Player.Instance.IsStunned || Player.Instance.PlayerMove.isKnockedDown) return;
         commandBuffer.Add(cmd);
         if (commandBuffer.Count > MaxCommandBuffer) commandBuffer.RemoveAt(0);
 

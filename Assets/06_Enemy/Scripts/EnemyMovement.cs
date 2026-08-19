@@ -101,8 +101,6 @@ public class EnemyMovement : MonoBehaviour
         Vector3 delta = animator.deltaPosition;
         float moveDist = delta.magnitude;
 
-        if (moveDist < 0.0001f) return;
-
         Vector3 direction = delta / moveDist;
         Vector3 origin = transform.position + (Vector3.up * checkHeight);
 

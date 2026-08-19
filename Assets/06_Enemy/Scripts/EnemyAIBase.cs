@@ -197,11 +197,11 @@ public abstract class EnemyAIBase : MonoBehaviour
         else
         {
             isDetectedPlayer = false;
+            core.SetPlayerDetection(false);
 
             if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
             {
                 isMemorizingPlayer = false;
-                core.SetPlayerDetection(false);
             }
         }
 
