@@ -1,5 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic; // List ì‚¬ìš©ì„ ìœ„í•´ ì¶”ê°€
 
 [RequireComponent(typeof(Collider))]
 public class EnvironmentSound : MonoBehaviour
@@ -15,10 +16,12 @@ public class EnvironmentSound : MonoBehaviour
     public string targetTag = "Player";
 
     private Coroutine playRoutine;
+
+    // í”Œë ˆì´ì–´ê°€ ë¬¼ë¦¬ì ìœ¼ë¡œ íŠ¸ë¦¬ê±° ì•ˆì— ìˆëŠ”ì§€ ì—¬ë¶€ë§Œ ê¸°ë¡í•©ë‹ˆë‹¤.
     private bool isPlayerInside = false;
 
-    // AudioSource ´ë½Å Ç®¸µ °´Ã¼ÀÎ SoundObject¸¦ Á÷Á¢ ÂüÁ¶ÇÕ´Ï´Ù.
-    private SoundObject currentPlayingSound;
+    // ğŸ’¡ ìˆ˜ì •ë¨: ì¬ìƒëœ ì—¬ëŸ¬ ê²¹ì˜ ì‚¬ìš´ë“œë“¤ì„ ë†“ì¹˜ì§€ ì•Šê³  ì „ë¶€ ë„ê¸° ìœ„í•´ Listë¡œ ê´€ë¦¬í•©ë‹ˆë‹¤.
+    private List<SoundObject> activeSounds = new List<SoundObject>();
 
     private void Awake()
     {
@@ -31,11 +34,28 @@ public class EnvironmentSound : MonoBehaviour
 
     private void Update()
     {
-        // ÇÃ·¹ÀÌ¾î°¡ ¿µ¿ª ¾È¿¡ ÀÖÁö¸¸ Á×¾úÀ» °æ¿ì Ã³¸®
-        if (isPlayerInside && Player.Instance != null && !Player.Instance.IsAlive)
+        // ğŸ’¡ ìˆ˜ì •ë¨: Inventory.activeSelf ëŒ€ì‹  í™•ì‹¤í•œ í™”ë©´ ë…¸ì¶œ ì—¬ë¶€ë¥¼ ì²´í¬í•˜ëŠ” activeInHierarchy ì‚¬ìš©
+        bool canPlay = isPlayerInside &&
+                       Player.Instance != null &&
+                       Player.Instance.IsAlive &&
+                       UIManager.Instance != null &&
+                       !UIManager.Instance.Inventory.activeInHierarchy;
+
+        if (canPlay)
         {
-            StopEnvironmentSound();
-            isPlayerInside = false;
+            // ì¬ìƒ ì¡°ê±´ì´ ë§ëŠ”ë° ì½”ë£¨í‹´ì´ ëŒê³  ìˆì§€ ì•Šë‹¤ë©´ ì‹œì‘í•©ë‹ˆë‹¤. (ì¸ë²¤í† ë¦¬ë¥¼ ë‹«ì•˜ì„ ë•Œ ì¬ê°œ)
+            if (playRoutine == null)
+            {
+                playRoutine = StartCoroutine(EnvironmentSoundRoutine());
+            }
+        }
+        else
+        {
+            // ì¬ìƒ ì¡°ê±´ì´ ì•ˆ ë§ëŠ”ë° ì‚¬ìš´ë“œ ë¡œì§ì´ ëŒê³  ìˆê±°ë‚˜ ì¼œì§„ ì†Œë¦¬ê°€ ìˆë‹¤ë©´ ì •ì§€í•©ë‹ˆë‹¤.
+            if (playRoutine != null || activeSounds.Count > 0)
+            {
+                StopEnvironmentSound();
+            }
         }
     }
 
@@ -43,14 +63,7 @@ public class EnvironmentSound : MonoBehaviour
     {
         if (other.CompareTag(targetTag))
         {
-            // ÇÃ·¹ÀÌ¾î°¡ ÀÌ¹Ì Á×¾îÀÖ´Ù¸é ÁøÀÔ ½Ã È¯°æÀ½À» Àç»ıÇÏÁö ¾ÊÀ½
-            if (Player.Instance != null && !Player.Instance.IsAlive) return;
-
             isPlayerInside = true;
-            if (playRoutine == null)
-            {
-                playRoutine = StartCoroutine(EnvironmentSoundRoutine());
-            }
         }
     }
 
@@ -59,56 +72,53 @@ public class EnvironmentSound : MonoBehaviour
         if (other.CompareTag(targetTag))
         {
             isPlayerInside = false;
-            StopEnvironmentSound();
         }
     }
 
     private void StopEnvironmentSound()
     {
-        // ´ë±â ÄÚ·çÆ¾ ÁßÁö
         if (playRoutine != null)
         {
             StopCoroutine(playRoutine);
             playRoutine = null;
         }
 
-        // Àç»ı ÁßÀÎ »ç¿îµå°¡ ÀÖ´Ù¸é SoundManagerÀÇ ±â´ÉÀ» ÅëÇØ Á¤Áö ¹× Ç® ¹İÈ¯
-        if (currentPlayingSound != null && SoundManager.Instance != null)
+        // ğŸ’¡ ìˆ˜ì •ë¨: ë¦¬ìŠ¤íŠ¸ì— ë“±ë¡ëœ ëª¨ë“  ì‚¬ìš´ë“œë¥¼ ìˆœíšŒí•˜ë©° í™•ì‹¤í•˜ê²Œ ì „ë¶€ ì •ì§€ì‹œí‚µë‹ˆë‹¤.
+        if (SoundManager.Instance != null)
         {
-            SoundManager.Instance.StopSound(currentPlayingSound);
-            currentPlayingSound = null;
+            foreach (var sound in activeSounds)
+            {
+                if (sound != null && sound.audioSource != null && sound.audioSource.isPlaying)
+                {
+                    SoundManager.Instance.StopSound(sound);
+                }
+            }
         }
+
+        // ì •ì§€ ì™„ë£Œ í›„ ë¦¬ìŠ¤íŠ¸ ì´ˆê¸°í™”
+        activeSounds.Clear();
     }
 
     private IEnumerator EnvironmentSoundRoutine()
     {
-        while (isPlayerInside)
+        while (true)
         {
             float waitTime = Random.Range(minInterval, maxInterval);
-            float timer = 0f;
+            yield return new WaitForSeconds(waitTime);
 
-            // waitTime¸¸Å­ ´ë±âÇÏµÇ, ¸Å ÇÁ·¹ÀÓ ÇÃ·¹ÀÌ¾î »ıÁ¸ ¿©ºÎ Ã¼Å©
-            while (timer < waitTime)
-            {
-                if (Player.Instance != null && !Player.Instance.IsAlive)
-                {
-                    yield break;
-                }
-                timer += Time.deltaTime;
-                yield return null;
-            }
-
-            if (isPlayerInside && environmentClips != null && environmentClips.Length > 0)
+            if (environmentClips != null && environmentClips.Length > 0)
             {
                 AudioClip randomClip = environmentClips[Random.Range(0, environmentClips.Length)];
 
                 if (SoundManager.Instance != null)
                 {
-                    // ¹İÈ¯µÇ´Â SoundObject¸¦ Ä³½ÌÇÏ¿© ³ªÁß¿¡ °­Á¦·Î ²ø ¼ö ÀÖ°Ô µÓ´Ï´Ù.
-                    currentPlayingSound = SoundManager.Instance.PlaySound(randomClip);
+                    SoundObject newSound = SoundManager.Instance.PlaySound(randomClip);
+                    activeSounds.Add(newSound);
+
+                    // ì„±ëŠ¥ ìµœì í™”: ì´ë¯¸ ì¬ìƒì´ ëë‚¬ê±°ë‚˜ í’€ë¡œ ëŒì•„ê°„ ì‚¬ìš´ë“œì˜¤ë¸Œì íŠ¸ëŠ” ë¦¬ìŠ¤íŠ¸ì—ì„œ ìë™ ì²­ì†Œ
+                    activeSounds.RemoveAll(s => s == null || !s.gameObject.activeInHierarchy || !s.audioSource.isPlaying);
                 }
             }
         }
-        playRoutine = null;
     }
 }

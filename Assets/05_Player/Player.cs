@@ -309,7 +309,6 @@ public class Player : MonoBehaviour, IDamageable
 
         if ((isParrying || isGuarding) && skillIsGuardable)
         {
-            // 수정됨: Mathf.Abs 제거 (후방 공격 방어 방지)
             if (Vector3.Dot(transform.forward, (caster.position - transform.position).normalized) < GuardAngleThreshold)
             {
                 isParrying = false;
@@ -383,18 +382,16 @@ public class Player : MonoBehaviour, IDamageable
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                bool isDown = PlayerMove != null && (PlayerMove.isKnockedDown || isAirborne || isWakingUp);
-                if (!(isDown && stunData.stunType != StunType.Grabbed))
+                if (PlayerMove != null) PlayerMove.CancelKnockBack();
+
+                Transform grabTarget = null;
+                if (stunData.stunType == StunType.Grabbed)
                 {
-                    Transform grabTarget = null;
-                    if (stunData.stunType == StunType.Grabbed)
-                    {
-                        grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
-                    }
-                    ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
-                    ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
-                    isStunApplied = true;
+                    grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
                 }
+                ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
+                ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
+                isStunApplied = true;
             }
         }
 
@@ -411,14 +408,10 @@ public class Player : MonoBehaviour, IDamageable
         if (!isStunApplied && !willDie && !hasKnockback)
         {
             CancelCurrentAction();
+            ClearStun();
+            if (PlayerMove != null) PlayerMove.CancelKnockBack();
 
-            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
-            bool isPlayingKnockMotion = state.IsName("KnockBack") || state.IsName("KnockBackEnd") ||
-                                        state.IsName("KnockDown1") || state.IsName("KnockDown1End") ||
-                                        state.IsName("KnockDown2") || state.IsName("KnockDown2End") ||
-                                        PlayerMove.isKnockedBack;
-
-            if (animator != null && currentStunRoutine == null && !isAirborne && !isWakingUp && !isPlayingKnockMotion)
+            if (animator != null)
             {
                 animator.ResetTrigger("Hitted1");
                 animator.ResetTrigger("Hitted2");
@@ -470,6 +463,9 @@ public class Player : MonoBehaviour, IDamageable
         currentStunType = StunType.Stagger;
         animator.SetBool("isGrabbed", false);
         animator.ResetTrigger("Stagger");
+
+        PreventMove = false;
+        PreventAttack = false;
     }
 
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)

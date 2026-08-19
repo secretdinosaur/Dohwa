@@ -31,6 +31,12 @@ public class StrongBanditAI : EnemyAIBase
     public float guardStartupDelay = 0.5f;
     public float postStunGuardDelay = 2.0f;
 
+    [Header("Jump Counter Specific")]
+    public AnimationCurve jumpCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+    public float jumpHeight = 3f;
+    public float jumpDuration = 0.8f;
+    public float jumpLandingOffset = 1.5f;
+
     private SkillSelector skillSelector;
     private float lastGuardTime = -9999f;
     private bool isStartingFight = false;
@@ -39,10 +45,13 @@ public class StrongBanditAI : EnemyAIBase
 
     private Action<float> currentAttackCompleteHandler;
 
+    private UnityEngine.AI.NavMeshAgent agent;
+
     protected override void Awake()
     {
         base.Awake();
         skillSelector = GetComponent<SkillSelector>();
+        agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
 
         core.OnPlayerDetected += HandlePlayerDetected;
         core.OnStunned += HandleInterruptSpecial;
@@ -64,15 +73,38 @@ public class StrongBanditAI : EnemyAIBase
         }
     }
 
+    private void SnapToGround()
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            Vector3 pos = transform.position;
+            pos.y = hit.position.y;
+            transform.position = pos;
+            if (agent != null && agent.enabled) agent.nextPosition = pos;
+        }
+    }
+
     private void HandleInterruptSpecial()
     {
         isStartingFight = false;
         core.isGuarding = false;
         wasStunned = true;
+
+        if (agent != null && !agent.enabled && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+        }
     }
 
     private void HandleRevived()
     {
+        if (agent != null && !agent.enabled)
+        {
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
+        }
+
         isStartingFight = false;
         core.isGuarding = false;
         wasStunned = false;
@@ -123,8 +155,8 @@ public class StrongBanditAI : EnemyAIBase
             StopActionRoutine();
 
             bool canGuard = guardSkill != null
-                            && Time.time >= lastGuardTime + guardCooldown
-                            && Time.time >= nextAllowedGuardTime;
+                          && Time.time >= lastGuardTime + guardCooldown
+                          && Time.time >= nextAllowedGuardTime;
 
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
@@ -289,6 +321,8 @@ public class StrongBanditAI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
+        if (agent != null) agent.enabled = false;
+
         bool actionFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
@@ -316,14 +350,25 @@ public class StrongBanditAI : EnemyAIBase
         ClearAttackHandler();
 
         core.isGuarding = false;
+
+        if (agent != null && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
+        }
+
         ChainNextAttackOrIdle();
     }
 
+    // 카운터 발동 시 점프 공격 로직 처리
     private IEnumerator CounterSequence(SkillBase skill)
     {
         isAttacking = true;
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
+
+        if (agent != null) agent.enabled = false;
 
         bool attackFinished = false;
 
@@ -334,6 +379,43 @@ public class StrongBanditAI : EnemyAIBase
 
         core.OnAttackCompleted += currentAttackCompleteHandler;
         core.CmdPerformAttack?.Invoke(skill);
+        float prepTime = 0f;
+        while (prepTime < 1.8f)
+        {
+            if (skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
+            prepTime += Time.deltaTime;
+            yield return null;
+        }
+
+        Vector3 startPos = transform.position;
+        Vector3 playerPos = Player.Instance.transform.position;
+
+        Vector3 dirToPlayer = (playerPos - startPos).normalized;
+        dirToPlayer.y = 0f;
+
+        Vector3 targetPos = playerPos - (dirToPlayer * jumpLandingOffset);
+        targetPos.y = startPos.y;
+
+        float elapsed = 0f;
+        float moveDuration = jumpDuration * (0.7916f - 0.3f);
+
+        while (elapsed < moveDuration)
+        {
+            if (skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
+
+            float t = elapsed / moveDuration;
+            Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
+            currentPos.y += jumpCurve.Evaluate(t) * jumpHeight;
+            transform.position = currentPos;
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        if (!skillSelector.isInstantComboTriggered && !core.IsDead && core.currentState != EnemyState.Stun)
+        {
+            transform.position = targetPos;
+        }
 
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead);
 
@@ -342,6 +424,14 @@ public class StrongBanditAI : EnemyAIBase
         if (skillSelector.isInstantComboTriggered)
         {
             skillSelector.isInstantComboTriggered = false;
+            core.CmdCancelAttack?.Invoke();
+        }
+
+        if (agent != null && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
         }
 
         float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
@@ -362,6 +452,8 @@ public class StrongBanditAI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
+        if (agent != null) agent.enabled = false;
+
         bool attackFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
@@ -381,6 +473,13 @@ public class StrongBanditAI : EnemyAIBase
         {
             skillSelector.isInstantComboTriggered = false;
             core.CmdCancelAttack?.Invoke();
+        }
+
+        if (agent != null && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
         }
 
         float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;

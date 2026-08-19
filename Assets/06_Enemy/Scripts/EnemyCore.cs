@@ -225,6 +225,12 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public void TakeParry(float mpDamage)
     {
         if (IsDead) return;
+        StartCoroutine(ParryRoutine(mpDamage));
+    }
+
+    IEnumerator ParryRoutine(float mpDamage)
+    {
+        yield return new WaitForSeconds(1f);
         OnParryDamageTaken?.Invoke(mpDamage);
     }
 

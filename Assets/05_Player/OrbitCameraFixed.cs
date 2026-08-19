@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using Unity.Cinemachine;
 using System.Collections;
+using System.Collections.Generic; // 💡 List 사용을 위해 필요합니다.
 
 public class CameraController : MonoBehaviour
 {
     public CinemachineCamera freeLookCam;
     public CinemachineCamera lockOnCam;
     public CinemachineCamera cutsceneCam;
+    public CinemachineCamera knockdownCam;
 
     public CinemachineTargetGroup targetGroup;
     public CinemachineTargetGroup playerTargetGroup;
+    public CinemachineTargetGroup knockdownTargetGroup;
 
     public Transform playerTransform;
     public int lockOnTargetIndex = 1;
@@ -31,6 +34,34 @@ public class CameraController : MonoBehaviour
     {
         Instance = this;
         cinemachineBrain = Camera.main.GetComponent<CinemachineBrain>();
+    }
+
+    private void Start()
+    {
+        if (knockdownTargetGroup != null)
+        {
+            // 💡 수정됨: 배열(Array) 대신 리스트(List)를 사용하여 타겟 슬롯을 확장합니다.
+            if (knockdownTargetGroup.Targets.Count < 2)
+            {
+                var newTargets = new List<CinemachineTargetGroup.Target>(knockdownTargetGroup.Targets);
+                while (newTargets.Count < 2)
+                {
+                    newTargets.Add(new CinemachineTargetGroup.Target());
+                }
+                knockdownTargetGroup.Targets = newTargets;
+            }
+
+            if (playerTransform != null)
+            {
+                var targets = knockdownTargetGroup.Targets;
+                var playerTarget = targets[0]; // Struct 복사
+                playerTarget.Object = playerTransform;
+                playerTarget.Weight = 1f;
+                playerTarget.Radius = 1f;
+                targets[0] = playerTarget; // 다시 덮어씌움
+                knockdownTargetGroup.Targets = targets;
+            }
+        }
     }
 
     public void SetCinematicCamera(bool isActive, CinemachineCamera specificCam = null)
@@ -62,6 +93,25 @@ public class CameraController : MonoBehaviour
                 lockOnCam.Priority = 5;
                 freeLookCam.Priority = 20;
             }
+        }
+    }
+
+    public void SetKnockdownCamera(bool isActive)
+    {
+        if (knockdownCam == null) return;
+
+        if (isActive)
+        {
+            if (knockdownTargetGroup != null)
+            {
+                knockdownCam.LookAt = knockdownTargetGroup.transform;
+            }
+
+            knockdownCam.Priority = 25;
+        }
+        else
+        {
+            knockdownCam.Priority = 0;
         }
     }
 
@@ -106,6 +156,7 @@ public class CameraController : MonoBehaviour
             finalTarget = enemyCore.cameraTarget;
         }
 
+        // 1. 기본 타겟 그룹 락온 등록
         var targets = targetGroup.Targets;
         var targetInfo = targets[lockOnTargetIndex];
         targetInfo.Object = finalTarget;
@@ -114,11 +165,22 @@ public class CameraController : MonoBehaviour
         targets[lockOnTargetIndex] = targetInfo;
         targetGroup.Targets = targets;
 
+        // 2. 넉다운 타겟 그룹에도 동일하게 락온 등록
+        if (knockdownTargetGroup != null && lockOnTargetIndex < knockdownTargetGroup.Targets.Count)
+        {
+            var kdTargets = knockdownTargetGroup.Targets;
+            var kdTargetInfo = kdTargets[lockOnTargetIndex];
+            kdTargetInfo.Object = finalTarget;
+            kdTargetInfo.Weight = 0.04f;
+            kdTargetInfo.Radius = 0.2f;
+            kdTargets[lockOnTargetIndex] = kdTargetInfo;
+            knockdownTargetGroup.Targets = kdTargets;
+        }
+
         LastTarget = enemyTransform;
         isLockedOn = true;
 
         lockOnCam.LookAt = finalTarget;
-
         if (cinemachineBrain != null)
         {
             var blend = cinemachineBrain.DefaultBlend;
@@ -134,12 +196,24 @@ public class CameraController : MonoBehaviour
     {
         isLockedOn = false;
 
+        // 1. 기본 타겟 그룹 락온 해제
         var targets = targetGroup.Targets;
         var targetInfo = targets[lockOnTargetIndex];
         targetInfo.Object = null;
         targetInfo.Weight = 0f;
         targets[lockOnTargetIndex] = targetInfo;
         targetGroup.Targets = targets;
+
+        // 2. 넉다운 타겟 그룹 락온 해제
+        if (knockdownTargetGroup != null && lockOnTargetIndex < knockdownTargetGroup.Targets.Count)
+        {
+            var kdTargets = knockdownTargetGroup.Targets;
+            var kdTargetInfo = kdTargets[lockOnTargetIndex];
+            kdTargetInfo.Object = null;
+            kdTargetInfo.Weight = 0f;
+            kdTargets[lockOnTargetIndex] = kdTargetInfo;
+            knockdownTargetGroup.Targets = kdTargets;
+        }
 
         var orbitalFollow = freeLookCam.GetComponent<CinemachineOrbitalFollow>();
         if (orbitalFollow != null && playerTargetGroup != null)
@@ -156,11 +230,8 @@ public class CameraController : MonoBehaviour
             orbitalFollow.HorizontalAxis.Value = targetYaw;
             orbitalFollow.VerticalAxis.Value = targetPitch;
 
-            // 시네머신 과거 위치 데이터 초기화 (슬링샷 현상 방지)
             freeLookCam.PreviousStateIsValid = false;
-
-            // ForceCameraPosition 삭제 (오프셋 씹히는 문제 해결)
-        } 
+        }
 
         if (cinemachineBrain != null)
         {
@@ -236,6 +307,4 @@ public class CameraController : MonoBehaviour
         }
         playerTargetGroup.Targets = targets;
     }
-
-    private Vector3 originalPos;
 }

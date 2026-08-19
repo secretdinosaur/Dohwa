@@ -81,7 +81,6 @@ public class QueenBanditAI : EnemyAIBase
 
     private float nextStateChangeTime = 0f;
 
-    // 안전한 공격 종료 및 코루틴 관리를 위한 변수
     private Action<float> currentOnAttackComplete;
     private bool currentAttackFinished = false;
     private Coroutine activeDashCoroutine;
@@ -637,7 +636,12 @@ public class QueenBanditAI : EnemyAIBase
 
     private void UpdateChaseTarget(float stopDist)
     {
-        if (agent != null) agent.updateRotation = false;
+        if (agent != null)
+        {
+            agent.updateRotation = false;
+            if (agent.enabled) agent.isStopped = false;
+        }
+
         core.ChangeState(EnemyState.Chase);
         core.SetMoveAnimations(0f, 1f, 2f);
         isRunningForward = true;
@@ -654,7 +658,12 @@ public class QueenBanditAI : EnemyAIBase
 
     private void HandleCooldownWalk(float optimalDistance)
     {
-        if (agent != null) agent.updateRotation = false;
+        if (agent != null)
+        {
+            agent.updateRotation = false;
+            if (agent.enabled) agent.isStopped = false;
+        }
+
         core.ChangeState(EnemyState.CooldownWalk);
         core.SetMoveAnimations(0f, 1f, 1f);
         isRunningForward = false;
@@ -771,7 +780,7 @@ public class QueenBanditAI : EnemyAIBase
         bool isPushAttack = PushSkill != null && PushSkill == skill;
         if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(false);
 
-        // 💡 수정 완료: Attack7(7_1 포함)을 다시 루트 모션 대상으로 복구
+        // Attack7(7_1 포함) 애니메이션 루트 모션 복구
         bool UseAnimRoot = skill.name.Contains("Attack7") || skill.name.Contains("Attack9") || skill.name.Contains("Attack10");
 
         if (agent != null)
@@ -879,7 +888,7 @@ public class QueenBanditAI : EnemyAIBase
         bool isPushAttack = PushSkill != null && PushSkill == skill;
         if (isPushAttack) core.CmdSetIgnorePlayerCollision?.Invoke(false);
 
-        // 💡 수정 완료: Attack7(7_1 포함)을 다시 루트 모션 대상으로 복구
+        // Attack7(7_1 포함) 애니메이션 루트 모션 복구
         bool UseAnimRoot = skill.name.Contains("Attack7") || skill.name.Contains("Attack9") || skill.name.Contains("Attack10");
 
         if (agent != null)

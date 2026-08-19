@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 
   MP_cost: 20
-  clip: {fileID: 7400000, guid: 6392d4579c83e2643a030db6b8fc921d, type: 2}
+  clip: {fileID: 7400000, guid: 481044973019b2c47a5bd78392888730, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 1a246afc519d3444c822783f719a0703, type: 3}
   effect: {fileID: 0}
@@ -82,7 +82,7 @@ MonoBehaviour:
       guardable: 0
       parryable: 0
     stunData:
-      stunType: 1
+      stunType: 0
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 5
@@ -108,10 +108,10 @@ MonoBehaviour:
       guardable: 0
       parryable: 0
     stunData:
-      stunType: 1
+      stunType: 0
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
-      stunDuration: 10
+      stunDuration: 5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

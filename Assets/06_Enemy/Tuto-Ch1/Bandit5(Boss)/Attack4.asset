@@ -68,6 +68,8 @@ MonoBehaviour:
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 12
     knockbackForce: {x: 0, y: 0, z: 12}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
     effectDirection: 11
     playerHitEffect: {fileID: 11400000, guid: 8c562abd9eda9604d8e6e363874b53ee, type: 2}
@@ -80,7 +82,7 @@ MonoBehaviour:
       stunType: 1
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
-      stunDuration: 5
+      stunDuration: 3
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
