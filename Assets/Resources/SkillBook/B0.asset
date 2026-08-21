@@ -98,11 +98,9 @@ MonoBehaviour:
     useCondition: 1
     autoUnlockOnCondition: 1
     conditions:
-    - conditionType: 1
-      targetValue: 1
     - conditionType: 3
-      targetValue: 1
-    unlocked: 1
+      targetValue: 2
+    unlocked: 0
     prerequisiteIndices: 00000000
     isStartingNode: 0
   - nodeType: 1
@@ -135,7 +133,7 @@ MonoBehaviour:
       targetValue: 2
     - conditionType: 3
       targetValue: 99
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 01000000
     isStartingNode: 0
   - nodeType: 1
@@ -168,7 +166,7 @@ MonoBehaviour:
       targetValue: 3
     - conditionType: 3
       targetValue: 99
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 02000000
     isStartingNode: 0
   - nodeType: 1

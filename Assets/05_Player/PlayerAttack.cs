@@ -35,7 +35,6 @@ public class PlayerAttack : MonoBehaviour
     [HideInInspector] public float lastAttackTime = 0f;
     [HideInInspector] public float lastAttackEndTime = 0f;
 
-    private float strongAttackWindowEndTime = 0f;
     private float lastGuardTime = 0f;
     private float lastLockOnTime = -10f;
     [HideInInspector] public float lastLockOffTime = -10f;
@@ -231,12 +230,6 @@ public class PlayerAttack : MonoBehaviour
 
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
-
-    public void EnableStrongAttackWindow()
-    {
-        strongAttackWindowEndTime = Time.time + 3f;
-    }
-
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
@@ -246,14 +239,11 @@ public class PlayerAttack : MonoBehaviour
         if (isAttacking && !canComboInput) return;
         if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) return;
 
-        if (Time.time <= strongAttackWindowEndTime)
+        EnemyCore targetEnemy = GetClosestStunnedEnemy();
+        if (targetEnemy != null && strongAttackSkill != null)
         {
-            EnemyCore targetEnemy = GetClosestStunnedEnemy();
-            if (targetEnemy != null && strongAttackSkill != null)
-            {
-                ExecuteStrongAttack(targetEnemy);
-                return;
-            }
+            ExecuteStrongAttack(targetEnemy);
+            return;
         }
 
         StartCoroutine(AttackRoutine());
@@ -295,7 +285,6 @@ public class PlayerAttack : MonoBehaviour
             else transform.rotation = Quaternion.LookRotation(direction);
         }
 
-        strongAttackWindowEndTime = 0f;
 
         if (!isArmed)
         {
@@ -379,7 +368,6 @@ public class PlayerAttack : MonoBehaviour
     {
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
         if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
-
         Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
