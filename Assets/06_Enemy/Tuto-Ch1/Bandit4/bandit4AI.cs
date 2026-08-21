@@ -55,9 +55,10 @@ public class Bandit4AI : EnemyAIBase
             bool canAttackGlobal = Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo;
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            if (dist <= executeRange)
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
+
+            if (isWithinAttackBox)
             {
-                // 💡 추가됨: 선택된 스킬이 점프 공격인 경우 거리 조절 없이 바로 점프 공격 실행
                 if (selectedSkill == jumpAttackSkill && canAttackGlobal && hasEnoughMP)
                 {
                     actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
@@ -65,7 +66,6 @@ public class Bandit4AI : EnemyAIBase
                 }
                 else
                 {
-                    // 기존 MeleeEnemy 거리 조절 로직
                     if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
@@ -98,7 +98,26 @@ public class Bandit4AI : EnemyAIBase
             }
             else
             {
-                UpdateChaseTarget();
+                // 타격 박스 안에 없을 때, 거리가 너무 가깝다면 뒤로 빼거나 회피기동
+                if (dist < backWalkRange)
+                {
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        lastActionWasBackWalk = true;
+                    }
+                }
+                else
+                {
+                    // 거리가 멀거나 각도가 빗나간 경우 추적하여 간격 좁히기
+                    UpdateChaseTarget();
+                    lastActionWasBackWalk = false;
+                }
             }
         }
         else
@@ -149,7 +168,6 @@ public class Bandit4AI : EnemyAIBase
         ChainNextAttackOrIdle();
     }
 
-    // 💡 추가됨: 점프 공격 시퀀스 로직
     private IEnumerator JumpAttackSequence(SkillBase skill)
     {
         isAttacking = true;
@@ -168,7 +186,6 @@ public class Bandit4AI : EnemyAIBase
         core.OnAttackCompleted += currentAttackCompleteHandler;
         core.CmdPerformAttack?.Invoke(skill);
 
-        // 점프 도약 대기 시간
         float prepTime = 0f;
         while (prepTime < 0.75f)
         {
@@ -189,7 +206,6 @@ public class Bandit4AI : EnemyAIBase
         float elapsed = 0f;
         float moveDuration = jumpDuration * (0.7916f - 0.3f);
 
-        // 실제 점프 궤적 이동
         while (elapsed < moveDuration)
         {
             if (core.skillSelector.isInstantComboTriggered || core.IsDead) break;
@@ -227,6 +243,31 @@ public class Bandit4AI : EnemyAIBase
         }
 
         ChainNextAttackOrIdle();
+    }
+
+    private void ChainNextAttackOrIdle()
+    {
+        if (core.skillSelector.HasPendingCombo)
+        {
+            float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
+            selectedSkill = core.skillSelector.GetNextSkill(currentDist);
+
+            if (selectedSkill == jumpAttackSkill)
+            {
+                actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
+            }
+            else
+            {
+                actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
+            }
+        }
+        else
+        {
+            isAttacking = false;
+            selectedSkill = null;
+            core.ChangeState(EnemyState.Idle);
+            actionCoroutine = null;
+        }
     }
 
     protected void OnDisable()

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
@@ -14,7 +14,7 @@ public class EnemyMovement : MonoBehaviour
     public Vector3 OriginalPosition { get; private set; }
     private Quaternion originalRotation;
 
-    // LookAt ¸í·ÉÀÌ µé¾î¿Ã ¶§ ÀÚµ¿ ÀÌµ¿ È¸ÀüÀ» ¸·±â À§ÇÑ Å¸ÀÌ¸Ó
+    // LookAt ëª…ë ¹ì´ ë“¤ì–´ì˜¬ ë•Œ ìë™ ì´ë™ íšŒì „ì„ ë§‰ê¸° ìœ„í•œ íƒ€ì´ë¨¸
     private float overrideLookTimer = 0f;
 
     private void Awake()
@@ -31,7 +31,7 @@ public class EnemyMovement : MonoBehaviour
             agent.speed = baseMoveSpeed;
             agent.enabled = false;
 
-            // NavMeshAgentÀÇ ÀÚµ¿ È¸Àü ±â´É ºñÈ°¼ºÈ­
+            // NavMeshAgentì˜ ìë™ íšŒì „ ê¸°ëŠ¥ ë¹„í™œì„±í™”
             agent.updateRotation = false;
         }
 
@@ -106,7 +106,7 @@ public class EnemyMovement : MonoBehaviour
 
         if (core == null || !core.isIgnoringPlayer)
         {
-            if (Physics.SphereCast(origin, checkRadius, direction, out RaycastHit hit, moveDist, LayerMask.GetMask("Player")))
+            if (Physics.SphereCast(origin, checkRadius, direction, out RaycastHit hit, moveDist, LayerMask.GetMask("Player", "Enemy", "Default")))
             {
                 transform.rotation *= animator.deltaRotation;
                 return;

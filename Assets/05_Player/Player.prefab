@@ -2497,7 +2497,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.8, y: 14.987, z: 145.53}
-  m_LocalScale: {x: 0.13499999, y: 0.13499999, z: 0.13499998}
+  m_LocalScale: {x: 0.13499999, y: 0.13499999, z: 0.13499996}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2655299265364879644}
@@ -2630,7 +2630,7 @@ MonoBehaviour:
   maxSlopeAngle: 40
   maxJumpSlopeAngle: 60
   dashForce: 10
-  sprintMultiplier: 2.25
+  sprintMultiplier: 1.75
   acceleration: 20
   walkMultiplier: 0.5
   JumpForce: 5
@@ -3026,6 +3026,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: fc7b2fd1-8368-43ec-bf46-da7216a2e606
     m_ActionName: 'Player/Scroll[/Mouse/scroll]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: OpenSetting
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e181b01c-7472-4ab1-b78f-6ac2e588f905
+    m_ActionName: 'Player/OpenSetting[/Keyboard/escape]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

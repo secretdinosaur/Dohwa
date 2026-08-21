@@ -1,4 +1,4 @@
-using DG.Tweening;
+ï»¿using DG.Tweening;
 using System.Collections;
 using System.Linq;
 using TMPro;
@@ -134,30 +134,38 @@ public class UIManager : MonoBehaviour
         }
     }
     float HPtemp = 1f;
+
+    // =======================================================
+    // ì¼ë°˜ ì¸ë²¤í† ë¦¬ ì—´ê¸° (ê¸°ì¡´)
+    // =======================================================
     public void OpenInventory(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-
         ToggleInventory();
     }
+
     public void ToggleInventory()
     {
-        // ÀÔ·Â Â÷´Ü Á¶°Ç °Ë»ç (context °ü·Ã Á¶°Ç Á¦°Å)
         if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
 
-
-
-        bool nextState = !Inventory.activeSelf; // ÀüÈ¯µÉ ÀÎº¥Åä¸® »óÅÂ
+        bool nextState = !InventoryManager.Instance.isInventoryOpen;
 
         if (Player.Instance.CanAttack())
         {
             InkBrushEffectManager.Instance.ClearHitEffects();
-
             Time.timeScale = nextState ? 0f : 1f;
-
             InventoryManager.Instance.uiMap.SetActive(nextState);
-            Inventory.SetActive(nextState);
-            InventoryManager.Instance.OnClickInfoTab();
+
+            if (nextState)
+            {
+                InventoryManager.Instance.OnClickInfoTab();
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
             PreventCameraMoveAndClick(nextState);
             GameQuickSlot.SetActive(!nextState);
             InventoryManager.Instance.isInventoryOpen = nextState;
@@ -176,15 +184,106 @@ public class UIManager : MonoBehaviour
                 Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
             }
         }
-        else if (Inventory.activeSelf)
+        else if (InventoryManager.Instance.isInventoryOpen) // ë‹«ê¸° ë¡œì§
         {
             InventoryManager.Instance.uiMap.SetActive(nextState);
-            Inventory.SetActive(nextState);
-            InventoryManager.Instance.OnClickInfoTab();
+
+            if (nextState)
+            {
+                InventoryManager.Instance.OnClickInfoTab();
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
             PreventCameraMoveAndClick(nextState);
             GameQuickSlot.SetActive(!nextState);
             InventoryManager.Instance.isInventoryOpen = nextState;
             TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
+
+            if (nextState)
+            {
+                SoundManager.Instance.PlayUISound(2);
+            }
+            else
+            {
+                SoundManager.Instance.PlayUISound(3);
+            }
+            Time.timeScale = nextState ? 0f : 1f;
+        }
+    }
+
+    // =======================================================
+    // ğŸ’¡ ì¶”ê°€ë¨: ì„¸íŒ…ì°½ ë‹¤ì´ë ‰íŠ¸ ì˜¤í”ˆ (ESC ë©”ë‰´ ë“±)
+    // =======================================================
+    public void OpenSetting(InputAction.CallbackContext context)
+    {
+        if (!context.started) return;
+        ToggleSetting();
+    }
+
+    public void ToggleSetting()
+    {
+        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
+
+        bool nextState = !InventoryManager.Instance.isInventoryOpen;
+
+        if (Player.Instance.CanAttack())
+        {
+            InkBrushEffectManager.Instance.ClearHitEffects();
+            Time.timeScale = nextState ? 0f : 1f;
+            InventoryManager.Instance.uiMap.SetActive(nextState);
+
+            if (nextState)
+            {
+                InventoryManager.Instance.ResetTabState();
+                InventoryManager.Instance.OnClickSettingTab();
+                // ğŸ’¡ í•µì‹¬: ì„¸íŒ… UIê°€ Inventory í•˜ìœ„ì— ìˆê³ , OnClickSettingTab ë‚´ë¶€ì˜ 
+                // HideAllTabs()ê°€ Inventoryë¥¼ ê°•ì œë¡œ ë„ê¸° ë•Œë¬¸ì— ë§ˆì§€ë§‰ì— ë‹¤ì‹œ í™œì„±í™” í•´ì¤ë‹ˆë‹¤.
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
+            PreventCameraMoveAndClick(nextState);
+            GameQuickSlot.SetActive(!nextState);
+            InventoryManager.Instance.isInventoryOpen = nextState;
+
+            if (nextState)
+            {
+                SoundManager.Instance.PlayUISound(2);
+                HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
+                Player.Instance.LowHPMat.SetFloat("_HP", 1f);
+                InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
+            }
+            else
+            {
+                SoundManager.Instance.PlayUISound(3);
+                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
+            }
+        }
+        else if (InventoryManager.Instance.isInventoryOpen) // ë‹«ê¸° ë¡œì§
+        {
+            InventoryManager.Instance.uiMap.SetActive(nextState);
+
+            if (nextState)
+            {
+                InventoryManager.Instance.ResetTabState();
+                InventoryManager.Instance.OnClickSettingTab();
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
+            PreventCameraMoveAndClick(nextState);
+            GameQuickSlot.SetActive(!nextState);
+            InventoryManager.Instance.isInventoryOpen = nextState;
 
             if (nextState)
             {
@@ -285,9 +384,6 @@ public class UIManager : MonoBehaviour
         yield return null;
     }
 
-    // =======================================================
-    // [Ãß°¡µÊ] ·ÎµåµÈ ÀÎº¥Åä¸® Äü½½·ÔÀ» °ÔÀÓ HUD Äü½½·ÔÀ¸·Î º¹Á¦ µ¿±âÈ­
-    // =======================================================
     public void SyncGameQuickSlots()
     {
         if (InventoryManager.Instance == null) return;
