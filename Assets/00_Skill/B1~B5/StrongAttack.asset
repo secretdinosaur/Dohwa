@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d6cb460c5e307a42adda57a4889bc7f, type: 3}
-  m_Name: B2_Attack2
+  m_Name: StrongAttack
   m_EditorClassIdentifier: Assembly-CSharp::Skill_Slash
   isEnemySkill: 0
   isUpgraded: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
   HitEffects:
   - {fileID: 0}
   enemyHitEffectDirections: 02000000
-  isSpecialSkill: 1
+  isSpecialSkill: 0
   triggerType: 2
   triggerThreshold: 0
   triggerCooldown: 0

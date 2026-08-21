@@ -68,52 +68,47 @@ public class Bandit5AI : EnemyAIBase
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
+            float backWalkRange = executeRange * backWalkTriggerFactor;
+
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            if (canAttackGlobal && hasEnoughMP)
+            // 💡 추가됨: 단순 거리 비교 대신 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
+
+            if (isWithinAttackBox)
             {
-                if (selectedSkill == jumpAttackSkill)
+                if (canAttackGlobal && hasEnoughMP)
                 {
-                    if (distToLastPos <= executeRange)
+                    if (selectedSkill == jumpAttackSkill)
+                    {
                         actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
-                    else
-                        HandleDistantApproach(executeRange);
-                }
-                else if (selectedSkill == runAttackSkill)
-                {
-                    if (distToLastPos <= executeRange && core.currentState == EnemyState.Chase && isRunningForward)
+                        lastActionWasBackWalk = false;
+                    }
+                    else if (selectedSkill == runAttackSkill)
                     {
-                        actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
+                        // 돌진 공격은 추적 상태에서 앞을 향해 달리고 있을 때만 발동
+                        if (core.currentState == EnemyState.Chase && isRunningForward)
+                        {
+                            actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
+                            lastActionWasBackWalk = false;
+                        }
+                        else
+                        {
+                            UpdateChaseTarget();
+                            lastActionWasBackWalk = false;
+                        }
                     }
                     else
                     {
-                        UpdateChaseTarget();
+                        actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
+                        lastActionWasBackWalk = false;
                     }
                 }
-                else if (distToLastPos <= executeRange)
-                {
-                    actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-                }
-                else if (distToLastPos <= executeRange * walkApproachFactor)
-                {
-                    UpdateWalkApproachTarget();
-                }
                 else
                 {
-                    HandleDistantApproach(executeRange);
-                }
-            }
-            else
-            {
-                if (distToLastPos > executeRange)
-                {
-                    HandleDistantApproach(executeRange);
-                }
-                else
-                {
-                    float backWalkRange = executeRange * backWalkTriggerFactor;
-                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk)
+                    // 박스 안이지만 공격 쿨타임 대기 중일 때
+                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk && !skillSelector.HasPendingCombo)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                         {
@@ -130,6 +125,55 @@ public class Bandit5AI : EnemyAIBase
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                         lastActionWasBackWalk = false;
                     }
+                }
+            }
+            else
+            {
+                // 💡 추가됨: 타격 박스 밖에 있을 때의 유동적 위치 선정 로직
+                if (distToLastPos < backWalkRange)
+                {
+                    // 거리는 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        lastActionWasBackWalk = true;
+                    }
+                }
+                else
+                {
+                    // 거리가 멀거나 각도가 빗나간 경우 스킬별 접근 방식 적용
+                    if (canAttackGlobal && hasEnoughMP)
+                    {
+                        if (selectedSkill == jumpAttackSkill)
+                        {
+                            HandleDistantApproach(executeRange);
+                        }
+                        else if (selectedSkill == runAttackSkill)
+                        {
+                            UpdateChaseTarget();
+                        }
+                        else
+                        {
+                            if (distToLastPos <= executeRange * walkApproachFactor)
+                            {
+                                UpdateWalkApproachTarget();
+                            }
+                            else
+                            {
+                                HandleDistantApproach(executeRange);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        HandleDistantApproach(executeRange);
+                    }
+                    lastActionWasBackWalk = false;
                 }
             }
         }
@@ -323,7 +367,6 @@ public class Bandit5AI : EnemyAIBase
             skillSelector.isInstantComboTriggered = false;
         }
 
-        // RunAttackSequence에도 누락되었던 이펙트 종료 로직 추가
         core.StopEffects(skill.name);
 
         ChainNextAttackOrIdle();
@@ -356,11 +399,12 @@ public class Bandit5AI : EnemyAIBase
             skillSelector.isInstantComboTriggered = false;
         }
         core.StopEffects(skill.name);
+
         ChainNextAttackOrIdle();
     }
 
     // ============================================================
-    // 새로 추가된 무기 데칼 생성 함수 (애니메이션 이벤트 등에서 호출)
+    // 무기 데칼 생성 함수 (애니메이션 이벤트 등에서 호출)
     // ============================================================
     public void SpawnWeaponGroundDecal()
     {
@@ -369,13 +413,10 @@ public class Bandit5AI : EnemyAIBase
 
         Vector3 rayStart = currentWeapon.transform.position;
         int groundLayer = LayerMask.GetMask("Ground");
-        // 무기 위치에서 수직 방향(아래)으로 레이캐스트
+
         if (Physics.Raycast(rayStart + Vector3.up, Vector3.down, out RaycastHit hit, 15.0f, groundLayer))
         {
             Material selectedMat = customDecalMaterials[UnityEngine.Random.Range(0, customDecalMaterials.Length)];
-
-            // 데칼의 방향(velocity 인자)을 캐릭터가 바라보는 방향(transform.forward)으로 넘겨주어 
-            // 캐릭터의 전진/공격 방향에 맞춰 길쭉한 자국이 남도록 설정합니다.
 
             MapDecalManager.Instance.SpawnCustomDecal(
                 hit.point,

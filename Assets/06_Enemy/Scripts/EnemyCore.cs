@@ -38,6 +38,8 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Func<Vector3> QueryOriginalPosition;
 
     public Action<SkillBase> CmdPerformAttack;
+    // 💡 추가됨: 애니메이션 크로스페이드 없이 즉시 스킬을 발동하는 델리게이트
+    public Action<SkillBase> CmdPerformInstantAttack;
     public Action CmdCancelAttack;
     public Action<float> OnAttackCompleted;
     public Action<SkillBase, int> PlayHitSound;

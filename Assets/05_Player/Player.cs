@@ -5,7 +5,8 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour, IDamageable
+public class  Player
+    : MonoBehaviour, IDamageable
 {
     #region Components & References
     [Header("Core Components")]
@@ -152,6 +153,9 @@ public class Player : MonoBehaviour, IDamageable
 
     private float _motionTimeOffset = 0f;
     private int currentSkillStateIndex = 1;
+
+    // 💡 추가됨: 동시 기절+넉백 처리를 위한 프레임 기록
+    private int lastStunFrame = -1;
     #endregion
 
     #region Unity Lifecycle
@@ -299,7 +303,6 @@ public class Player : MonoBehaviour, IDamageable
         bool skillIsGuardable = gData != null ? gData.guardable : true;
         bool skillIsParryable = gData != null ? gData.parryable : true;
         float ShakePower = 1f;
-
         if (damage >= (hp * 0.3f)) ShakePower = 3f;
         else if (damage >= (hp * 0.5f)) ShakePower = 10f;
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
@@ -376,13 +379,26 @@ public class Player : MonoBehaviour, IDamageable
             return;
         }
 
+        // 💡 수정됨: 넉백 여부를 먼저 판별하여 동시 적용 시 기존 넉백이 캔슬되지 않도록 순서 변경
+        bool hasKnockback = false;
+        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
+        {
+            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+        }
+        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex)
+        {
+            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+        }
+
         bool isStunApplied = false;
         if (skill.GetStunData(hitIndex) != null)
         {
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                if (PlayerMove != null) PlayerMove.CancelKnockBack();
+                // 이번 공격에 넉백이 없다면 기존의 넉백을 취소하고 기절만 적용
+                if (!hasKnockback && PlayerMove != null)
+                    PlayerMove.CancelKnockBack();
 
                 Transform grabTarget = null;
                 if (stunData.stunType == StunType.Grabbed)
@@ -393,16 +409,6 @@ public class Player : MonoBehaviour, IDamageable
                 ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
                 isStunApplied = true;
             }
-        }
-
-        bool hasKnockback = false;
-        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
-        {
-            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
-        }
-        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex)
-        {
-            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
 
         if (!isStunApplied && !willDie && !hasKnockback)
@@ -454,6 +460,15 @@ public class Player : MonoBehaviour, IDamageable
 
     public void ClearStun()
     {
+        // 💡 동시 적용 로직: 같은 프레임에 막 적용된 기절이라면, 넉백 로직이 부르는 ClearStun을 무시
+        if (Time.frameCount == lastStunFrame) return;
+
+        ForceClearStun();
+    }
+
+    // 내부적으로 강제 해제가 필요할 때 사용 (동시 적용 여부 무시)
+    private void ForceClearStun()
+    {
         if (currentStunRoutine != null)
         {
             StopCoroutine(currentStunRoutine);
@@ -471,7 +486,10 @@ public class Player : MonoBehaviour, IDamageable
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)
     {
         CancelCurrentAction();
-        ClearStun();
+        ForceClearStun(); // 새로운 기절을 덮어씌우기 위해 기존 상태는 무조건 초기화
+
+        // 💡 기록: 이번 프레임에 새로운 기절이 적용되었음 (이후 불리는 넉백의 ClearStun 무시용)
+        lastStunFrame = Time.frameCount;
 
         currentStunType = type;
         grabTargetTransform = targetTransform;
@@ -552,7 +570,7 @@ public class Player : MonoBehaviour, IDamageable
     public void StartWakeUp(float animDuration)
     {
         CancelCurrentAction();
-        ClearStun();
+        ForceClearStun();
         StartCoroutine(WakeUpRoutine(animDuration));
     }
 
@@ -636,6 +654,30 @@ public class Player : MonoBehaviour, IDamageable
     public void TakeArbitraryDamage(int damage)
     {
         HP -= damage;
+    }
+
+    public EnemyCore GetTargetForStrongAttack(float searchRadius = 5f, int enemyLayerMask = -1)
+    {
+        enemyLayerMask = LayerMask.GetMask("Enemy");
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayerMask);
+        EnemyCore closestVulnerableEnemy = null;
+        float minDistance = float.MaxValue;
+
+        foreach (Collider hit in hits)
+        {
+            EnemyCore enemy = hit.GetComponent<EnemyCore>();
+            if (enemy != null && enemy.currentState == EnemyState.Stun && !enemy.IsDead)
+            {
+                float distance = Vector3.Distance(transform.position, enemy.transform.position);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestVulnerableEnemy = enemy;
+                }
+            }
+        }
+        return closestVulnerableEnemy;
     }
     #endregion
 
