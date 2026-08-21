@@ -42,6 +42,22 @@ MonoBehaviour:
       m_LocalVariables: []
     needCheckConditionForChooseNextDialogue: 1
     NextDialogueSet:
+    - dialogueSet: {fileID: 11400000, guid: e64f2768a7221eb42b1c20488abdf61f, type: 2}
+      conditions:
+      - conditionType: 5
+        keyName: 
+        shouldExist: 0
+        compareValue: 0
+        req:
+          requireItem:
+            Weapon: {fileID: 0}
+            Armor: {fileID: 0}
+            Consumable: {fileID: 0}
+            NonConsumable: {fileID: 11400000, guid: eb8bac0cae7a53343a5dbcbbed07d557, type: 2}
+            SkillBook: {fileID: 0}
+          requireItemCount: 2
+          isDeleteItem: 0
+        compareType: 0
     - dialogueSet: {fileID: 11400000, guid: 7a471515ee2de4c4a96a4a8ced6c07a5, type: 2}
       conditions:
       - conditionType: 5

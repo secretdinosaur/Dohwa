@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a820c655c9ce845bd58f84787fb154, type: 3}
+  m_Name: Teacher_After_BanditQueen
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSet
+  Script:
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 10883693014446081
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 10883693014446082
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 10883693014446083
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  - m_TableReference:
+      m_TableCollectionName: GUID:b24d2dda7180a914e9db41f0abbdaffb
+    m_TableEntryReference:
+      m_KeyId: 10883693014446084
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Whisper: 1
+  Shout: 0
+  gettingWhat:
+    GettingType: 0
+    GetStatPoint: 0
+    OnDialogueEnd:
+      m_PersistentCalls:
+        m_Calls: []
+  isChoiceNode: 1
+  choiceOptions: []
+  NextMainDialogue: {fileID: 0}
+  needExecutionFunction: 0
+  ExecutionFunctionIndex: 0
+  references:
+    version: 2
+    RefIds: []
