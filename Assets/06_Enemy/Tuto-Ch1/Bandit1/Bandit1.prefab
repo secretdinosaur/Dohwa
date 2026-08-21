@@ -1059,15 +1059,16 @@ MonoBehaviour:
   wanderSearchRadius: 10
   fieldOfView: 90
   chaseSpeedMultiplier: 3.5
-  backWalkSpeedMultiplier: 1.5
+  backWalkSpeedMultiplier: 0.5
   backWalkDist: 3
   backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 1.5
+  strafeSpeedMultiplier: 0.5
   strafeMinDuration: 1
   strafeMaxDuration: 2
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   backWalkTriggerFactor: 0.5

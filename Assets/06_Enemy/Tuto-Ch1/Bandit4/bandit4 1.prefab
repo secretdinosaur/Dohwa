@@ -1365,10 +1365,10 @@ GameObject:
   - component: {fileID: 6949757137014706020}
   - component: {fileID: 5605676412277359969}
   - component: {fileID: 6696764682098925417}
-  - component: {fileID: 4852872339167672233}
   - component: {fileID: 7879533036743666521}
   - component: {fileID: 2792134168679897466}
   - component: {fileID: 707065155847661315}
+  - component: {fileID: 5424027703706566729}
   m_Layer: 7
   m_Name: bandit4 1
   m_TagString: Enemy
@@ -1887,8 +1887,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb00462449827e947ab0bf47598f1b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  baseMoveSpeed: 3
-  rotationSpeed: 20
+  baseMoveSpeed: 2
+  rotationSpeed: 10
 --- !u!114 &6696764682098925417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1907,43 +1907,6 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8be319b2d8003ee4bad999b3f3273bbe, type: 3}
   startChaseSound: {fileID: 8300000, guid: 9d3ebb475c5874241832a91819d6d702, type: 3}
   deathSound: {fileID: 8300000, guid: 04b768ed66023ba488bcc63db3518e21, type: 3}
---- !u!114 &4852872339167672233
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2905456378437358889}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ff681005013452240aeb1630d8243fdb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyAI
-  disableLogicDistance: 100
-  detectionRange: 25
-  detectionRangeWithoutWatch: 15
-  detectionMemoryDuration: 10
-  chaseRange: 35
-  wanderSearchRadius: 10
-  fieldOfView: 90
-  chaseSpeedMultiplier: 1.5
-  backWalkSpeedMultiplier: 0.6
-  backWalkDist: 3
-  backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 0.7
-  strafeMinDuration: 1
-  strafeMaxDuration: 2
-  skillRangeMultiplier: 0.9
-  targetUpdateInterval: 0.2
-  firstDetectionDelay: 1
-  maxPredictionTime: 0.7
-  isDetectedPlayer: 0
-  isMemorizingPlayer: 0
-  moveBeforeAttackChance: 0.5
-  parriedBackWalkChance: 40
-  normalBackWalkChance: 10
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 14.7
 --- !u!114 &7879533036743666521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2045,8 +2008,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillSelector
   skillProfiles:
   - skill: {fileID: 11400000, guid: 8f32bbca3af9c914ea990568aa4319da, type: 2}
-    minDistance: 0
-    maxDistance: 3
+    minDistance: 5
+    maxDistance: 12
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
@@ -2089,6 +2052,98 @@ MonoBehaviour:
   isNextSkillCombo: 0
   isInstantComboTriggered: 0
   currentPhase: 1
+--- !u!114 &5424027703706566729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2905456378437358889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b374615397fc440a515f1fe4c014ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Bandit4AI
+  disableLogicDistance: 100
+  detectionRange: 20
+  detectionRangeWithoutWatch: 15
+  detectionMemoryDuration: 10
+  chaseRange: 15
+  wanderSearchRadius: 10
+  fieldOfView: 90
+  chaseSpeedMultiplier: 2.5
+  backWalkSpeedMultiplier: 0.5
+  backWalkDist: 3
+  backWalkMaxDuration: 1
+  strafeSpeedMultiplier: 0.5
+  strafeMinDuration: 1
+  strafeMaxDuration: 2
+  skillRangeMultiplier: 0.9
+  targetUpdateInterval: 0.2
+  firstDetectionDelay: 1
+  maxPredictionTime: 0.7
+  isDetectedPlayer: 0
+  isMemorizingPlayer: 0
+  moveBeforeAttackChance: 25
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  backWalkTriggerFactor: 0.7
+  strafeOnCloseChance: 15
+  jumpAttackSkill: {fileID: 11400000, guid: 8f32bbca3af9c914ea990568aa4319da, type: 2}
+  jumpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.23258787
+      value: 0.70593536
+      inSlope: 2.7470884
+      outSlope: 2.7470884
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7476382
+      value: 0.774967
+      inSlope: -2.5604372
+      outSlope: -2.5604372
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  jumpHeight: 1
+  jumpDuration: 0.7
+  jumpLandingOffset: 1
 --- !u!1 &2933167520126801958
 GameObject:
   m_ObjectHideFlags: 0

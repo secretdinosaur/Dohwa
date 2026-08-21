@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 
@@ -80,9 +80,12 @@ public class FatBanditAI : EnemyAIBase
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
+            float backWalkRange = executeRange * backWalkTriggerFactor;
+
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
+            // 💡 돌진 공격: 거리가 멀 때 확률적으로 발동하는 특수 패턴 (기존 로직 유지)
             if (canAttackGlobal && distToLastPos > executeRange)
             {
                 bool canRunAttack = runAttackSkill != null && Time.time >= lastRunAttackTime + runAttackCooldown;
@@ -99,31 +102,21 @@ public class FatBanditAI : EnemyAIBase
                 }
             }
 
-            if (canAttackGlobal && hasEnoughMP)
+            // 💡 추가됨: 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
+
+            // 타격 박스 안일 때
+            if (isWithinAttackBox)
             {
-                if (distToLastPos <= executeRange)
+                if (canAttackGlobal && hasEnoughMP)
                 {
                     actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-                }
-                else if (distToLastPos <= executeRange * walkApproachFactor)
-                {
-                    UpdateWalkApproachTarget();
+                    lastActionWasBackWalk = false;
                 }
                 else
                 {
-                    HandleDistantApproach(executeRange);
-                }
-            }
-            else
-            {
-                if (distToLastPos > executeRange * walkApproachFactor)
-                {
-                    HandleDistantApproach(executeRange);
-                }
-                else
-                {
-                    float backWalkRange = executeRange * backWalkTriggerFactor;
-                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk)
+                    // 쿨타임 대기 중
+                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk && !skillSelector.HasPendingCombo)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                         {
@@ -140,6 +133,47 @@ public class FatBanditAI : EnemyAIBase
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                         lastActionWasBackWalk = false;
                     }
+                }
+            }
+            // 💡 추가됨: 타격 박스 밖일 때의 유동적 위치 선정 로직
+            else
+            {
+                if (distToLastPos < backWalkRange)
+                {
+                    // 거리는 너무 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        lastActionWasBackWalk = true;
+                    }
+                }
+                else
+                {
+                    // 거리가 멀거나 각도가 안 맞으므로 접근
+                    if (canAttackGlobal && hasEnoughMP)
+                    {
+                        if (distToLastPos <= executeRange * walkApproachFactor)
+                            UpdateWalkApproachTarget();
+                        else
+                            HandleDistantApproach(executeRange);
+                    }
+                    else
+                    {
+                        if (distToLastPos > executeRange * walkApproachFactor)
+                        {
+                            HandleDistantApproach(executeRange);
+                        }
+                        else
+                        {
+                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        }
+                    }
+                    lastActionWasBackWalk = false;
                 }
             }
         }

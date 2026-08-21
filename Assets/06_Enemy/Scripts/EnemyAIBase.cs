@@ -490,29 +490,6 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         return Vector3.Distance(transform.position, Player.Instance.transform.position) <= 2.5f * scale;
     }
-
-    protected float GetSkillOptimalDistance(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            return Mathf.Abs(m.hitDataList[0].centerOffset.z);
-        }
-        else if (skill is Skill_Range r)
-        {
-            return r.range * 0.8f;
-        }
-        return 2.5f;
-    }
-
-    protected float GetSkillBoxZExtents(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            return m.hitDataList[0].boxSize.z / 2f;
-        }
-        return 1.0f;
-    }
-
     protected void CancelCurrentSkillAction()
     {
         core.animator.CrossFade("Idle", 0.25f);

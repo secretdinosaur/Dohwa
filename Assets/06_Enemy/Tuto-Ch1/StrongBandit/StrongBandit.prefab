@@ -3699,10 +3699,10 @@ MonoBehaviour:
   wanderSearchRadius: 0
   fieldOfView: 90
   chaseSpeedMultiplier: 3
-  backWalkSpeedMultiplier: 0.7
+  backWalkSpeedMultiplier: 0.5
   backWalkDist: 3
-  backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 0.7
+  backWalkMaxDuration: 1.5
+  strafeSpeedMultiplier: 0.5
   strafeMinDuration: 1
   strafeMaxDuration: 2
   skillRangeMultiplier: 0.9
@@ -3728,6 +3728,60 @@ MonoBehaviour:
   maxGuardDistance: 5
   guardStartupDelay: 0.5
   postStunGuardDelay: 5
+  jumpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.19970363
+      value: 0.7630642
+      inSlope: 2.4904022
+      outSlope: 2.4904022
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7047731
+      value: 0.8056534
+      inSlope: -2.3990316
+      outSlope: -2.3990316
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  jumpHeight: 2
+  jumpDuration: 1.5
+  jumpLandingOffset: 1
 --- !u!114 &6141236220954738026
 MonoBehaviour:
   m_ObjectHideFlags: 0

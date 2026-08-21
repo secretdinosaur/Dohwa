@@ -93,7 +93,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void HandleParryDamage(float mpDamage)
     {
-        UpdateMP(0);
+        ConsumeMP(mpDamage);
 
         if (currentMp <= 0 && core.currentState != EnemyState.Stun)
         {

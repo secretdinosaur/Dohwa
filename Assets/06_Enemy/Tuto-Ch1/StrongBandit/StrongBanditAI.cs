@@ -160,6 +160,7 @@ public class StrongBanditAI : EnemyAIBase
 
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
+            // 가드 확률 틱 처리
             if (canGuard && hasMpForGuard && distToLastPos <= maxGuardDistance)
             {
                 if (UnityEngine.Random.Range(0f, 100f) < guardChancePerSec * Time.deltaTime)
@@ -195,26 +196,30 @@ public class StrongBanditAI : EnemyAIBase
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             float backWalkRange = executeRange * backWalkTriggerFactor;
+            float guardTriggerRange = executeRange * guardTriggerFactor;
 
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            if (distToLastPos <= executeRange)
+            // 💡 추가됨: 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
+
+            // 1. 타격 박스 내외 상관없이 거리가 가깝고 공격 타이밍이면 가드 튕기기
+            if (distToLastPos < guardTriggerRange && canGuard && hasMpForGuard && UnityEngine.Random.value <= guardProbability && !skillSelector.HasPendingCombo)
             {
-                float guardTriggerRange = executeRange * guardTriggerFactor;
+                lastGuardTime = Time.time;
+                actionCoroutine = StartCoroutine(GuardSequence(guardSkill));
+                return;
+            }
 
-                if (distToLastPos < guardTriggerRange && canGuard && hasMpForGuard && UnityEngine.Random.value <= guardProbability && !skillSelector.HasPendingCombo)
-                {
-                    lastGuardTime = Time.time;
-                    actionCoroutine = StartCoroutine(GuardSequence(guardSkill));
-                    return;
-                }
-
+            // 2. 타격 박스 안일 때
+            if (isWithinAttackBox)
+            {
                 if (distToLastPos < backWalkRange && !skillSelector.HasPendingCombo)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
                     {
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1f));
                         lastActionWasBackWalk = false;
                         return;
                     }
@@ -256,29 +261,48 @@ public class StrongBanditAI : EnemyAIBase
                     lastActionWasBackWalk = false;
                 }
             }
+            // 3. 💡 타격 박스 밖일 때 (유동적 위치 선정)
             else
             {
-                if (canAttackGlobal && hasEnoughMP)
+                if (distToLastPos < backWalkRange)
                 {
-                    if (distToLastPos <= executeRange * walkApproachFactor)
-                        UpdateWalkApproachTarget();
-                    else
-                        UpdateChaseTarget();
-                }
-                else
-                {
-                    if (distToLastPos > executeRange * walkApproachFactor)
+                    // 거리는 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
                     {
-                        UpdateChaseTarget();
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1f));
+                        lastActionWasBackWalk = false;
                     }
                     else
                     {
-                        if (UnityEngine.Random.Range(0f, 100f) < 60f)
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        lastActionWasBackWalk = true;
+                    }
+                }
+                else
+                {
+                    // 멀리 있거나 각도를 잡기 위해 추적
+                    if (canAttackGlobal && hasEnoughMP)
+                    {
+                        if (distToLastPos <= executeRange * walkApproachFactor)
+                            UpdateWalkApproachTarget();
+                        else
+                            UpdateChaseTarget();
+                    }
+                    else
+                    {
+                        if (distToLastPos > executeRange * walkApproachFactor)
                         {
-                            float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                            UpdateChaseTarget();
                         }
-                        lastActionWasBackWalk = false;
+                        else
+                        {
+                            if (UnityEngine.Random.Range(0f, 100f) < 60f)
+                            {
+                                float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
+                                actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                            }
+                            lastActionWasBackWalk = false;
+                        }
                     }
                 }
             }
@@ -321,8 +345,6 @@ public class StrongBanditAI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
-        if (agent != null) agent.enabled = false;
-
         bool actionFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
@@ -350,18 +372,9 @@ public class StrongBanditAI : EnemyAIBase
         ClearAttackHandler();
 
         core.isGuarding = false;
-
-        if (agent != null && !core.IsDead)
-        {
-            SnapToGround();
-            agent.enabled = true;
-            core.CmdTrySnapToNavMesh?.Invoke();
-        }
-
         ChainNextAttackOrIdle();
     }
 
-    // 카운터 발동 시 점프 공격 로직 처리
     private IEnumerator CounterSequence(SkillBase skill)
     {
         isAttacking = true;
@@ -378,9 +391,11 @@ public class StrongBanditAI : EnemyAIBase
         };
 
         core.OnAttackCompleted += currentAttackCompleteHandler;
-        core.CmdPerformAttack?.Invoke(skill);
+
+        core.CmdPerformInstantAttack?.Invoke(skill);
+
         float prepTime = 0f;
-        while (prepTime < 1.8f)
+        while (prepTime < 1.72f)
         {
             if (skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
             prepTime += Time.deltaTime;
@@ -452,8 +467,6 @@ public class StrongBanditAI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
-        if (agent != null) agent.enabled = false;
-
         bool attackFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
@@ -473,13 +486,6 @@ public class StrongBanditAI : EnemyAIBase
         {
             skillSelector.isInstantComboTriggered = false;
             core.CmdCancelAttack?.Invoke();
-        }
-
-        if (agent != null && !core.IsDead)
-        {
-            SnapToGround();
-            agent.enabled = true;
-            core.CmdTrySnapToNavMesh?.Invoke();
         }
 
         float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
