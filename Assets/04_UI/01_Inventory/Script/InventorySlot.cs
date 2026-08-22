@@ -89,6 +89,7 @@ public class InventorySlot : MonoBehaviour, IScrollHandler, IBeginDragHandler, I
     public void OnClick()
     {
         InventoryManager.Instance.selectedItem = this;
+        InventoryManager.Instance.ShowItemTooltip(item);
         if (!InventoryManager.Instance.ItemContextMenu.gameObject.activeSelf && item.isSettedItem)
             InventoryManager.Instance.ShowItmeContextMenu();
         else
@@ -106,6 +107,7 @@ public class InventorySlot : MonoBehaviour, IScrollHandler, IBeginDragHandler, I
 
     public void OnPointerExit()
     {
+        if (item.skillBook == null) return;
         InventoryManager.Instance.HideItemTooltip();
     }
 
