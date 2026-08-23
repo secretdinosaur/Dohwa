@@ -24,6 +24,9 @@ public class EnemyBossHealth : MonoBehaviour
     private bool hasTriggered66 = false;
     private bool hasTriggered33 = false;
 
+    // 💡 추가됨: 현재 실행 중인 스턴 코루틴을 추적하기 위한 변수
+    private Coroutine stunCoroutine;
+
     private void Awake()
     {
         core = GetComponent<EnemyCore>();
@@ -69,6 +72,18 @@ public class EnemyBossHealth : MonoBehaviour
             return;
         }
 
+        // 💡 추가됨: 스턴 중에 공격을 받으면 스턴을 강제로 해제합니다.
+        if (core.currentState == EnemyState.Stun)
+        {
+            if (stunCoroutine != null)
+            {
+                StopCoroutine(stunCoroutine);
+                stunCoroutine = null;
+            }
+            UpdateMP(maxMP); // 스턴이 풀릴 때 MP를 꽉 채워줌
+            core.TriggerStunEnd();
+        }
+
         currentHp -= damage;
 
         float hpPercentage = currentHp / maxHP;
@@ -108,7 +123,8 @@ public class EnemyBossHealth : MonoBehaviour
         if (currentMp <= 0 && core.currentState != EnemyState.Stun)
         {
             core.TriggerParried();
-            StartCoroutine(StunRoutine());
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+            stunCoroutine = StartCoroutine(StunRoutine());
         }
     }
 
@@ -187,6 +203,7 @@ public class EnemyBossHealth : MonoBehaviour
         }
         UpdateMP(maxMP);
         core.TriggerStunEnd();
+        stunCoroutine = null;
     }
 
     public void UpdateMP(float value)
@@ -205,6 +222,13 @@ public class EnemyBossHealth : MonoBehaviour
 
         hasTriggered66 = false;
         hasTriggered33 = false;
+
+        // 💡 추가됨: 체력 초기화 시 스턴 코루틴도 초기화
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+            stunCoroutine = null;
+        }
 
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);

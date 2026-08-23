@@ -44,14 +44,15 @@ public class StrongBanditAI : EnemyAIBase
     private float nextAllowedGuardTime = -9999f;
 
     private Action<float> currentAttackCompleteHandler;
-
     private UnityEngine.AI.NavMeshAgent agent;
+    private Collider enemyCollider; // 💡 콜라이더 캐싱용 변수 추가
 
     protected override void Awake()
     {
         base.Awake();
         skillSelector = GetComponent<SkillSelector>();
         agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        enemyCollider = GetComponent<Collider>(); // 💡 Awake에서 콜라이더 가져오기
 
         core.OnPlayerDetected += HandlePlayerDetected;
         core.OnStunned += HandleInterruptSpecial;
@@ -90,6 +91,8 @@ public class StrongBanditAI : EnemyAIBase
         core.isGuarding = false;
         wasStunned = true;
 
+        if (enemyCollider != null) enemyCollider.enabled = true; // 💡 인터럽트 발생 시 콜라이더 복구 보장
+
         if (agent != null && !agent.enabled && !core.IsDead)
         {
             SnapToGround();
@@ -104,6 +107,8 @@ public class StrongBanditAI : EnemyAIBase
             agent.enabled = true;
             core.CmdTrySnapToNavMesh?.Invoke();
         }
+
+        if (enemyCollider != null) enemyCollider.enabled = true; // 💡 부활 시 콜라이더 활성화 보장
 
         isStartingFight = false;
         core.isGuarding = false;
@@ -160,7 +165,6 @@ public class StrongBanditAI : EnemyAIBase
 
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
-            // 가드 확률 틱 처리
             if (canGuard && hasMpForGuard && distToLastPos <= maxGuardDistance)
             {
                 if (UnityEngine.Random.Range(0f, 100f) < guardChancePerSec * Time.deltaTime)
@@ -201,10 +205,8 @@ public class StrongBanditAI : EnemyAIBase
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            // 💡 추가됨: 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
             bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
 
-            // 1. 타격 박스 내외 상관없이 거리가 가깝고 공격 타이밍이면 가드 튕기기
             if (distToLastPos < guardTriggerRange && canGuard && hasMpForGuard && UnityEngine.Random.value <= guardProbability && !skillSelector.HasPendingCombo)
             {
                 lastGuardTime = Time.time;
@@ -212,7 +214,6 @@ public class StrongBanditAI : EnemyAIBase
                 return;
             }
 
-            // 2. 타격 박스 안일 때
             if (isWithinAttackBox)
             {
                 if (distToLastPos < backWalkRange && !skillSelector.HasPendingCombo)
@@ -261,12 +262,10 @@ public class StrongBanditAI : EnemyAIBase
                     lastActionWasBackWalk = false;
                 }
             }
-            // 3. 💡 타격 박스 밖일 때 (유동적 위치 선정)
             else
             {
                 if (distToLastPos < backWalkRange)
                 {
-                    // 거리는 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1f));
@@ -280,7 +279,6 @@ public class StrongBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    // 멀리 있거나 각도를 잡기 위해 추적
                     if (canAttackGlobal && hasEnoughMP)
                     {
                         if (distToLastPos <= executeRange * walkApproachFactor)
@@ -382,6 +380,7 @@ public class StrongBanditAI : EnemyAIBase
         core.ChangeState(EnemyState.Attack);
 
         if (agent != null) agent.enabled = false;
+        if (enemyCollider != null) enemyCollider.enabled = false; // 💡 카운터 시작 시 콜라이더 끄기
 
         bool attackFinished = false;
 
@@ -431,6 +430,8 @@ public class StrongBanditAI : EnemyAIBase
         {
             transform.position = targetPos;
         }
+
+        if (enemyCollider != null) enemyCollider.enabled = true; // 💡 이동(점프) 착지 후 콜라이더 켜기
 
         yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead);
 

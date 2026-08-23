@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 
@@ -17,6 +17,8 @@ public class EnemyHealth : MonoBehaviour
     private bool hasTriggered66 = false;
     private bool hasTriggered33 = false;
 
+    private Coroutine stunCoroutine;
+
     public event Action<float, float> OnHpChanged;
     public event Action<float, float> OnMpChanged;
 
@@ -31,7 +33,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void OnEnable()
     {
-        if(hpBarCanvas != null)
+        if (hpBarCanvas != null)
             hpBarCanvas.gameObject.SetActive(false);
 
         core.OnDamageTaken += HandleDamage;
@@ -60,11 +62,26 @@ public class EnemyHealth : MonoBehaviour
 
     private void HandleDamage(float damage)
     {
-        if(hpBarCanvas != null)
+        if (hpBarCanvas != null)
             hpBarCanvas.gameObject.SetActive(true);
-            
-        currentHp -= damage;
-        
+
+        if (core.currentState == EnemyState.Stun && core.HittedSkill != null && core.HittedSkill.name.Contains("StrongAttack"))
+        {
+            currentHp = 0;
+
+            if (stunCoroutine != null)
+            {
+                StopCoroutine(stunCoroutine);
+                stunCoroutine = null;
+            }
+            UpdateMP(maxMP);
+            core.TriggerStunEnd();
+        }
+        else
+        {
+            currentHp -= damage;
+        }
+
         float hpPercentage = currentHp / maxHP;
         if (!hasTriggered66 && hpPercentage <= 0.66f)
         {
@@ -82,12 +99,12 @@ public class EnemyHealth : MonoBehaviour
 
         if (hpBarCanvas != null)
             hpBarCanvas.UpdateHP(currentHp, maxHP);
-        
-        if (currentHp <= 0) 
-        { 
-            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);  
-            core.TriggerDeath(); 
-            hpBarCanvas.gameObject.SetActive(false); 
+
+        if (currentHp <= 0)
+        {
+            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
+            core.TriggerDeath();
+            hpBarCanvas.gameObject.SetActive(false);
         }
     }
 
@@ -98,7 +115,8 @@ public class EnemyHealth : MonoBehaviour
         if (currentMp <= 0 && core.currentState != EnemyState.Stun)
         {
             core.TriggerParried();
-            StartCoroutine(StunRoutine());
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+            stunCoroutine = StartCoroutine(StunRoutine());
         }
     }
 
@@ -117,6 +135,7 @@ public class EnemyHealth : MonoBehaviour
         }
         UpdateMP(maxMP);
         core.TriggerStunEnd();
+        stunCoroutine = null;
     }
 
     public void UpdateMP(float value)
@@ -131,10 +150,16 @@ public class EnemyHealth : MonoBehaviour
         currentHp = maxHP; currentMp = maxMP;
         hasTriggered66 = false;
         hasTriggered33 = false;
-        
+
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+            stunCoroutine = null;
+        }
+
         OnHpChanged?.Invoke(currentHp, maxHP);
         OnMpChanged?.Invoke(currentMp, maxMP);
-        
+
         hpBarCanvas.UpdateHP(currentHp, maxHP);
         hpBarCanvas.UpdateMP(currentMp, maxMP);
 

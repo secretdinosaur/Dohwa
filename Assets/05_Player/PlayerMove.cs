@@ -129,15 +129,6 @@ public class PlayerMove : MonoBehaviour
             sprintLockoutTimer -= Time.deltaTime;
         }
 
-        // ==========================================
-        // 💡 추가됨: 디버깅용 Y키 넉다운
-        if (Keyboard.current != null && Keyboard.current.yKey.wasPressedThisFrame)
-        {
-            // 뒤로 밀리면서 위로 살짝 뜨는 힘(Force)과 함께 넉다운(타입 1) 적용
-            Vector3 debugForce = -transform.forward * 5f + Vector3.up * 5f;
-            KnockBack(debugForce, 1, 1.5f);
-        }
-        // ==========================================
 
         if (Player.Instance == null || !Player.Instance.CanMove() || (Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isAttacking))
         {

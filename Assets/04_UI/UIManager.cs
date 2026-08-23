@@ -160,73 +160,47 @@ public class UIManager : MonoBehaviour
 
     public void ToggleInventory()
     {
-        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
+        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim)
+        {
+            return;
+        }
 
         bool nextState = !InventoryManager.Instance.isInventoryOpen;
 
-        if (Player.Instance.CanAttack())
+        if (nextState && !Player.Instance.CanAttack())
+        {
+            return;
+        }
+
+
+        InventoryManager.Instance.uiMap.SetActive(nextState);
+        PreventCameraMoveAndClick(nextState);
+        GameQuickSlot.SetActive(!nextState);
+        InventoryManager.Instance.isInventoryOpen = nextState;
+        TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
+
+        if (nextState) // 열 때
         {
             InkBrushEffectManager.Instance.ClearHitEffects();
-            Time.timeScale = nextState ? 0f : 1f;
-            InventoryManager.Instance.uiMap.SetActive(nextState);
+            InventoryManager.Instance.OnClickInfoTab();
+            Inventory.SetActive(true);
 
-            if (nextState)
-            {
-                InventoryManager.Instance.OnClickInfoTab();
-                Inventory.SetActive(true);
-            }
-            else
-            {
-                Inventory.SetActive(false);
-            }
+            SoundManager.Instance.PlayUISound(2);
 
-            PreventCameraMoveAndClick(nextState);
-            GameQuickSlot.SetActive(!nextState);
-            InventoryManager.Instance.isInventoryOpen = nextState;
-            TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
+            HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
+            Player.Instance.LowHPMat.SetFloat("_HP", 1f);
 
-            if (nextState)
-            {
-                SoundManager.Instance.PlayUISound(2);
-                HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
-                Player.Instance.LowHPMat.SetFloat("_HP", 1f);
-                InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
-            }
-            else
-            {
-                SoundManager.Instance.PlayUISound(3);
-                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
-            }
+            InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
         }
-        else if (InventoryManager.Instance.isInventoryOpen) // 닫기 로직
+        else // 닫을 때
         {
-            InventoryManager.Instance.uiMap.SetActive(nextState);
+            Inventory.SetActive(false);
+            SoundManager.Instance.PlayUISound(3);
 
-            if (nextState)
-            {
-                InventoryManager.Instance.OnClickInfoTab();
-                Inventory.SetActive(true);
-            }
-            else
-            {
-                Inventory.SetActive(false);
-            }
-
-            PreventCameraMoveAndClick(nextState);
-            GameQuickSlot.SetActive(!nextState);
-            InventoryManager.Instance.isInventoryOpen = nextState;
-            TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
-
-            if (nextState)
-            {
-                SoundManager.Instance.PlayUISound(2);
-            }
-            else
-            {
-                SoundManager.Instance.PlayUISound(3);
-            }
-            Time.timeScale = nextState ? 0f : 1f;
+            Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
         }
+
+        Time.timeScale = nextState ? 0f : 1f;
     }
 
     // =======================================================
@@ -269,15 +243,15 @@ public class UIManager : MonoBehaviour
 
             if (nextState)
             {
+                SoundManager.Instance.PlayUISound(3);
+                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
+            }
+            else
+            {
                 SoundManager.Instance.PlayUISound(2);
                 HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
                 Player.Instance.LowHPMat.SetFloat("_HP", 1f);
                 InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
-            }
-            else
-            {
-                SoundManager.Instance.PlayUISound(3);
-                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
             }
         }
         else if (InventoryManager.Instance.isInventoryOpen) // 닫기 로직
