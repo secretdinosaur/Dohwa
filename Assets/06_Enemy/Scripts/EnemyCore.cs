@@ -344,7 +344,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
         OnStunned?.Invoke();
         StopAllEffects();
 
-        if (EnemyLockOnImage.Instance != null)
+        if (EnemyLockOnImage.Instance != null &&
+            EnemyLockOnImage.Instance.target != null &&
+            EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
         {
             EnemyLockOnImage.Instance.TriggerStrongAttackEffect();
         }
@@ -357,7 +359,9 @@ public class EnemyCore : MonoBehaviour, IDamageable
             ChangeState(EnemyState.Idle);
             wasParried = false;
 
-            if (EnemyLockOnImage.Instance != null)
+            if (EnemyLockOnImage.Instance != null &&
+                EnemyLockOnImage.Instance.target != null &&
+                EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
             {
                 EnemyLockOnImage.Instance.CancelStrongAttackEffect();
             }

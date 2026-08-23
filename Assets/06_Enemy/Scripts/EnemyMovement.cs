@@ -10,11 +10,11 @@ public class EnemyMovement : MonoBehaviour
     private NavMeshAgent agent;
     private Animator animator;
     private EnemyCore core;
+    private CharacterController characterController;
 
     public Vector3 OriginalPosition { get; private set; }
     private Quaternion originalRotation;
 
-    // LookAt 명령이 들어올 때 자동 이동 회전을 막기 위한 타이머
     private float overrideLookTimer = 0f;
 
     private void Awake()
@@ -22,6 +22,7 @@ public class EnemyMovement : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         core = GetComponent<EnemyCore>();
+        characterController = GetComponent<CharacterController>();
 
         OriginalPosition = transform.position;
         originalRotation = transform.rotation;
@@ -30,9 +31,7 @@ public class EnemyMovement : MonoBehaviour
         {
             agent.speed = baseMoveSpeed;
             agent.enabled = false;
-
-            // NavMeshAgent의 자동 회전 기능 비활성화
-            agent.updateRotation = false;
+            agent.updateRotation = false; // NavMesh 자체 회전 끄기
         }
 
         core.BaseMovementSpeed = baseMoveSpeed;
@@ -65,10 +64,8 @@ public class EnemyMovement : MonoBehaviour
         core.CmdMoveDirection -= MoveDirection;
         core.CmdWarpToOriginal -= WarpToOriginal;
         core.CmdTrySnapToNavMesh -= () => TrySnapToNavMesh();
-
         core.CmdFastLookAt -= FastLookAtTarget;
         core.OnDeath -= StopMovement;
-
         core.QueryIsPathPending = null;
         core.QueryOriginalPosition = null;
     }
@@ -78,6 +75,14 @@ public class EnemyMovement : MonoBehaviour
         if (overrideLookTimer > 0f)
         {
             overrideLookTimer -= Time.deltaTime;
+            return;
+        }
+
+        // 💡 [핵심 해결 로직]
+        // 공격 중이거나 스턴 상태일 때는 딱 붙어있어도 억지로 방향을 덮어씌우지 않도록 회전 차단!
+        // 이 코드가 있어야 루트모션 회전이 씹히지 않고 온전히 360도 돌아갑니다.
+        if (core != null && (core.currentState == EnemyState.Attack || core.currentState == EnemyState.Stun))
+        {
             return;
         }
 
@@ -94,22 +99,39 @@ public class EnemyMovement : MonoBehaviour
 
     private float checkRadius = 0.1f;
     private float checkHeight = 1.0f;
+
     private void OnAnimatorMove()
     {
         if (animator == null) return;
 
-        Vector3 delta = animator.deltaPosition;
-        float moveDist = delta.magnitude;
+        // 1. 회전(루트모션)은 이동(충돌)과 무관하게 무조건 최우선 적용
+        transform.rotation *= animator.deltaRotation;
 
-        Vector3 direction = delta / moveDist;
-        Vector3 origin = transform.position + (Vector3.up * checkHeight);
+        Vector3 delta = animator.deltaPosition;
+
+        // 2. 이동 거리가 0에 가깝다면 (제자리 360도 회전 등) 충돌 연산을 할 필요 없이 즉시 종료
+        if (delta.magnitude < 0.0001f) return;
+
+        // 3. 캐릭터 콜라이더가 있다면 알아서 벽을 타고 미끄러지도록 처리
+        if (characterController != null)
+        {
+            characterController.Move(delta);
+            if (agent != null && agent.isActiveAndEnabled)
+            {
+                agent.nextPosition = transform.position;
+            }
+            return;
+        }
 
         if (core == null || !core.isIgnoringPlayer)
         {
-            if (Physics.SphereCast(origin, checkRadius, direction, out RaycastHit hit, moveDist, LayerMask.GetMask("Player", "Enemy", "Default")))
+            Vector3 direction = delta.normalized;
+            Vector3 origin = transform.position + (Vector3.up * checkHeight);
+
+            if (Physics.SphereCast(origin, checkRadius, direction, out RaycastHit hit, delta.magnitude, LayerMask.GetMask("Player", "Enemy", "Default")))
             {
-                transform.rotation *= animator.deltaRotation;
-                return;
+                delta = Vector3.ProjectOnPlane(delta, hit.normal);
+                delta.y = 0f;
             }
         }
 
@@ -117,14 +139,14 @@ public class EnemyMovement : MonoBehaviour
         {
             Vector3 nextPos = transform.position + delta;
             if (NavMesh.SamplePosition(nextPos, out _, 2f, NavMesh.AllAreas))
+            {
                 agent.nextPosition = nextPos;
+            }
         }
         else
         {
             transform.position += delta;
         }
-
-        transform.rotation *= animator.deltaRotation;
     }
 
     private void MoveTo(Vector3 destination, float speedMultiplier)

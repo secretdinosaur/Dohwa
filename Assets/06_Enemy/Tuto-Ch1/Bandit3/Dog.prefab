@@ -786,7 +786,7 @@ MonoBehaviour:
   detectionRange: 30
   detectionRangeWithoutWatch: 20
   detectionMemoryDuration: 10
-  chaseRange: 50
+  chaseRange: 75
   wanderSearchRadius: 15
   fieldOfView: 90
   chaseSpeedMultiplier: 5
@@ -794,8 +794,8 @@ MonoBehaviour:
   backWalkDist: 1
   backWalkMaxDuration: 2
   strafeSpeedMultiplier: 0.6
-  strafeMinDuration: 1
-  strafeMaxDuration: 3
+  strafeMinDuration: 0.5
+  strafeMaxDuration: 1.5
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1

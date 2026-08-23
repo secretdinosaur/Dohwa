@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Localization;
 using System.Collections;
+using Unity.VisualScripting.FullSerializer;
 // 로직 베이스 클래스 (순수 C#)
 [System.Serializable]
 public abstract class PassiveLogic
@@ -164,5 +165,68 @@ public class UpgradeSkillPassive : PassiveLogic
         }
         replacedIndices.Clear();
         originalSkills.Clear();
+    }
+}
+
+[System.Serializable]
+public class ParryAttackBuffPassive : PassiveLogic
+{
+    [Header("Buff Settings")]
+    public float buffAmount = 10f;     // 증가할 공격력
+    public float buffDuration = 5f;    // 지속 시간
+
+    private Coroutine buffCoroutine;
+    private bool isBuffActive = false;
+
+    public override void Apply()
+    {
+        if (Player.Instance != null)
+        {
+            Player.Instance.OnParrySuccess += HandleParrySuccess;
+        }
+    }
+
+    public override void Remove()
+    {
+        if (Player.Instance != null)
+        {
+            Player.Instance.OnParrySuccess -= HandleParrySuccess;
+
+            if (buffCoroutine != null)
+            {
+                Player.Instance.StopCoroutine(buffCoroutine);
+                buffCoroutine = null;
+            }
+
+            if (isBuffActive)
+            {
+                StatManager.Instance.AttackPower -= buffAmount;
+                isBuffActive = false;
+            }
+        }
+    }
+
+    private void HandleParrySuccess()
+    {
+        if (buffCoroutine != null)
+        {
+            Player.Instance.StopCoroutine(buffCoroutine);
+        }
+        buffCoroutine = Player.Instance.StartCoroutine(BuffRoutine());
+    }
+
+    private IEnumerator BuffRoutine()
+    {
+        if (!isBuffActive)
+        {
+            StatManager.Instance.AttackPower += buffAmount;
+            isBuffActive = true;
+        }
+
+        yield return new WaitForSeconds(buffDuration);
+
+        StatManager.Instance.AttackPower -= buffAmount;
+        isBuffActive = false;
+        buffCoroutine = null;
     }
 }

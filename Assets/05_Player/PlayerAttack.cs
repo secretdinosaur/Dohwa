@@ -66,7 +66,7 @@ public class PlayerAttack : MonoBehaviour
     private float autoAimAngle = 22.5f;
 
     [Header("Timing Settings")]
-    private float guardCooldown = 0.5f;
+    private float guardCooldown = 0.15f;
     private float attackComboThreshold = 0.125f;
     private float autoSheathDelay = 20f;
     private float drawAnimDuration = 0.25f;
@@ -117,13 +117,15 @@ public class PlayerAttack : MonoBehaviour
     public void OnCommandD(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.D); }
     public void OnCommandJump(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.J); }
 
+    public void UpdateCommandUI() { UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray()); }
+
     private void AddCommand(SkillBase.Command cmd)
     {
         if (Player.Instance.isAirborne || Player.Instance.isCinematic || Player.Instance.IsStunned || Player.Instance.PlayerMove.isKnockedDown) return;
         commandBuffer.Add(cmd);
         if (commandBuffer.Count > MaxCommandBuffer) commandBuffer.RemoveAt(0);
 
-        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
+        UpdateCommandUI();
     }
 
     private string CommandsToString(IEnumerable<SkillBase.Command> cmds, bool forText = true)
