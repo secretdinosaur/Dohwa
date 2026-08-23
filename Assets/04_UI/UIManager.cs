@@ -57,6 +57,20 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI MpText;
     public TextMeshProUGUI AttackText;
     public TextMeshProUGUI ArmorText;
+    public TextMeshProUGUI ExternalArtText;
+    public TextMeshProUGUI InnerArtText;
+    public TextMeshProUGUI VitalStrikeRateText;
+    public TextMeshProUGUI VitalStrikeDamageText;
+    public TextMeshProUGUI HpRecoveryAmountText;
+    public TextMeshProUGUI MpRecoveryAmountText;
+    public TextMeshProUGUI MoveSpeedText;
+    public TextMeshProUGUI PoisonResistanceText;
+    public TextMeshProUGUI BleedResistanceText;
+    public TextMeshProUGUI FireResistanceText;
+    public TextMeshProUGUI LightningResistanceText;
+    public TextMeshProUGUI OrthodoxText;
+    public TextMeshProUGUI UnorthodoxText;
+    public TextMeshProUGUI DemonicText;
     public Image MpTipImage;
 
     public TextMeshProUGUI InsightPointText;

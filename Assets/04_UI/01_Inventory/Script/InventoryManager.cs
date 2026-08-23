@@ -82,6 +82,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject TreeInfo;
     public GameObject InformationTab;
     public GameObject GradeTab;
+    public GameObject MouseItemInfoBackground;
     public GameObject MouseItemInfo;
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
@@ -742,23 +743,84 @@ public class InventoryManager : MonoBehaviour
                 NormalItemInfoPanel.EffectDescText.text = "";
                 NormalItemInfoPanel.EffectIcon.enabled = false;
             }
-
         }
-        InventorySlot Slot = item.GetComponentInParent<InventorySlot>();
-        float scaleFactor = InventoryBG.GetComponentInParent<Canvas>().scaleFactor;
+        if (item.itemType == InventoryType.SkillBook)
+        {
+            MouseItemInfoBackground.SetActive(false);
 
-        RectTransform infoRect = NormalItemInfoPanel.GetComponent<RectTransform>();
+            NormalItemInfoPanel.ItemIcon.sprite = item.skillBook.icon;
+            NormalItemInfoPanel.ItemNameText.text = item.skillBook.skillBookName;
+            NormalItemInfoPanel.ItemDescText.text = item.skillBook.skillBookItemDesc;
 
-        float syncPivotY = Slot.CalculatedPivotY;
-        infoRect.pivot = new Vector2(0f, syncPivotY);
+            System.Text.StringBuilder effectBuilder = new System.Text.StringBuilder();
 
-        NormalItemInfoPanel.transform.position = Slot.transform.position + (Slot.TooltipOffset * scaleFactor);
-        NormalItemInfoPanel.gameObject.SetActive(true);
+            if (item.skillBook.skillTree != null)
+            {
+                bool isB0 = item.skillBook.Id == "4a9a5dcc-df4c-4f47-940d-04d12d054268";
+                int unlockedCount = 0;
+
+                if (isB0)
+                {
+                    foreach (var node in item.skillBook.skillTree)
+                    {
+                        if (node.unlocked) unlockedCount++;
+                    }
+                }
+
+                for (int i = 0; i < item.skillBook.skillTree.Length; i++)
+                {
+                    var node = item.skillBook.skillTree[i];
+                    string alphaTag = node.unlocked ? "#FF" : "#80";
+
+                    string displayName = node.GetNodeName();
+
+                    if (isB0 && i >= unlockedCount)
+                    {
+                        displayName = "???";
+                    }
+
+                    effectBuilder.AppendLine($"<alpha={alphaTag}>{displayName}");
+                }
+            }
+
+            NormalItemInfoPanel.ItemEffectDescText.text = effectBuilder.ToString();
+            NormalItemInfoPanel.EffectNameText.text = "";
+            NormalItemInfoPanel.EffectDescText.text = "";
+            NormalItemInfoPanel.EffectIcon.enabled = false;
+
+            InventorySlot Slot = item.GetComponentInParent<InventorySlot>();
+            float scaleFactor = InventoryBG.GetComponentInParent<Canvas>().scaleFactor;
+
+            RectTransform infoRect = NormalItemInfoPanel.GetComponent<RectTransform>();
+
+            float syncPivotY = Slot.CalculatedPivotY;
+            infoRect.pivot = new Vector2(0f, syncPivotY);
+            NormalItemInfoPanel.GetComponent<Image>().color =
+                new Color(NormalItemInfoPanel.GetComponent<Image>().color.r,
+                          NormalItemInfoPanel.GetComponent<Image>().color.g,
+                          NormalItemInfoPanel.GetComponent<Image>().color.b,
+                          1f);
+            NormalItemInfoPanel.transform.position = Slot.transform.position + (Slot.TooltipOffset * scaleFactor);
+            NormalItemInfoPanel.gameObject.SetActive(true);
+        }
+        else
+        {
+            NormalItemInfoPanel.GetComponent<Image>().color =
+                new Color(NormalItemInfoPanel.GetComponent<Image>().color.r,
+                          NormalItemInfoPanel.GetComponent<Image>().color.g,
+                          NormalItemInfoPanel.GetComponent<Image>().color.b,
+                          0f);
+            NormalItemInfoPanel.gameObject.SetActive(true);
+            NormalItemInfoPanel.GetComponent<RectTransform>().pivot = new Vector2(0, 0.8f);
+            NormalItemInfoPanel.GetComponent<RectTransform>().anchoredPosition = new Vector3(-310, 234, 0);
+            MouseItemInfoBackground.SetActive(true);
+        }
     }
 
     public void HideItemTooltip()
     {
         NormalItemInfoPanel.gameObject.SetActive(false);
+        MouseItemInfoBackground.SetActive(false);
     }
 
     public InventorySlot selectedItem;
@@ -846,6 +908,7 @@ public class InventoryManager : MonoBehaviour
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.SetActive(false);
+        if (MouseItemInfoBackground != null) MouseItemInfoBackground.SetActive(false);
         MouseItemInfo.SetActive(false);
         PeachTree.Instance.gameObject.SetActive(false);
         GradeManager.Instance.gradePanel.DisableUI(0f);
@@ -1008,6 +1071,7 @@ public class InventoryManager : MonoBehaviour
         if (ArmorInventory != null) ArmorInventory.SetActive(true);
         if (EquippedArmorSlot != null) EquippedArmorSlot.gameObject.SetActive(true);
         if (EquipItemInfoPanel != null) EquipItemInfoPanel.gameObject.SetActive(true);
+
         EquipmentButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         ArmorButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
         SetInfoPanel(1);

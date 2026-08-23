@@ -70,6 +70,7 @@ public class itemContextMenu : MonoBehaviour
                 break;
         }
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
     }
 
     public void OnSetQuickSlot()
@@ -102,6 +103,7 @@ public class itemContextMenu : MonoBehaviour
             InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
         }
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
         UIManager.Instance.SyncGameQuickSlots();
     }
 
@@ -135,6 +137,7 @@ public class itemContextMenu : MonoBehaviour
         InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
         InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
         UIManager.Instance.SyncGameQuickSlots();
     }
 
@@ -143,7 +146,10 @@ public class itemContextMenu : MonoBehaviour
         if (slot.item.consumable != null)
         {
             if(slot.item.Count == 1)
+            {
                 InventoryManager.Instance.HideItemContextMenu();
+                InventoryManager.Instance.HideItemTooltip();
+            }
             slot.item.consumable.Use();
             slot.item.Count--;
             InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
@@ -209,6 +215,7 @@ public class itemContextMenu : MonoBehaviour
                 InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
             }
             InventoryManager.Instance.HideItemContextMenu();
+            InventoryManager.Instance.HideItemTooltip();
             UIManager.Instance.SyncGameQuickSlots();
             InventoryManager.Instance.CheckDeleteItemPenel.SetActive(false);
             StopCoroutine(checkDeleteCoroutine);
