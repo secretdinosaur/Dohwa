@@ -50,7 +50,7 @@ public class Bandit3AI : EnemyAIBase
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                     {
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
                     }
                     else
                     {
@@ -68,10 +68,8 @@ public class Bandit3AI : EnemyAIBase
                 {
                     // 스킬 쿨타임 대기 중 특유의 게걸음/후퇴 무빙
                     float ran = UnityEngine.Random.value;
-                    if (ran < 0.4f)
+                    if (ran < 0.8f)
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
-                    else if (ran < 0.8f)
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
                     else
                     {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
@@ -92,7 +90,7 @@ public class Bandit3AI : EnemyAIBase
                     // 거리는 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
                     {
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 2));
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
                         lastActionWasBackWalk = false;
                     }
                     else

@@ -2068,7 +2068,7 @@ MonoBehaviour:
   detectionRange: 20
   detectionRangeWithoutWatch: 15
   detectionMemoryDuration: 10
-  chaseRange: 15
+  chaseRange: 50
   wanderSearchRadius: 10
   fieldOfView: 90
   chaseSpeedMultiplier: 2.5
@@ -2142,7 +2142,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   jumpHeight: 1
-  jumpDuration: 0.7
+  jumpDuration: 1.2
   jumpLandingOffset: 1
 --- !u!1 &2933167520126801958
 GameObject:

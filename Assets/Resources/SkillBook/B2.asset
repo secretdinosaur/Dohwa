@@ -69,7 +69,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 
     isStartingNode: 0
   - nodeType: 2
@@ -100,7 +100,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 00000000
     isStartingNode: 0
   - nodeType: 2
@@ -131,7 +131,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 00000000
     isStartingNode: 0
   - nodeType: 1
@@ -160,12 +160,12 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 02000000
     isStartingNode: 0
-  - nodeType: 0
+  - nodeType: 1
     activeSkill: {fileID: 11400000, guid: c44d885bfee762544b92bf22d47ba1a0, type: 2}
-    passiveSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: fd175e2e15cedc942aef0bd6d5d64c4b, type: 2}
     statModifiers: []
     localizeStatNodeName:
       m_TableReference:
@@ -189,7 +189,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 01000000
     isStartingNode: 0
   references:

@@ -328,6 +328,19 @@ public class SoundManager : MonoBehaviour
         UpdateBGMVolume();
     }
 
+    public IEnumerator FadeOutAndStopSpecificRoutine(SoundObject obj)
+    {
+        float fadeSpeed = obj.audioSource.volume / 3f; // 1초 동안 페이드아웃
+
+        while (obj.audioSource.volume > 0)
+        {
+            obj.audioSource.volume -= fadeSpeed * Time.deltaTime;
+            yield return null;
+        }
+
+        obj.audioSource.Stop();
+    }
+
     public void ReturnSoundObject(SoundObject soundObject)
     {
         if (activeSFXList.Contains(soundObject))

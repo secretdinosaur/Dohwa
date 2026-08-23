@@ -90,7 +90,7 @@ public class EnvironmentSound : MonoBehaviour
             {
                 if (sound != null && sound.audioSource != null && sound.audioSource.isPlaying)
                 {
-                    SoundManager.Instance.StopSound(sound);
+                    SoundManager.Instance.FadeOutAndStopSpecificRoutine(sound);
                 }
             }
         }

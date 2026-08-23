@@ -5,7 +5,7 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class  Player
+public class Player
     : MonoBehaviour, IDamageable
 {
     #region Components & References
@@ -43,6 +43,9 @@ public class  Player
     public bool isDeathPanelOn = false;
     public bool isAirborne = false;
     public bool isWakingUp = false;
+
+    // 💡 추가됨: 패시브 스킬에서 패링 성공을 감지하기 위한 이벤트
+    public event Action OnParrySuccess;
 
     private Vector3 savedGrabOffset;
     private int detectedByEnemyCount = 0;
@@ -154,7 +157,6 @@ public class  Player
     private float _motionTimeOffset = 0f;
     private int currentSkillStateIndex = 1;
 
-    // 💡 추가됨: 동시 기절+넉백 처리를 위한 프레임 기록
     private int lastStunFrame = -1;
     #endregion
 
@@ -176,26 +178,23 @@ public class  Player
 
     private void Start()
     {
-        try
-        {
-            HP = StatManager.Instance.MaxHp;
-            MP = StatManager.Instance.MaxMp;
-            StartCoroutine(FullHpRoutine());
-            StartCoroutine(RecoveryRoutine());
-            StartCoroutine(LowHpMatRoutine());
-            StartCoroutine(InitialAttackPreventRoutine());
-        }
-        catch { }
+        HP = StatManager.Instance.MaxHp;
+        MP = StatManager.Instance.MaxMp;
+        StartCoroutine(FullHpRoutine());
+        StartCoroutine(RecoveryRoutine());
+        StartCoroutine(LowHpMatRoutine());
+        StartCoroutine(InitialAttackPreventRoutine());
     }
 
     IEnumerator FullHpRoutine()
     {
         yield return null;
+        yield return null;
+        yield return null;
 
         hasTriggered66 = false;
         hasTriggered33 = false;
         decalGenerator?.ClearDecals();
-
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;
     }
@@ -327,7 +326,8 @@ public class  Player
             SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, effectName);
 
             SoundManager.Instance.PlayMovementSound(11);
-            Animator_SetTrigger("parrySuccess");
+            Animator_SetFloat("Random", UnityEngine.Random.Range(-1, 1));
+            StartCoroutine(Animator_SetBool_Time("GuardHitted"));
 
             if (caster.TryGetComponent<EnemyCore>(out var enemy))
             {
@@ -335,6 +335,10 @@ public class  Player
             }
 
             SpecialSkillManager.Instance.Trigger(transform, SkillBase.TriggerType.OnParry);
+
+            // 💡 추가됨: 패링 성공 이벤트 호출
+            OnParrySuccess?.Invoke();
+
             impulseSource.GenerateImpulse(ShakePower);
             return;
         }
@@ -379,7 +383,6 @@ public class  Player
             return;
         }
 
-        // 💡 수정됨: 넉백 여부를 먼저 판별하여 동시 적용 시 기존 넉백이 캔슬되지 않도록 순서 변경
         bool hasKnockback = false;
         if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
         {
@@ -396,7 +399,6 @@ public class  Player
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                // 이번 공격에 넉백이 없다면 기존의 넉백을 취소하고 기절만 적용
                 if (!hasKnockback && PlayerMove != null)
                     PlayerMove.CancelKnockBack();
 
@@ -460,13 +462,11 @@ public class  Player
 
     public void ClearStun()
     {
-        // 💡 동시 적용 로직: 같은 프레임에 막 적용된 기절이라면, 넉백 로직이 부르는 ClearStun을 무시
         if (Time.frameCount == lastStunFrame) return;
 
         ForceClearStun();
     }
 
-    // 내부적으로 강제 해제가 필요할 때 사용 (동시 적용 여부 무시)
     private void ForceClearStun()
     {
         if (currentStunRoutine != null)
@@ -486,9 +486,8 @@ public class  Player
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)
     {
         CancelCurrentAction();
-        ForceClearStun(); // 새로운 기절을 덮어씌우기 위해 기존 상태는 무조건 초기화
+        ForceClearStun();
 
-        // 💡 기록: 이번 프레임에 새로운 기절이 적용되었음 (이후 불리는 넉백의 ClearStun 무시용)
         lastStunFrame = Time.frameCount;
 
         currentStunType = type;
@@ -1025,6 +1024,12 @@ public class  Player
     {
         while (true)
         {
+            if (Time.timeScale == 0f)
+            {
+                yield return null;
+                continue;
+            }
+
             float max = StatManager.Instance.MaxHp;
             float ratio = Mathf.Clamp01(HP / max);
 

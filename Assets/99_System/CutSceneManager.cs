@@ -113,7 +113,7 @@ public class CutsceneManager : MonoBehaviour
 
         director.time = director.duration;
         director.Evaluate();
-
+        fadePanel.gameObject.SetActive(true);
         yield return null;
 
         director.stopped += OnCutsceneEnded;

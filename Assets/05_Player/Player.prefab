@@ -2510,6 +2510,7 @@ Transform:
   - {fileID: 5679932536484855795}
   - {fileID: 7947880815896424950}
   - {fileID: 5041970619080635544}
+  - {fileID: 7122807050938285759}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &5146815660333871651
@@ -2606,6 +2607,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8f0e1c28a9d0ad645b0dc3989b5216a6, type: 2}
   - {fileID: 11400000, guid: 098ed76bd159b944793e33a09b75af1e, type: 2}
   ViewSkill: {fileID: 11400000, guid: 8f0e1c28a9d0ad645b0dc3989b5216a6, type: 2}
+  strongAttackSkill: {fileID: 11400000, guid: c44d885bfee762544b92bf22d47ba1a0, type: 2}
   lastAttackTime: 0
   lastAttackEndTime: 0
   lastLockOffTime: -10
@@ -4306,7 +4308,7 @@ Transform:
   m_GameObject: {fileID: 4219311871070031441}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.15, y: 18, z: -20}
+  m_LocalPosition: {x: 0.15, y: 25, z: -25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7627,6 +7629,37 @@ Transform:
   - {fileID: 8605396858843308938}
   m_Father: {fileID: 1531015692239867410}
   m_LocalEulerAnglesHint: {x: -64.220764, y: 9.855756, z: -3.2621517}
+--- !u!1 &8491546216728029856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7122807050938285759}
+  m_Layer: 9
+  m_Name: KnockdownCameraTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7122807050938285759
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8491546216728029856}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 12, y: 25, z: -26}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2164106175186671938}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8497024005178115414
 GameObject:
   m_ObjectHideFlags: 0

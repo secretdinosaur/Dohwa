@@ -227,15 +227,8 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public void TakeParry(float mpDamage)
     {
         if (IsDead) return;
-        StartCoroutine(ParryRoutine(mpDamage));
-    }
-
-    IEnumerator ParryRoutine(float mpDamage)
-    {
-        yield return new WaitForSeconds(1f);
         OnParryDamageTaken?.Invoke(mpDamage);
     }
-
     public void TriggerDeath()
     {
         isForceDetected = false;
@@ -350,6 +343,13 @@ public class EnemyCore : MonoBehaviour, IDamageable
         ChangeState(EnemyState.Stun);
         OnStunned?.Invoke();
         StopAllEffects();
+
+        if (EnemyLockOnImage.Instance != null &&
+            EnemyLockOnImage.Instance.target != null &&
+            EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
+        {
+            EnemyLockOnImage.Instance.TriggerStrongAttackEffect();
+        }
     }
 
     public void TriggerStunEnd()
@@ -358,6 +358,13 @@ public class EnemyCore : MonoBehaviour, IDamageable
         {
             ChangeState(EnemyState.Idle);
             wasParried = false;
+
+            if (EnemyLockOnImage.Instance != null &&
+                EnemyLockOnImage.Instance.target != null &&
+                EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
+            {
+                EnemyLockOnImage.Instance.CancelStrongAttackEffect();
+            }
         }
         OnStunEnd?.Invoke();
     }
