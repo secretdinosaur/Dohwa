@@ -2,6 +2,7 @@
 using System.Collections;
 using System.IO;
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -144,6 +145,7 @@ public class Player
     public enum StunType { Stagger, Stun, Grabbed }
     public Coroutine currentStunRoutine;
     private Coroutine DeathRoutine;
+    private Coroutine EatRoutine;
     private StunType currentStunType;
     private Transform grabTargetTransform;
     private Vector3 grabTargetOffset;
@@ -900,6 +902,42 @@ public class Player
             if (result != null) return result;
         }
         return null;
+    }
+
+    public void StartUseItemRoutine(InventorySlot Slot)
+    {
+        if (!CanInteract()) return;
+        InventoryItem item = Slot.item;
+        if ((item == null || EatRoutine != null) ||
+            (item.consumable == null && item.nonConsumable == null))
+        {
+            return;
+        }
+        if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
+            EatRoutine = StartCoroutine(UseItemRoutine(Slot));
+    }
+
+    IEnumerator UseItemRoutine(InventorySlot Slot)
+    {
+        if (UIManager.Instance.Inventory.activeSelf)
+            UIManager.Instance.ToggleInventory();
+        Animator_SetTrigger("Eat");
+        yield return new WaitForSeconds(1.16f);
+
+        InventoryItem item = Slot.item;
+        // 아이템 사용
+        if (item.consumable != null)
+            item.consumable.Use();
+        else if (item.nonConsumable != null)
+            item.nonConsumable.Use();
+        item.Count--;
+        if(Slot.GetComponent<QuickSlot>() != null)
+        {
+            Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;
+            UIManager.Instance.SyncGameQuickSlots();
+        }
+        Slot.GetComponent<CanvasGroup>().blocksRaycasts = true;
+        EatRoutine = null;
     }
 
     #endregion
