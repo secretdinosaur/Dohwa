@@ -4,6 +4,7 @@ using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public enum KnockdownType { None = 0, FacingUp = 1, FacingDown = 2 }
+public enum DebuffType { None, Bleed, Poison, ElectricShock }
 
 #region Hit Data Structure
 [Serializable]
@@ -16,7 +17,7 @@ public class MeleeHitData
     public Vector3 knockbackForce = Vector3.zero;
 
     public KnockdownType knockdownType = KnockdownType.None;
-    public float knockdownDuration = 1.5f; // 💡 넉다운 지속 시간 추가
+    public float knockdownDuration = 1.5f;
 
     public AudioClip hitSound;
 
@@ -27,6 +28,10 @@ public class MeleeHitData
     public bool useStunSettings = false;
     public GuardableData guardData;
     public StunEffectData stunData;
+
+    public bool useDebuffEffect = false;
+    public DebuffType debuffType = DebuffType.None;
+    [Range(0f, 1f)] public float debuffChance = 0.5f;
 
     public bool useAreaSpawn = false;
     public GameObject areaPrefab;
@@ -106,6 +111,9 @@ public class Skill_Melee : SkillBase
 
         List<IDamageable> hitTargets = new List<IDamageable>();
 
+        bool isCriticalChecked = false;
+        bool isCriticalHit = false;
+
         foreach (Collider col in hitColliders)
         {
             if (col.TryGetComponent(out IDamageable target))
@@ -113,7 +121,6 @@ public class Skill_Melee : SkillBase
                 if (casterTransform != null && col.transform == casterTransform) continue;
 
                 Vector3 hitPoint = col.ClosestPoint(worldCenter);
-                float finalDamage = baseDamage * hitData.damageMultiplier;
 
                 bool isGuarding = false;
                 if (col.TryGetComponent(out EnemyCore enemyCore))
@@ -124,18 +131,41 @@ public class Skill_Melee : SkillBase
                 {
                     isGuarding = player.isGuarding;
                 }
-                target.TakeDamage(finalDamage, this, casterTransform, hitData.playerHitEffect, hitIndex);
 
-                if (enemyHitEffectDirections[hitIndex] != EnemyHitEffectDirection.None && !isGuarding)
-                    SkillEffectManager.Instance.PlayHitEffect(col.gameObject, this, hitPoint, CalculateEffectRotation(enemyHitEffectDirections[hitIndex], casterTransform, hitPoint, col.transform), hitIndex);
+                Quaternion effectRot = CalculateEffectRotation(enemyHitEffectDirections[hitIndex], casterTransform, hitPoint, col.transform);
+
+                float finalDamage = ProcessCriticalHit(
+                    ref isCriticalChecked, ref isCriticalHit, isCasterPlayer,
+                    col.gameObject, hitPoint, effectRot,
+                    baseDamage, hitData.damageMultiplier, isGuarding, hitIndex);
+
+                target.TakeDamage(finalDamage, this, casterTransform, hitData.playerHitEffect, hitIndex);
 
                 if (hitData.knockbackForce.magnitude > 0f)
                 {
                     if (target.transform.TryGetComponent<PlayerMove>(out var playerMove))
                     {
                         Vector3 worldKnockback = casterTransform.rotation * hitData.knockbackForce;
-                        // 💡 넉다운 지속 시간을 추가로 전달
                         playerMove.KnockBack(isGuarding ? worldKnockback / 2 : worldKnockback, (int)hitData.knockdownType, hitData.knockdownDuration);
+                    }
+                }
+
+                if (hitData.useDebuffEffect && UnityEngine.Random.value <= hitData.debuffChance)
+                {
+                    if (!isGuarding && col.TryGetComponent(out IBleedable bleedable))
+                    {
+                        switch (hitData.debuffType)
+                        {
+                            case DebuffType.Bleed:
+                                bleedable.ApplyBleed(2, this, hitData.playerHitEffect, hitData.effectDirection);
+                                break;
+                            case DebuffType.Poison:
+                                // 향후 독 데미지 구현
+                                break;
+                            case DebuffType.ElectricShock:
+                                // 향후 감전 데미지 구현
+                                break;
+                        }
                     }
                 }
 

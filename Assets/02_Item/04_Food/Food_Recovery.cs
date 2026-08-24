@@ -6,6 +6,6 @@ public class Food_Recovery : Food
 
     public override void Use()
     {
-        Player.Instance.HP += HpRecoveryAmount;
+        Player.Instance.HP += HpRecoveryAmount * StatManager.Instance.HpRecoveryAmount;
     }
 }

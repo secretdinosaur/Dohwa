@@ -47,8 +47,8 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 2
-      statValue: 5
+    - statType: 8
+      statValue: 3
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -78,7 +78,7 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 2
+    - statType: 8
       statValue: 5
     localizeStatNodeName:
       m_TableReference:
@@ -109,7 +109,7 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 2
+    - statType: 8
       statValue: 5
     localizeStatNodeName:
       m_TableReference:
@@ -140,8 +140,8 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 0
-      statValue: 5
+    - statType: 8
+      statValue: 8
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -171,8 +171,8 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 3
-      statValue: 5
+    - statType: 8
+      statValue: 8
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -202,14 +202,12 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 0
+    - statType: 8
+      statValue: 18
+    - statType: 6
       statValue: 10
-    - statType: 3
-      statValue: 10
-    - statType: 1
-      statValue: 20
-    - statType: 2
-      statValue: 20
+    - statType: 5
+      statValue: 0.05
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023

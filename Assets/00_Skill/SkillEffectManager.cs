@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Redcode.Pools;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
-using Redcode.Pools;
 public class SkillEffectManager : MonoBehaviour
 {
     public static SkillEffectManager Instance;
@@ -68,6 +69,36 @@ public class SkillEffectManager : MonoBehaviour
         hitEffectInstance.gameObject.SetActive(true);
     }
 
+    private Coroutine hitStopCoroutine;
+
+    public void PlayCriticalHitEffect(GameObject target, SkillBase skill, Vector3 hitPoint, Quaternion boxRotation, int hitIndex = 0)
+    {
+        HitEffect hitEffectInstance = poolManager.GetFromPool<HitEffect>("CriticalHitEffect");
+        if (hitEffectInstance == null) return;
+        hitEffectInstance.gameObject.SetActive(false);
+
+        hitEffectInstance.transform.position = hitPoint;
+        hitEffectInstance.transform.rotation = boxRotation;
+
+        hitEffectInstance.gameObject.SetActive(true);
+
+        if (hitStopCoroutine != null)
+        {
+            StopCoroutine(hitStopCoroutine);
+        }
+        hitStopCoroutine = StartCoroutine(HitStopRoutine());
+    }
+
+    private IEnumerator HitStopRoutine()
+    {
+        Time.timeScale = 0f;
+
+        yield return new WaitForSecondsRealtime(0.04f);
+
+        Time.timeScale = 1f;
+        hitStopCoroutine = null;
+    }
+
     public void ReturnSkillEffect(SkillEffect effect, string name)
     {
         if(effect != null && effect.gameObject.activeSelf)
@@ -78,7 +109,12 @@ public class SkillEffectManager : MonoBehaviour
     {
         try
         {
-            poolManager.TakeToPool<HitEffect>(effect);
+            if (effect.name.Contains("Critical"))
+            {
+            poolManager.TakeToPool<HitEffect>("CriticalHitEffect", effect);
+
+            }
+            else poolManager.TakeToPool<HitEffect>("HitEffect", effect);
 
         }
         catch { print(effect); }

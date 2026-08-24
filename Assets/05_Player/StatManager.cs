@@ -97,11 +97,11 @@ public class StatManager : MonoBehaviour
         set { vitalStrikeDamage = value; UIManager.Instance.VitalStrikeDamageText.text = (vitalStrikeDamage * 100f).ToString("0.#") + "%"; }
     }
 
-    [SerializeField] private float hpRecoveryAmount = 10f;
+    [SerializeField] private float hpRecoveryAmount = 1f;
     public float HpRecoveryAmount
     {
         get => hpRecoveryAmount;
-        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = ((int)hpRecoveryAmount).ToString(); }
+        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = (HpRecoveryAmount * 100f).ToString("0.#") + "%"; }
     }
 
     [SerializeField] private float mpRecoveryAmount = 10f;
@@ -224,14 +224,26 @@ public class StatManager : MonoBehaviour
         MpRecoveryAmount = mpRecoveryAmount;
     }
 
-
+    public bool cheatMode = false;
     private void OnValidate()
     {
         if(UIManager.Instance == null) return;
+
         Armor = armor;
         AttackPower = attackPower;
         MaxHp = maxHp;
         MaxMp = maxMp;
+
+
+        if (cheatMode)
+        {
+            SetStat(StatType.ExternalArt, 99999);
+            SetStat(StatType.InnerArt, 99999);
+            Player.Instance.HP = float.MaxValue;
+            SetStat(StatType.MpRecovery, float.MaxValue);
+            MoveSpeed = 1000f;
+        }
+
     }
     public void GetStatPoint(int amount)
     {
@@ -280,10 +292,18 @@ public class StatManager : MonoBehaviour
 
             case StatType.ExternalArt:
                 ExternalArt += value;
+                ApplySingleStat(StatType.MaxHp, value * 1.2f);
+                ApplySingleStat(StatType.Defense, value * 0.3f);
+                ApplySingleStat(StatType.Attack, value * 0.5f);
+                ApplySingleStat(StatType.MaxMp, value * 0.1f);
                 break;
 
             case StatType.InnerArt:
                 InnerArt += value;
+                ApplySingleStat(StatType.MaxHp, value * 0.2f);
+                ApplySingleStat(StatType.Defense, value * 0.1f);
+                ApplySingleStat(StatType.Attack, value * 0.5f);
+                ApplySingleStat(StatType.MaxMp, value * 0.8f);
                 break;
 
             case StatType.VitalStrikeRate:
@@ -366,10 +386,10 @@ public class StatManager : MonoBehaviour
 
             case StatType.InnerArt:
                 InnerArt = value;
-                ApplySingleStat(StatType.MaxHp, ExternalArt * 0.2f);
-                ApplySingleStat(StatType.Defense, ExternalArt * 0.1f);
-                ApplySingleStat(StatType.Attack, ExternalArt * 0.5f);
-                ApplySingleStat(StatType.MaxMp, ExternalArt * 0.8f);
+                ApplySingleStat(StatType.MaxHp, InnerArt * 0.2f);
+                ApplySingleStat(StatType.Defense, InnerArt * 0.1f);
+                ApplySingleStat(StatType.Attack, InnerArt * 0.5f);
+                ApplySingleStat(StatType.MaxMp, InnerArt * 0.8f);
                 break;
 
             case StatType.VitalStrikeRate:

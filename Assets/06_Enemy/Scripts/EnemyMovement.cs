@@ -108,20 +108,8 @@ public class EnemyMovement : MonoBehaviour
         transform.rotation *= animator.deltaRotation;
 
         Vector3 delta = animator.deltaPosition;
-
         // 2. 이동 거리가 0에 가깝다면 (제자리 360도 회전 등) 충돌 연산을 할 필요 없이 즉시 종료
         if (delta.magnitude < 0.0001f) return;
-
-        // 3. 캐릭터 콜라이더가 있다면 알아서 벽을 타고 미끄러지도록 처리
-        if (characterController != null)
-        {
-            characterController.Move(delta);
-            if (agent != null && agent.isActiveAndEnabled)
-            {
-                agent.nextPosition = transform.position;
-            }
-            return;
-        }
 
         if (core == null || !core.isIgnoringPlayer)
         {
@@ -168,6 +156,7 @@ public class EnemyMovement : MonoBehaviour
 
     private void LookAtTarget(Vector3 targetPos)
     {
+        if (core != null && core.isTakingDoT) return;
         Vector3 dir = (targetPos - transform.position).normalized;
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.1f)

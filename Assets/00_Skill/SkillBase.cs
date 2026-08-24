@@ -43,7 +43,7 @@ public abstract class SkillBase : ScriptableObject
     public AudioClip sound;
     public SkillEffect effect;
     public SkillEffect SpecialGuardEffect;
-    
+
     [Header("Localization")]
     public LocalizedString Localize_skillName;
     public LocalizedString Localize_skillItemDesc;
@@ -58,7 +58,7 @@ public abstract class SkillBase : ScriptableObject
     [FormerlySerializedAs("playerHitEffects")]
     [HideInInspector] public HitEffectData[] HitEffects;
     [HideInInspector] public EnemyHitEffectDirection[] enemyHitEffectDirections;
-    
+
     public bool isSpecialSkill = false;
     public TriggerType triggerType = TriggerType.None;
     public float triggerThreshold = 0.5f;
@@ -81,6 +81,34 @@ public abstract class SkillBase : ScriptableObject
     public virtual void DrawSkillGizmos(Transform casterTransform)
     {
     }
+
+    protected float ProcessCriticalHit(ref bool isCriticalChecked, ref bool isCriticalHit, bool isCasterPlayer, GameObject targetObj, Vector3 hitPoint, Quaternion effectRotation, float baseDamage, float damageMultiplier, bool isGuarding, int hitIndex)
+    {
+        if (!isCriticalChecked)
+        {
+            isCriticalHit = UnityEngine.Random.value < StatManager.Instance.VitalStrikeRate && isCasterPlayer;
+            if (isCriticalHit) Player.Instance.impulseSource.GenerateImpulse(2f);
+            isCriticalChecked = true;
+        }
+
+        float finalDamage = isCriticalHit ? baseDamage * damageMultiplier * StatManager.Instance.VitalStrikeDamage : baseDamage * damageMultiplier;
+
+        if (enemyHitEffectDirections[hitIndex] != EnemyHitEffectDirection.None && !isGuarding)
+        {
+            if (isCriticalHit)
+            {
+                SoundManager.Instance.PlayCriticalSound();
+                SkillEffectManager.Instance.PlayCriticalHitEffect(targetObj, this, hitPoint, effectRotation, hitIndex);
+            }
+            else
+            {
+                SkillEffectManager.Instance.PlayHitEffect(targetObj, this, hitPoint, effectRotation, hitIndex);
+            }
+        }
+
+        return finalDamage;
+    }
+
     public abstract GuardableData GetGuardData(int hitIndex);
     public abstract StunEffectData GetStunData(int hitIndex);
 

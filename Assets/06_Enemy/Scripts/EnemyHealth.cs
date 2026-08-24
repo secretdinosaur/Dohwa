@@ -42,6 +42,7 @@ public class EnemyHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = HasEnoughMP;
         core.CmdConsumeMP += ConsumeMP;
+        core.QueryCurrentHP = () => currentHp;
     }
 
     private void OnDisable()
@@ -52,19 +53,43 @@ public class EnemyHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = null;
         core.CmdConsumeMP -= ConsumeMP;
+        core.QueryCurrentHP = null;
     }
 
     private void Update()
     {
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
+
+        if (hpBarCanvas != null)
+        {
+            if (core.IsDead)
+            {
+                if (hpBarCanvas.gameObject.activeSelf)
+                    hpBarCanvas.gameObject.SetActive(false);
+            }
+            else
+            {
+                bool isLockedOn = EnemyLockOnImage.Instance != null &&
+                                  EnemyLockOnImage.Instance.target != null &&
+                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
+
+                if (isLockedOn || currentHp < maxHP)
+                {
+                    if (!hpBarCanvas.gameObject.activeSelf)
+                        hpBarCanvas.gameObject.SetActive(true);
+                }
+                else
+                {
+                    if (hpBarCanvas.gameObject.activeSelf)
+                        hpBarCanvas.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     private void HandleDamage(float damage)
     {
-        if (hpBarCanvas != null)
-            hpBarCanvas.gameObject.SetActive(true);
-
         if (core.currentState == EnemyState.Stun && core.HittedSkill != null && core.HittedSkill.name.Contains("StrongAttack"))
         {
             currentHp = 0;
@@ -95,16 +120,20 @@ public class EnemyHealth : MonoBehaviour
         }
 
         OnHpChanged?.Invoke(currentHp, maxHP);
-        core.PlayHitSound(core.HittedSkill, core.HitIndex);
+
+        if (!core.isTakingDoT)
+        {
+            core.PlayHitSound(core.HittedSkill, core.HitIndex);
+        }
 
         if (hpBarCanvas != null)
             hpBarCanvas.UpdateHP(currentHp, maxHP);
 
         if (currentHp <= 0)
         {
-            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
+            if (GradeManager.Instance != null)
+                GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
             core.TriggerDeath();
-            hpBarCanvas.gameObject.SetActive(false);
         }
     }
 
@@ -142,7 +171,7 @@ public class EnemyHealth : MonoBehaviour
     {
         currentMp = Mathf.Clamp(value, 0, maxMP);
         OnMpChanged?.Invoke(currentMp, maxMP);
-        hpBarCanvas.UpdateMP(currentMp, maxMP);
+        if (hpBarCanvas != null) hpBarCanvas.UpdateMP(currentMp, maxMP);
     }
 
     private void ResetHealth()
@@ -160,10 +189,12 @@ public class EnemyHealth : MonoBehaviour
         OnHpChanged?.Invoke(currentHp, maxHP);
         OnMpChanged?.Invoke(currentMp, maxMP);
 
-        hpBarCanvas.UpdateHP(currentHp, maxHP);
-        hpBarCanvas.UpdateMP(currentMp, maxMP);
-
-        hpBarCanvas.gameObject.SetActive(false);
+        if (hpBarCanvas != null)
+        {
+            hpBarCanvas.UpdateHP(currentHp, maxHP);
+            hpBarCanvas.UpdateMP(currentMp, maxMP);
+            hpBarCanvas.gameObject.SetActive(false);
+        }
     }
 
     private bool HasEnoughMP(float requiredMp) => currentMp >= requiredMp;

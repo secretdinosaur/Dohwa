@@ -1856,6 +1856,7 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
@@ -2013,7 +2014,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 1
+    cooldown: 10
     minPhase: 1
     maxPhase: 1
     comboSkills: []

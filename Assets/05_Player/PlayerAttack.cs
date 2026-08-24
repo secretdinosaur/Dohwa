@@ -66,7 +66,7 @@ public class PlayerAttack : MonoBehaviour
     private float autoAimAngle = 22.5f;
 
     [Header("Timing Settings")]
-    private float guardCooldown = 0.15f;
+    private float guardCooldown = 0.3f;
     private float attackComboThreshold = 0.125f;
     private float autoSheathDelay = 20f;
     private float drawAnimDuration = 0.25f;

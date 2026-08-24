@@ -76,8 +76,8 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 1
-      statValue: 10
+    - statType: 7
+      statValue: 5
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -107,8 +107,10 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 2
-      statValue: 10
+    - statType: 8
+      statValue: 5
+    - statType: 9
+      statValue: 0.02
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023

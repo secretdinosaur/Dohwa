@@ -24,7 +24,6 @@ public class EnemyBossHealth : MonoBehaviour
     private bool hasTriggered66 = false;
     private bool hasTriggered33 = false;
 
-    // 💡 추가됨: 현재 실행 중인 스턴 코루틴을 추적하기 위한 변수
     private Coroutine stunCoroutine;
 
     private void Awake()
@@ -44,6 +43,7 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = HasEnoughMP;
         core.CmdConsumeMP += ConsumeMP;
+        core.QueryCurrentHP = () => currentHp;
     }
 
     private void OnDisable()
@@ -54,12 +54,40 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = null;
         core.CmdConsumeMP -= ConsumeMP;
+        core.QueryCurrentHP = null;
     }
 
     private void Update()
     {
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
+
+        if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
+        {
+            // 페이즈 전환 중이거나 죽었을 때는 무조건 숨김
+            if (isTransitioningPhase || core.IsDead)
+            {
+                if (UIManager.Instance.BossStatus.gameObject.activeSelf)
+                    UIManager.Instance.BossStatus.gameObject.SetActive(false);
+            }
+            else
+            {
+                bool isLockedOn = EnemyLockOnImage.Instance != null &&
+                                  EnemyLockOnImage.Instance.target != null &&
+                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
+
+                if (isLockedOn || currentHp < maxHP)
+                {
+                    if (!UIManager.Instance.BossStatus.gameObject.activeSelf)
+                        UIManager.Instance.BossStatus.gameObject.SetActive(true);
+                }
+                else
+                {
+                    if (UIManager.Instance.BossStatus.gameObject.activeSelf)
+                        UIManager.Instance.BossStatus.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     private void HandleDamage(float damage)
@@ -72,7 +100,6 @@ public class EnemyBossHealth : MonoBehaviour
             return;
         }
 
-        // 💡 추가됨: 스턴 중에 공격을 받으면 스턴을 강제로 해제합니다.
         if (core.currentState == EnemyState.Stun)
         {
             if (stunCoroutine != null)
@@ -80,7 +107,7 @@ public class EnemyBossHealth : MonoBehaviour
                 StopCoroutine(stunCoroutine);
                 stunCoroutine = null;
             }
-            UpdateMP(maxMP); // 스턴이 풀릴 때 MP를 꽉 채워줌
+            UpdateMP(maxMP);
             core.TriggerStunEnd();
         }
 
@@ -99,8 +126,15 @@ public class EnemyBossHealth : MonoBehaviour
         }
 
         core.TriggerHpChanged(currentHp, maxHP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        core.PlayHitSound(core.HittedSkill, core.HitIndex);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+
+        if (!core.isTakingDoT)
+        {
+            core.PlayHitSound(core.HittedSkill, core.HitIndex);
+        }
+
         if (currentHp <= 0)
         {
             if (currentPhase < maxPhase)
@@ -173,8 +207,11 @@ public class EnemyBossHealth : MonoBehaviour
             core.TriggerHpChanged(currentHp, maxHP);
             core.TriggerMpChanged(currentMp, maxMP);
 
-            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+                UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+            }
 
             yield return null;
         }
@@ -184,8 +221,12 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+        }
     }
 
     private IEnumerator StunRoutine()
@@ -210,7 +251,9 @@ public class EnemyBossHealth : MonoBehaviour
     {
         currentMp = Mathf.Clamp(value, 0, maxMP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
     }
 
     private void ResetHealth()
@@ -223,7 +266,6 @@ public class EnemyBossHealth : MonoBehaviour
         hasTriggered66 = false;
         hasTriggered33 = false;
 
-        // 💡 추가됨: 체력 초기화 시 스턴 코루틴도 초기화
         if (stunCoroutine != null)
         {
             StopCoroutine(stunCoroutine);
@@ -232,8 +274,12 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+        }
     }
 
     private bool HasEnoughMP(float requiredMp) => currentMp >= requiredMp;
