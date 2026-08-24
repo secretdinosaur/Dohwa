@@ -16,6 +16,7 @@ public class Consumable : ScriptableObject
     public string ItemDescription => Localize_ItemDescription.GetLocalizedString();
     public string EffectDescription => Localize_EffectDescription.GetLocalizedString();
     public Sprite icon;
+    public bool isEatable = true;
     public bool isDeletable;
 
     public virtual void Use() { }

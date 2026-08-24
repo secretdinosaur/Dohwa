@@ -302,6 +302,8 @@ public class SettingManager : MonoBehaviour
         }
 
         Player.Instance.PlayerAttack.UpdateCommandUI();
+        if (UIManager.Instance?.BossName != null)
+            UIManager.Instance.UpdateBossNameUI();
     }
 
     public void OnClickResetButton() => ResetPanel.SetActive(true);
