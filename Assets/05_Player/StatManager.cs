@@ -24,7 +24,8 @@ public class StatManager : MonoBehaviour
         LightningResistance,
         Orthodox,
         Unorthodox,
-        Demonic
+        Demonic,
+        MpConsumptionReduction
     }
     public float ParringTime = 0.2f;
     public float dashCooldown = 1f;
@@ -45,14 +46,14 @@ public class StatManager : MonoBehaviour
     public float AttackPower
     {
         get => attackPower;
-        set { attackPower = value; UIManager.Instance.AttackText.text = ((int)attackPower).ToString();  }
+        set { attackPower = value; UIManager.Instance.AttackText.text = ((int)attackPower).ToString(); }
     }
 
     [SerializeField] private float maxHp = 100;
     public float MaxHp
     {
         get => maxHp;
-        set { maxHp = value;}
+        set { maxHp = value; }
     }
 
     [SerializeField] private float maxMp = 100f;
@@ -167,6 +168,13 @@ public class StatManager : MonoBehaviour
         set { demonic = value; UIManager.Instance.DemonicText.text = ((int)demonic).ToString(); }
     }
 
+    [SerializeField] private float mpConsumptionReduction = 0f;
+    public float MpConsumptionReduction
+    {
+        get => mpConsumptionReduction;
+        set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = (mpConsumptionReduction * 100f).ToString("0.#") + "%"; }
+    }
+
     public float ParryMpRecovery = 20f;
     public float GuardSuccessCostMpMult = 1f;
 
@@ -198,7 +206,7 @@ public class StatManager : MonoBehaviour
 
         hpRecoveryAmount = 10f;
         mpRecoveryAmount = 10f;
-
+        mpConsumptionReduction = 0f;
 
         Armor = armor;
         AttackPower = attackPower;
@@ -222,18 +230,18 @@ public class StatManager : MonoBehaviour
 
         HpRecoveryAmount = hpRecoveryAmount;
         MpRecoveryAmount = mpRecoveryAmount;
+        MpConsumptionReduction = mpConsumptionReduction;
     }
 
     public bool cheatMode = false;
     private void OnValidate()
     {
-        if(UIManager.Instance == null) return;
+        if (UIManager.Instance == null) return;
 
         Armor = armor;
         AttackPower = attackPower;
         MaxHp = maxHp;
         MaxMp = maxMp;
-
 
         if (cheatMode)
         {
@@ -249,7 +257,7 @@ public class StatManager : MonoBehaviour
     {
         earnedStatPoint += amount;
         StatPoint += amount;
-        for(int i = 0; i < amount; i++)
+        for (int i = 0; i < amount; i++)
             GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.EarnedInsightPoint);
         StartCoroutine(UIManager.Instance.ShowStatPanel(amount));
     }
@@ -341,6 +349,10 @@ public class StatManager : MonoBehaviour
             case StatType.Demonic:
                 Demonic += value;
                 break;
+
+            case StatType.MpConsumptionReduction:
+                MpConsumptionReduction += value;
+                break;
         }
     }
 
@@ -426,6 +438,10 @@ public class StatManager : MonoBehaviour
 
             case StatType.Demonic:
                 Demonic = value;
+                break;
+
+            case StatType.MpConsumptionReduction:
+                MpConsumptionReduction = value;
                 break;
         }
     }

@@ -511,16 +511,42 @@ public class GradeManager : MonoBehaviour
 
     public void Apply_Ability_SecondClass()
     {
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.MaxMp, 20f);
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpRecovery, 5f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 5f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 10f);
     }
+
     public void Apply_Ability_FirstClass()
     {
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.Attack, 20f);
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.Defense, 20f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 8f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 15f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
     }
-    public void Apply_Ability_Peak() { }
-    public void Apply_Ability_SuperPeak() { }
-    public void Apply_Ability_TransformationRealm() { }
-    public void Apply_Ability_ProfoundRealm() { }
+
+    public void Apply_Ability_Peak()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 15f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 30f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_SuperPeak()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 30f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 50f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_TransformationRealm()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 50f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 80f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_ProfoundRealm()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 80f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 100f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
 }

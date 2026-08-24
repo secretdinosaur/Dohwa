@@ -186,17 +186,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 15174387682013184
-    m_Localized: 'Press <b>{Action:UseQuickSlot}</b> to use the Consumable assigned
-      to Quick Slot.
-
-      Use <b>{Action:NextQuickSlot}</b> and <b>{Action:PrevQuickSlot}</b>
-      to cycle through Quick Slots.
-
-      Up to four Usable Items can be assigned
-      to the Quick Slot.
-
-      You can view your Usable Items in <b>Inventory -
-      Item</b>.'
+    m_Localized: During combat, when the opponent's Inner Qi reaches 0, you can use
+      {Action:Attack} to perform a <b>Powerful Attack</b>.
     m_Metadata:
       m_Items: []
   - m_Id: 15174387707179008
@@ -219,6 +210,20 @@ MonoBehaviour:
 
       However, if you accept
       a request and successfully complete it, you can receive <b>small rewards</b>.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 22480928888913920
+    m_Localized: 'Press <b>{Action:UseQuickSlot}</b> to use the Consumable assigned
+      to Quick Slot.
+
+      Use <b>{Action:NextQuickSlot}</b> and <b>{Action:PrevQuickSlot}</b>
+      to cycle through Quick Slots.
+
+      Up to four Usable Items can be assigned
+      to the Quick Slot.
+
+      You can view your Usable Items in <b>Inventory -
+      Item</b>.'
     m_Metadata:
       m_Items: []
   references:
