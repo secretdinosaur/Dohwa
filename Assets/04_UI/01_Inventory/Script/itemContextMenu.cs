@@ -143,7 +143,10 @@ public class itemContextMenu : MonoBehaviour
 
     public void OnUse()
     {
-        if (slot.item.consumable != null)
+        var item = InventoryManager.Instance.selectedItem.item;
+        if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
+            Player.Instance.StartUseItemRoutine(InventoryManager.Instance.selectedItem);
+        else if (slot.item.consumable != null)
         {
             if(slot.item.Count == 1)
             {

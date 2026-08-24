@@ -48,6 +48,7 @@ public class UIManager : MonoBehaviour
     [Header("Player UI")]
     public GameObject BossStatus;
     public TextMeshProUGUI BossNameText;
+    public LocalizedString BossName;
 
     public Image BossHpFill;
 
@@ -127,6 +128,26 @@ public class UIManager : MonoBehaviour
     public void UpdateBossMpUI(float value)
     {
         BossMpFill.material.SetFloat("_FillAmount", value);
+    }
+
+    public void UpdateBossNameUI()
+    {
+        if (BossNameText == null)
+            return;
+
+        if (BossName == null)
+        {
+            BossNameText.text = "Null boss name";
+            return;
+        }
+
+        if (BossName.IsEmpty)
+        {
+            BossNameText.text = "Empty boss name";
+            return;
+        }
+
+        BossNameText.text = BossName.GetLocalizedString();
     }
 
     public void PreventCameraMoveAndClick(bool status)

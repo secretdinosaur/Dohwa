@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: InventoryTutorial Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: InventoryTutorial
+  m_TableCollectionNameGuidString: 34ddb7c291309e84d930afeb873675c1
+  m_Entries:
+  - m_Id: 4432883712
+    m_Key: Inventory_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8274866176
+    m_Key: Inventory_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10980192256
+    m_Key: Inventory_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12733411328
+    m_Key: Inventory_4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14427910144
+    m_Key: Inventory_5
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items:
+    - rid: 3736905225487253749
+  m_KeyGenerator:
+    rid: 3736905225487253748
+  references:
+    version: 2
+    RefIds:
+    - rid: 3736905225487253748
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1787570190847
+    - rid: 3736905225487253749
+      type: {class: AssetTypeMetadata, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries:
+        - m_KeyId: 4432883712
+          m_TableCodes:
+          - zh-Hans
+          - en
+          - ja
+          - ko
+        - m_KeyId: 10980192256
+          m_TableCodes:
+          - ko
+          - ja
+          - zh-Hans
+          - en
+        - m_KeyId: 12733411328
+          m_TableCodes:
+          - ko
+          - en
+          - ja
+          - zh-Hans
+        - m_KeyId: 14427910144
+          m_TableCodes:
+          - ko
+          - zh-Hans
+          - en
+          - ja
+        - m_KeyId: 8274866176
+          m_TableCodes:
+          - ko
+          - en
+          - zh-Hans
+          - ja
+        m_TypeString: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
