@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
 
 [CustomPropertyDrawer(typeof(MeleeHitData))]
 public class MeleeHitDataDrawer : PropertyDrawer
@@ -28,7 +27,6 @@ public class MeleeHitDataDrawer : PropertyDrawer
 
             DrawField(ref y, position, property, "knockdownType");
 
-            // 💡 넉다운 타입이 None이 아닐 때만 지속 시간 입력창 표시
             if (property.FindPropertyRelative("knockdownType").enumValueIndex > 0)
             {
                 EditorGUI.indentLevel = baseIndent + 2;
@@ -42,6 +40,16 @@ public class MeleeHitDataDrawer : PropertyDrawer
             if (isEnemySkill)
             {
                 DrawField(ref y, position, property, "playerHitEffect");
+            }
+
+            // 디버프 설정 조건부 출력
+            EditorGUI.indentLevel = baseIndent + 1;
+            DrawField(ref y, position, property, "useDebuffEffect");
+            if (property.FindPropertyRelative("useDebuffEffect").boolValue)
+            {
+                EditorGUI.indentLevel = baseIndent + 2;
+                DrawField(ref y, position, property, "debuffType");
+                DrawField(ref y, position, property, "debuffChance");
             }
 
             EditorGUI.indentLevel = baseIndent + 1;
@@ -109,7 +117,6 @@ public class MeleeHitDataDrawer : PropertyDrawer
         h += GetHeight(property, "centerOffset") + GetHeight(property, "boxSize") + GetHeight(property, "boxRotation");
         h += GetHeight(property, "damageMultiplier") + GetHeight(property, "knockbackForce") + GetHeight(property, "knockdownType");
 
-        // 💡 넉다운 시간 높이 동적 추가
         if (property.FindPropertyRelative("knockdownType").enumValueIndex > 0)
         {
             h += GetHeight(property, "knockdownDuration");
@@ -119,6 +126,13 @@ public class MeleeHitDataDrawer : PropertyDrawer
         h += GetHeight(property, "effectDirection");
 
         if (isEnemySkill) h += GetHeight(property, "playerHitEffect");
+
+        // 디버프 설정 높이 계산
+        h += GetHeight(property, "useDebuffEffect");
+        if (property.FindPropertyRelative("useDebuffEffect").boolValue)
+        {
+            h += GetHeight(property, "debuffType") + GetHeight(property, "debuffChance");
+        }
 
         h += GetHeight(property, "useAreaSpawn");
         if (property.FindPropertyRelative("useAreaSpawn").boolValue)

@@ -98,13 +98,12 @@ public class EnemyCombat : MonoBehaviour
     private void HandleHit(float damage)
     {
         if (core.isGuarding) return;
-
+        if(core.isTakingDoT) return;
         TriggerHitStop();
 
         if (core.currentState == EnemyState.Dead) return;
 
         CancelCurrentSkillAction();
-
         core.animator.SetTrigger(UnityEngine.Random.Range(0, 2) == 0 ? "Hitted1" : "Hitted2");
     }
 
@@ -123,6 +122,7 @@ public class EnemyCombat : MonoBehaviour
 
     private void CancelCurrentSkillAction()
     {
+
         core.CmdCancelAttack?.Invoke();
         if (currentActiveSkill != null)
         {

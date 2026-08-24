@@ -9,6 +9,6 @@ public class Food : Consumable
     
     public override void Use()
     {
-        Player.Instance.HP += StatManager.Instance.MaxHp * HealPercentage / 100 + HealAmount;
+        Player.Instance.HP += (StatManager.Instance.MaxHp * HealPercentage / 100 + HealAmount) * StatManager.Instance.HpRecoveryAmount;
     }
 }

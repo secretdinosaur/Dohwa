@@ -329,7 +329,7 @@ public class Bandit5AI : EnemyAIBase
         core.CmdPerformAttack?.Invoke(skill);
 
         float elapsed = 0f;
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(2.8f);
 
         Vector3 startPos = transform.position;
 

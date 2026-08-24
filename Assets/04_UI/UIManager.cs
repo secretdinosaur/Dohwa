@@ -72,6 +72,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI OrthodoxText;
     public TextMeshProUGUI UnorthodoxText;
     public TextMeshProUGUI DemonicText;
+    public TextMeshProUGUI MpConsumptionReductionText;
     public Image MpTipImage;
 
     public TextMeshProUGUI InsightPointText;

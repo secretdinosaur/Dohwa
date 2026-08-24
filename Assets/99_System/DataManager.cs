@@ -63,8 +63,22 @@ public class DataManager : MonoBehaviour
         DeleteAllFiles();
         RestoreSettingsData();
         PlayerPrefs.Save();
-        if(PeachTree.Instance != null)
+
+        if (GradeManager.Instance != null)
+        {
+            GradeManager.Instance.CurrentGradeIndex = 0;
+            GradeManager.Instance.CurrentExp = 0;
+        }
+
+        if (StatManager.Instance != null)
+        {
+            StatManager.Instance.StatPoint = 0;
+            StatManager.Instance.earnedStatPoint = 0;
+        }
+
+        if (PeachTree.Instance != null)
             PeachTree.Instance.SetInitialStage(0);
+
         ResetScriptableObjects();
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -300,7 +314,22 @@ public class DataManager : MonoBehaviour
     {
         string path = Path.Combine(Application.persistentDataPath, "Stats.data");
 
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path))
+        {
+            if (StatManager.Instance != null)
+            {
+                StatManager.Instance.StatPoint = 0;
+                StatManager.Instance.earnedStatPoint = 0;
+            }
+
+            if (GradeManager.Instance != null)
+            {
+                GradeManager.Instance.CurrentGradeIndex = 0;
+                GradeManager.Instance.CurrentExp = 0;
+                GradeManager.Instance.InitializeGradeAbility();
+            }
+            return;
+        }
 
         string loadText = File.ReadAllText(path);
         string[] data = loadText.Split('/');

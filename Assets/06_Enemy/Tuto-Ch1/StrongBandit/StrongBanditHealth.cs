@@ -19,8 +19,12 @@ public class StrongBanditHealth : MonoBehaviour
     private EnemyCore core;
     private bool isTransitioningPhase = false;
 
-    // 개별 HP 바 참조
     private HpBarCanvas hpBarCanvas;
+    private Coroutine stunCoroutine;
+
+    // 💡 EnemyHealth 처럼 글로벌 코어가 아닌 로컬 이벤트를 사용하도록 추가
+    public event Action<float, float> OnHpChanged;
+    public event Action<float, float> OnMpChanged;
 
     private void Awake()
     {
@@ -40,6 +44,7 @@ public class StrongBanditHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = HasEnoughMP;
         core.CmdConsumeMP += ConsumeMP;
+        core.QueryCurrentHP = () => currentHp;
     }
 
     private void OnDisable()
@@ -50,19 +55,46 @@ public class StrongBanditHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = null;
         core.CmdConsumeMP -= ConsumeMP;
+        core.QueryCurrentHP = null;
     }
 
     private void Update()
     {
+        // 💡 여기서 MP가 회복될 때마다 불필요한 과부하가 걸리지 않도록 로컬 이벤트 사용
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
+
+        if (hpBarCanvas != null)
+        {
+            if (isTransitioningPhase || core.IsDead)
+            {
+                if (hpBarCanvas.gameObject.activeSelf)
+                    hpBarCanvas.gameObject.SetActive(false);
+            }
+            else
+            {
+                bool isLockedOn = EnemyLockOnImage.Instance != null &&
+                                  EnemyLockOnImage.Instance.target != null &&
+                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
+
+                if (isLockedOn || currentHp < maxHP)
+                {
+                    if (!hpBarCanvas.gameObject.activeSelf)
+                        hpBarCanvas.gameObject.SetActive(true);
+                }
+                else
+                {
+                    if (hpBarCanvas.gameObject.activeSelf)
+                        hpBarCanvas.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     private void HandleDamage(float damage)
     {
         if (isTransitioningPhase) return;
 
-        // 💡 범용 가드 상태 체크 및 각도 판정 (150도)
         if (core.isGuarding)
         {
             bool isFacingPlayer = false;
@@ -74,7 +106,6 @@ public class StrongBanditHealth : MonoBehaviour
                 Vector3 forward = transform.forward;
                 forward.y = 0;
 
-                // 정면 기준 좌우 75도 (총 150도) 내에 플레이어가 있는지 체크
                 if (Vector3.Angle(forward, dirToPlayer) <= 75f)
                 {
                     isFacingPlayer = true;
@@ -84,19 +115,35 @@ public class StrongBanditHealth : MonoBehaviour
             if (isFacingPlayer)
             {
                 core.TriggerGuardSuccess();
-                return; // 가드 & 카운터 발동
+                return;
             }
             else
             {
-                // 뒤치기(또는 측면 타격) 시 가드가 강제로 풀리며 데미지 입음
                 core.isGuarding = false;
             }
         }
 
-        core.PlayHitSound(core.HittedSkill, core.HitIndex);
+        if (core.currentState == EnemyState.Stun)
+        {
+            if (stunCoroutine != null)
+            {
+                StopCoroutine(stunCoroutine);
+                stunCoroutine = null;
+            }
+            UpdateMP(maxMP);
+            core.TriggerStunEnd();
+        }
+
+        if (!core.isTakingDoT)
+        {
+            // 💡 널 레퍼런스 에러 방지를 위해 ?.Invoke 사용
+            core.PlayHitSound?.Invoke(core.HittedSkill, core.HitIndex);
+        }
 
         currentHp -= damage;
-        core.TriggerHpChanged(currentHp, maxHP);
+
+        // 💡 과부하 방지 (EnemyHealth와 동일하게 로컬 호출)
+        OnHpChanged?.Invoke(currentHp, maxHP);
 
         if (hpBarCanvas != null)
             hpBarCanvas.UpdateHP(currentHp, maxHP);
@@ -114,9 +161,6 @@ public class StrongBanditHealth : MonoBehaviour
                     GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
 
                 core.TriggerDeath();
-
-                if (hpBarCanvas != null)
-                    hpBarCanvas.gameObject.SetActive(false);
             }
         }
     }
@@ -130,7 +174,9 @@ public class StrongBanditHealth : MonoBehaviour
         if (currentMp <= 0 && core.currentState != EnemyState.Stun)
         {
             core.TriggerParried();
-            StartCoroutine(StunRoutine());
+
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+            stunCoroutine = StartCoroutine(StunRoutine());
         }
     }
 
@@ -172,8 +218,8 @@ public class StrongBanditHealth : MonoBehaviour
             currentHp = Mathf.Lerp(startHP, targetHP, t);
             currentMp = Mathf.Lerp(startMP, targetMP, t);
 
-            core.TriggerHpChanged(currentHp, maxHP);
-            core.TriggerMpChanged(currentMp, maxMP);
+            OnHpChanged?.Invoke(currentHp, maxHP);
+            OnMpChanged?.Invoke(currentMp, maxMP);
 
             if (hpBarCanvas != null)
             {
@@ -187,8 +233,8 @@ public class StrongBanditHealth : MonoBehaviour
         currentHp = targetHP;
         currentMp = targetMP;
 
-        core.TriggerHpChanged(currentHp, maxHP);
-        core.TriggerMpChanged(currentMp, maxMP);
+        OnHpChanged?.Invoke(currentHp, maxHP);
+        OnMpChanged?.Invoke(currentMp, maxMP);
 
         if (hpBarCanvas != null)
         {
@@ -212,12 +258,15 @@ public class StrongBanditHealth : MonoBehaviour
         }
         UpdateMP(maxMP);
         core.TriggerStunEnd();
+        stunCoroutine = null;
     }
 
     public void UpdateMP(float value)
     {
         currentMp = Mathf.Clamp(value, 0, maxMP);
-        core.TriggerMpChanged(currentMp, maxMP);
+
+        // 💡 핵심 끊김 해결: core.TriggerMpChanged (글로벌) 호출을 지우고 로컬 호출로 변경
+        OnMpChanged?.Invoke(currentMp, maxMP);
 
         if (hpBarCanvas != null)
             hpBarCanvas.UpdateMP(currentMp, maxMP);
@@ -229,8 +278,15 @@ public class StrongBanditHealth : MonoBehaviour
         currentPhase = 1;
         currentHp = maxHP;
         currentMp = maxMP;
-        core.TriggerHpChanged(currentHp, maxHP);
-        core.TriggerMpChanged(currentMp, maxMP);
+
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+            stunCoroutine = null;
+        }
+
+        OnHpChanged?.Invoke(currentHp, maxHP);
+        OnMpChanged?.Invoke(currentMp, maxMP);
 
         if (hpBarCanvas != null)
         {

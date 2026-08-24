@@ -6,8 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player
-    : MonoBehaviour, IDamageable
+public class Player : MonoBehaviour, IDamageable, IBleedable
 {
     #region Components & References
     [Header("Core Components")]
@@ -45,7 +44,8 @@ public class Player
     public bool isAirborne = false;
     public bool isWakingUp = false;
 
-    // 💡 추가됨: 패시브 스킬에서 패링 성공을 감지하기 위한 이벤트
+    [HideInInspector] public bool isTakingDoT = false;
+
     public event Action OnParrySuccess;
 
     private Vector3 savedGrabOffset;
@@ -303,12 +303,17 @@ public class Player
         GuardableData gData = skill.GetGuardData(hitIndex);
         bool skillIsGuardable = gData != null ? gData.guardable : true;
         bool skillIsParryable = gData != null ? gData.parryable : true;
+
+        skillIsGuardable = isTakingDoT ? false : skillIsGuardable;
+        skillIsParryable = isTakingDoT ? false : skillIsParryable;
+
         float ShakePower = 1f;
         if (damage >= (hp * 0.3f)) ShakePower = 3f;
         else if (damage >= (hp * 0.5f)) ShakePower = 10f;
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
 
-        float actualDamage = ApplyArmorReduction(damage);
+        float actualDamage = isTakingDoT ? damage : ApplyArmorReduction(damage);
+
         bool willDie = (HP - actualDamage) <= 0;
 
         if ((isParrying || isGuarding) && skillIsGuardable)
@@ -338,7 +343,6 @@ public class Player
 
             SpecialSkillManager.Instance.Trigger(transform, SkillBase.TriggerType.OnParry);
 
-            // 💡 추가됨: 패링 성공 이벤트 호출
             OnParrySuccess?.Invoke();
 
             impulseSource.GenerateImpulse(ShakePower);
@@ -386,17 +390,17 @@ public class Player
         }
 
         bool hasKnockback = false;
-        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
+        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
             hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
-        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex)
+        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
             hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
 
         bool isStunApplied = false;
-        if (skill.GetStunData(hitIndex) != null)
+        if (skill.GetStunData(hitIndex) != null && !isTakingDoT)
         {
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
@@ -415,7 +419,7 @@ public class Player
             }
         }
 
-        if (!isStunApplied && !willDie && !hasKnockback)
+        if (!isStunApplied && !willDie && !hasKnockback && !isTakingDoT)
         {
             CancelCurrentAction();
             ClearStun();
@@ -429,15 +433,18 @@ public class Player
             }
         }
 
-        if (skill.HitSound != null && skill.HitSound.Length > hitIndex && skill.HitSound[hitIndex])
-            SoundManager.Instance.PlaySound(skill.HitSound[hitIndex]);
+        if (!isTakingDoT)
+        {
+            if (skill.HitSound != null && skill.HitSound.Length > hitIndex && skill.HitSound[hitIndex])
+                SoundManager.Instance.PlaySound(skill.HitSound[hitIndex]);
 
-        if (hitEffect != null)
+            impulseSource.GenerateImpulse(ShakePower);
+        }
+
+        if (hitEffect != null && !isTakingDoT)
             InkBrushEffectManager.Instance.PlayHitEffect(hitEffect);
 
-        impulseSource.GenerateImpulse(ShakePower);
-
-        if (actualDamage > 0) TryApplyRandomWound();
+        if (actualDamage > 0 && !isTakingDoT) TryApplyRandomWound();
         HP -= actualDamage;
 
         if (caster.TryGetComponent<EnemyCore>(out var enemyCore))
@@ -603,8 +610,6 @@ public class Player
         {
             float mult = isGuarding ? 0.1f : 1f;
 
-            HP += StatManager.Instance.HpRecoveryAmount * Time.deltaTime * mult;
-
             if (mpRecoveryDelay > 0)
             {
                 mpRecoveryDelay -= Time.deltaTime;
@@ -643,7 +648,7 @@ public class Player
             {
                 while (HP < StatManager.Instance.MaxHp * 0.7)
                 {
-                    HP += StatManager.Instance.MaxHp * Time.deltaTime / 3;
+                    HP += StatManager.Instance.MaxHp * Time.deltaTime / 3 * StatManager.Instance.HpRecoveryAmount;
                     yield return null;
                 }
                 reachedCheckPoint = false;
@@ -679,6 +684,82 @@ public class Player
             }
         }
         return closestVulnerableEnemy;
+    }
+
+    private Coroutine bleedCoroutine;
+
+    public void ApplyBleed(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (HP <= 0) return;
+
+        if (bleedCoroutine != null)
+        {
+            StopCoroutine(bleedCoroutine);
+        }
+        bleedCoroutine = StartCoroutine(BleedRoutine(ticksPerSecond, bleedSkill, bleedEffect, effectDir));
+    }
+
+    private IEnumerator BleedRoutine(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        float interval = 1f / ticksPerSecond;
+        int totalTicks = 10 * ticksPerSecond;
+
+        for (int i = 0; i < totalTicks; i++)
+        {
+            if (HP <= 0)
+            {
+                bleedCoroutine = null;
+                yield break;
+            }
+
+            float tickDamage = (HP * 0.1f) / totalTicks;
+
+            isTakingDoT = true;
+            TakeDamage(tickDamage * (1 - StatManager.Instance.BleedResistance), bleedSkill, transform, bleedEffect, 0);
+            isTakingDoT = false;
+
+            PlayBleedHitEffect(bleedSkill, effectDir);
+            yield return new WaitForSeconds(interval);
+        }
+
+        bleedCoroutine = null;
+    }
+
+    private void PlayBleedHitEffect(SkillBase skill, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (SkillEffectManager.Instance == null) return;
+
+        Vector3 hitPoint = GetComponent<Collider>().bounds.center;
+        Quaternion effectRotation = CalculateBleedRotation(effectDir);
+        SkillEffectManager.Instance.PlayHitEffect(gameObject, skill, hitPoint, effectRotation, 0);
+    }
+
+    private Quaternion CalculateBleedRotation(SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        int dirIndex = (int)effectDir - 1;
+        if (dirIndex <= 11)
+        {
+            float rotY = transform.eulerAngles.y;
+            float rotX = dirIndex * 30f;
+            return Quaternion.Euler(rotX, rotY - 90f, 0f);
+        }
+
+        Vector3 effectDirection = -transform.forward;
+        Vector3 effectUp = transform.up;
+
+        if (effectDir.ToString() == "Forward")
+        {
+            effectDirection = transform.up;
+            effectUp = transform.forward;
+        }
+        else if (effectDir.ToString() == "Backward")
+        {
+            effectDirection = transform.up;
+            effectUp = -transform.forward;
+        }
+
+        if (effectDirection == Vector3.zero) effectDirection = -transform.forward;
+        return Quaternion.LookRotation(effectDirection, effectUp);
     }
     #endregion
 
@@ -837,6 +918,7 @@ public class Player
         decalGenerator?.ClearDecals();
         hasTriggered66 = false;
         hasTriggered33 = false;
+        isTakingDoT = false;
 
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;

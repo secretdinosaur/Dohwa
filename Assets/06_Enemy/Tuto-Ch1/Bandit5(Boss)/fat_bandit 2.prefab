@@ -7187,6 +7187,7 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
@@ -7373,7 +7374,7 @@ MonoBehaviour:
   - skill: {fileID: 11400000, guid: 34a1d443cf5d4804e99026c9081aa2d4, type: 2}
     minDistance: 0
     maxDistance: 3
-    baseWeight: 5
+    baseWeight: 10
     weightIncreaseAmount: 1
     nextAttackDelay: 0
     cooldown: 15
@@ -7453,7 +7454,7 @@ MonoBehaviour:
   walkApproachChance: 0.2
   backWalkTriggerFactor: 0.7
   strafeOnCloseChance: 15.2
-  runAttackSkill: {fileID: 11400000, guid: 48cbd1c25ff4f4846ba4cf84dd9e9c1b, type: 2}
+  runAttackSkill: {fileID: 11400000, guid: 13b440d5c7252404bbcfa45fa5e56bc5, type: 2}
   runDuration: 2
   runStopOffset: 1.5
   jumpAttackSkill: {fileID: 11400000, guid: 933a38a243252c14a88f627881fb0cb1, type: 2}
