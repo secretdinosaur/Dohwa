@@ -642,6 +642,7 @@ public class InventoryManager : MonoBehaviour
 
     public void ShowItemTooltip(InventoryItem item)
     {
+        if (isItemEmpty(item)) return;
         if (item.itemType == InventoryType.Weapon)
         {
             NormalItemInfoPanel.ItemIcon.sprite = item.weapon.icon;
@@ -940,10 +941,12 @@ public class InventoryManager : MonoBehaviour
         TitlePanel.gameObject.SetActive(false);
         SettingTab.gameObject.SetActive(false);
         QuickSlot.SetActive(false);
+        CantDeleteMessagePanel.SetActive(false);
         UIManager.Instance.GameQuickSlot.SetActive(false);
         UIManager.Instance.InteractPanel.SetActive(false);
 
         GradeManager.Instance.gradePanel.gameObject.SetActive(false);
+        
         Destroy(LastSkillTree);
     }
 
@@ -1243,5 +1246,16 @@ public class InventoryManager : MonoBehaviour
                 slot.item.skillBook.CheckAndProcessAutoUnlocks();
             }
         }
+    }
+
+    public bool isItemEmpty(InventoryItem item)
+    {
+        if (item.weapon == null && 
+            item.armor == null &&
+            item.skillBook == null &&
+            item.consumable == null &&
+            item.nonConsumable == null)
+            return true;
+        return false;
     }
 }

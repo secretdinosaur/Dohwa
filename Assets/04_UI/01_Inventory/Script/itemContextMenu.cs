@@ -186,7 +186,7 @@ public class itemContextMenu : MonoBehaviour
     {
         CanvasGroup canvasGroup = InventoryManager.Instance.CantDeleteMessagePanel.GetComponent<CanvasGroup>();
         canvasGroup.DOKill();
-
+        InventoryManager.Instance.CantDeleteMessagePanel.SetActive(true);
         canvasGroup.alpha = 0f;
 
         Sequence fadeSequence = DOTween.Sequence();
@@ -194,7 +194,11 @@ public class itemContextMenu : MonoBehaviour
         fadeSequence
             .Append(canvasGroup.DOFade(1f, 0.2f))
             .AppendInterval(2f)
-            .Append(canvasGroup.DOFade(0f, 0.2f));
+            .Append(canvasGroup.DOFade(0f, 0.2f))
+            .OnComplete(() => {
+                InventoryManager.Instance.CantDeleteMessagePanel.SetActive(false);
+            }).SetUpdate(true);
+
     }
 
     Coroutine checkDeleteCoroutine;
