@@ -75687,6 +75687,15 @@ MonoBehaviour:
   CurrentSlot: {fileID: 0}
   BossStatus: {fileID: 828777894}
   BossNameText: {fileID: 2113256388}
+  BossName:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   BossHpFill: {fileID: 548837486}
   BossMpFill: {fileID: 1162935925}
   HpText: {fileID: 745705714}
@@ -115093,7 +115102,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.07979102, y: 0.40079746, z: 0.03506446, w: -0.91201174}
+  m_LocalRotation: {x: -0.07557489, y: 0.49618745, z: 0.043411504, w: 0.8638298}
   m_LocalPosition: {x: -170.23021, y: 52.158073, z: 52.975952}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -115621,7 +115630,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: c8a9102643edae84ca1ba20153f9a81a, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: f8470ce94c9d39440a4bbb1b7a620564, type: 2}
   m_BuildHeightMesh: 0
 --- !u!114 &936540807
 MonoBehaviour:
