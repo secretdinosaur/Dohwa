@@ -2,7 +2,6 @@ using DG.Tweening;
 using JetBrains.Annotations;
 using System.Collections;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -174,7 +173,34 @@ public class itemContextMenu : MonoBehaviour
         {
             OpenCheckDeleteItemPenel();
         }
+        else if((slot.item.weapon != null && !slot.item.weapon.isDeletable)
+            || (slot.item.armor != null && !slot.item.armor.isDeletable)
+            || (slot.item.consumable != null && !slot.item.consumable.isDeletable)
+            || (slot.item.nonConsumable != null && !slot.item.nonConsumable.isDeletable))
+        {
+            ShowCantDeleteMessagePanel();
+        }
     }
+
+    private void ShowCantDeleteMessagePanel()
+    {
+        CanvasGroup canvasGroup = InventoryManager.Instance.CantDeleteMessagePanel.GetComponent<CanvasGroup>();
+        canvasGroup.DOKill();
+        InventoryManager.Instance.CantDeleteMessagePanel.SetActive(true);
+        canvasGroup.alpha = 0f;
+
+        Sequence fadeSequence = DOTween.Sequence();
+
+        fadeSequence
+            .Append(canvasGroup.DOFade(1f, 0.2f))
+            .AppendInterval(2f)
+            .Append(canvasGroup.DOFade(0f, 0.2f))
+            .OnComplete(() => {
+                InventoryManager.Instance.CantDeleteMessagePanel.SetActive(false);
+            }).SetUpdate(true);
+
+    }
+
     Coroutine checkDeleteCoroutine;
     public void OpenCheckDeleteItemPenel()
     {
