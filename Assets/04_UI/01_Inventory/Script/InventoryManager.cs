@@ -86,6 +86,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject MouseItemInfo;
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
+    public GameObject CantDeleteMessagePanel;
 
     [Header("Setting UI")]
     public GameObject SettingTab;
