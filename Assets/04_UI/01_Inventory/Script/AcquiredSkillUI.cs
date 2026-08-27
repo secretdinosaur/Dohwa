@@ -46,7 +46,19 @@ public class AcquiredSkillUI : MonoBehaviour
 
         // 3. 만약 Content Size Fitter를 쓰지 않는다면, 계산된 preferredHeight를 적용합니다.
         float finalHeight = LayoutUtility.GetPreferredHeight(SkillPanelContainer.GetComponent<RectTransform>());
-        GetComponent<RectTransform>().sizeDelta = new Vector2(800, acquiredNodes.Count * 75 + 75);
+        GetComponent<RectTransform>().sizeDelta = new Vector2(650, acquiredNodes.Count * 75 + 75);
+
         panelHeight = acquiredNodes.Count * 75 + 125;
+
+        if (skillBook.name == "B1")
+        {
+            GetComponentsInChildren<Image>()[1].enabled = false;
+
+        }
+        else
+        {
+            GetComponentsInChildren<Image>()[1].enabled = true;
+        }
+
     }
 }
