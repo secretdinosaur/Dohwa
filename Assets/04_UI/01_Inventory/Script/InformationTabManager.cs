@@ -34,6 +34,6 @@ public class InformationTabManager : MonoBehaviour
             contentTotalHeight += infoPanel.panelHeight + spacing;
         }
 
-        AcquiredSkillContent.GetComponent<RectTransform>().sizeDelta = new Vector2(800, contentTotalHeight);
+        AcquiredSkillContent.GetComponent<RectTransform>().sizeDelta = new Vector2(650, contentTotalHeight);
     }
 }

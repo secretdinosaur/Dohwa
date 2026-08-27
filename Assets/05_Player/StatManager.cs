@@ -165,7 +165,7 @@ public class StatManager : MonoBehaviour
     public float Demonic
     {
         get => demonic;
-        set { demonic = value; UIManager.Instance.DemonicText.text = ((int)demonic).ToString(); }
+        set { demonic = value; /*UIManager.Instance.DemonicText.text = ((int)demonic).ToString();*/ }
     }
 
     [SerializeField] private float mpConsumptionReduction = 0f;
