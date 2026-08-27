@@ -88,6 +88,7 @@ public class InventoryManager : MonoBehaviour
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
     public GameObject CantDeleteMessagePanel;
+    public GameObject StatToolTip;
 
     [Header("Setting UI")]
     public GameObject SettingTab;
@@ -955,6 +956,7 @@ public class InventoryManager : MonoBehaviour
         SettingTab.gameObject.SetActive(false);
         QuickSlot.SetActive(false);
         CantDeleteMessagePanel.SetActive(false);
+        StatToolTip.SetActive(false);
         UIManager.Instance.GameQuickSlot.SetActive(false);
         UIManager.Instance.InteractPanel.SetActive(false);
 
