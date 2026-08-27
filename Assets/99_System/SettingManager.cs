@@ -300,9 +300,8 @@ public class SettingManager : MonoBehaviour
             text.UpdateFontAsset();
         }
 
-        Player.Instance.PlayerAttack.UpdateCommandUI();
-        if (UIManager.Instance?.BossName != null)
-            UIManager.Instance.UpdateBossNameUI();
+        Player.Instance?.PlayerAttack.UpdateCommandUI();
+        UIManager.Instance?.UpdateBossNameUI();
     }
 
     public void OnClickResetButton() => ResetPanel.SetActive(true);
