@@ -94,7 +94,23 @@ public class SkillTreeTooltip : MonoBehaviour
                 string localizedStatName = LocalizationSettings.StringDatabase.GetLocalizedString(statStringTableName, mod.statType.ToString());
                 if (string.IsNullOrEmpty(localizedStatName)) localizedStatName = mod.statType.ToString();
 
-                string statValueStr = $"{localizedStatName} {mod.statValue}";
+                bool isPercentage = false;
+                switch (mod.statType)
+                {
+                    case StatManager.StatType.HpRecovery:
+                    case StatManager.StatType.VitalStrikeRate:
+                    case StatManager.StatType.VitalStrikeDamage:
+                    case StatManager.StatType.PoisonResistance:
+                    case StatManager.StatType.BleedResistance:
+                    case StatManager.StatType.FireResistance:
+                    case StatManager.StatType.LightningResistance:
+                        isPercentage = true;
+                        break;
+                }
+
+                string valueString = isPercentage ? $"{mod.statValue * 100}%" : mod.statValue.ToString();
+                string statValueStr = $"{localizedStatName} {valueString}";
+
                 statStrings.Add(increaseFormat.Contains("{0}") ? string.Format(increaseFormat, statValueStr) : $"{statValueStr} 증가");
             }
             return string.Join("\n", statStrings);

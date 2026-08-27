@@ -164,7 +164,6 @@ public class SkillNodeUI : MonoBehaviour, IPointerClickHandler
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Tooltip Animation Error: " + e.Message);
         }
 
         IsAnimating = false;

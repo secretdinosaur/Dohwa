@@ -324,7 +324,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1212714600863443769}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 0eb3d421ebcec474a83417d1b6c95a64, type: 3}
+  m_Avatar: {fileID: 9000000, guid: 96864233bce96d84da969e4f447e584e, type: 3}
   m_Controller: {fileID: 9100000, guid: f52c9a2e747013c42bc806583b49bb2b, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
@@ -383,11 +383,11 @@ MonoBehaviour:
   detectionRange: 20
   detectionRangeWithoutWatch: 10
   detectionMemoryDuration: 10
-  chaseRange: 30
+  chaseRange: 50
   wanderSearchRadius: 15
   fieldOfView: 75
-  chaseSpeedMultiplier: 1.5
-  backWalkSpeedMultiplier: 0.6
+  chaseSpeedMultiplier: 2.25
+  backWalkSpeedMultiplier: 0.5
   backWalkDist: 3
   backWalkMaxDuration: 3
   strafeSpeedMultiplier: 0.7
@@ -396,13 +396,14 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
-  moveBeforeAttackChance: 0.5
+  moveBeforeAttackChance: 50
   parriedBackWalkChance: 60
   normalBackWalkChance: 15
   backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 20
+  strafeOnCloseChance: 50
 --- !u!114 &488358157802232839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432,7 +433,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   baseMoveSpeed: 2
-  rotationSpeed: 100
+  rotationSpeed: 10
 --- !u!114 &5056422532345200166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -969,10 +970,50 @@ MonoBehaviour:
     cooldown: 0
     minPhase: 0
     maxPhase: 99
-    comboSkills:
-    - {fileID: 11400000, guid: e63a34cf104a9a04187b770379c863ba, type: 2}
-    - {fileID: 0}
-    isInstantCombo: 1
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 0
+  - skill: {fileID: 11400000, guid: ff2188b5d5cb6e749a5b9bab68f1a055, type: 2}
+    minDistance: 0
+    maxDistance: 3
+    baseWeight: 2
+    weightIncreaseAmount: 1
+    nextAttackDelay: 0
+    cooldown: 0
+    minPhase: 0
+    maxPhase: 99
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 0
+  - skill: {fileID: 11400000, guid: 1f2c49624c23ed344ab357fffc93a2e3, type: 2}
+    minDistance: 0
+    maxDistance: 3
+    baseWeight: 1
+    weightIncreaseAmount: 1
+    nextAttackDelay: 0
+    cooldown: 0
+    minPhase: 0
+    maxPhase: 99
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 0
+  - skill: {fileID: 11400000, guid: e63a34cf104a9a04187b770379c863ba, type: 2}
+    minDistance: 0
+    maxDistance: 3
+    baseWeight: 5
+    weightIncreaseAmount: 1
+    nextAttackDelay: 0
+    cooldown: 0
+    minPhase: 0
+    maxPhase: 99
+    comboSkills: []
+    isInstantCombo: 0
     instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0

@@ -1,4 +1,4 @@
-using DG.Tweening;
+Ôªøusing DG.Tweening;
 using System.Collections;
 using System.Linq;
 using TMPro;
@@ -48,6 +48,7 @@ public class UIManager : MonoBehaviour
     [Header("Player UI")]
     public GameObject BossStatus;
     public TextMeshProUGUI BossNameText;
+    public LocalizedString BossName;
 
     public Image BossHpFill;
 
@@ -57,6 +58,21 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI MpText;
     public TextMeshProUGUI AttackText;
     public TextMeshProUGUI ArmorText;
+    public TextMeshProUGUI ExternalArtText;
+    public TextMeshProUGUI InnerArtText;
+    public TextMeshProUGUI VitalStrikeRateText;
+    public TextMeshProUGUI VitalStrikeDamageText;
+    public TextMeshProUGUI HpRecoveryAmountText;
+    public TextMeshProUGUI MpRecoveryAmountText;
+    public TextMeshProUGUI MoveSpeedText;
+    public TextMeshProUGUI PoisonResistanceText;
+    public TextMeshProUGUI BleedResistanceText;
+    public TextMeshProUGUI FireResistanceText;
+    public TextMeshProUGUI LightningResistanceText;
+    public TextMeshProUGUI OrthodoxText;
+    public TextMeshProUGUI UnorthodoxText;
+    public TextMeshProUGUI DemonicText;
+    public TextMeshProUGUI MpConsumptionReductionText;
     public Image MpTipImage;
 
     public TextMeshProUGUI InsightPointText;
@@ -114,6 +130,26 @@ public class UIManager : MonoBehaviour
         BossMpFill.material.SetFloat("_FillAmount", value);
     }
 
+    public void UpdateBossNameUI()
+    {
+        if (BossNameText == null)
+            return;
+
+        if (BossName == null)
+        {
+            BossNameText.text = "Null boss name";
+            return;
+        }
+
+        if (BossName.IsEmpty)
+        {
+            BossNameText.text = "Empty boss name";
+            return;
+        }
+
+        BossNameText.text = BossName.GetLocalizedString();
+    }
+
     public void PreventCameraMoveAndClick(bool status)
     {
         if (status)
@@ -134,57 +170,130 @@ public class UIManager : MonoBehaviour
         }
     }
     float HPtemp = 1f;
+
+    // =======================================================
+    // ÏùºÎ∞ò Ïù∏Î≤§ÌÜ†Î¶¨ Ïó¥Í∏∞ (Í∏∞Ï°¥)
+    // =======================================================
     public void OpenInventory(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-
         ToggleInventory();
     }
+
     public void ToggleInventory()
     {
-        // ¿‘∑¬ ¬˜¥‹ ¡∂∞« ∞ÀªÁ (context ∞¸∑√ ¡∂∞« ¡¶∞≈)
+        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim)
+        {
+            return;
+        }
+
+        bool nextState = !InventoryManager.Instance.isInventoryOpen;
+
+        if (nextState && !Player.Instance.CanAttack())
+        {
+            return;
+        }
+
+
+        InventoryManager.Instance.uiMap.SetActive(nextState);
+        PreventCameraMoveAndClick(nextState);
+        GameQuickSlot.SetActive(!nextState);
+        InventoryManager.Instance.isInventoryOpen = nextState;
+        TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
+
+        if (nextState) // Ïó¥ Îïå
+        {
+            InkBrushEffectManager.Instance.ClearHitEffects();
+            InventoryManager.Instance.OnClickInfoTab();
+            Inventory.SetActive(true);
+
+            SoundManager.Instance.PlayUISound(2);
+
+            HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
+            Player.Instance.LowHPMat.SetFloat("_HP", 1f);
+
+            InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
+        }
+        else // Îã´ÏùÑ Îïå
+        {
+            Inventory.SetActive(false);
+            SoundManager.Instance.PlayUISound(3);
+
+            Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
+        }
+
+        Time.timeScale = nextState ? 0f : 1f;
+    }
+
+    // =======================================================
+    // üí° Ï∂îÍ∞ÄÎê®: ÏÑ∏ÌåÖÏ∞Ω Îã§Ïù¥Î†âÌä∏ Ïò§Ìîà (ESC Î©îÎâ¥ Îì±)
+    // =======================================================
+    public void OpenSetting(InputAction.CallbackContext context)
+    {
+        if (!context.started) return;
+        ToggleSetting();
+    }
+
+    public void ToggleSetting()
+    {
         if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
 
-
-
-        bool nextState = !Inventory.activeSelf; // ¿¸»Øµ… ¿Œ∫•≈‰∏Æ ªÛ≈¬
+        bool nextState = !InventoryManager.Instance.isInventoryOpen;
 
         if (Player.Instance.CanAttack())
         {
             InkBrushEffectManager.Instance.ClearHitEffects();
-
             Time.timeScale = nextState ? 0f : 1f;
-
             InventoryManager.Instance.uiMap.SetActive(nextState);
-            Inventory.SetActive(nextState);
-            InventoryManager.Instance.OnClickInfoTab();
+
+            if (nextState)
+            {
+                InventoryManager.Instance.ResetTabState();
+                InventoryManager.Instance.OnClickSettingTab();
+                // üí° ÌïµÏã¨: ÏÑ∏ÌåÖ UIÍ∞Ä Inventory ÌïòÏúÑÏóê ÏûàÍ≥†, OnClickSettingTab ÎÇ¥Î∂ÄÏùò 
+                // HideAllTabs()Í∞Ä InventoryÎ•º Í∞ïÏ†úÎ°ú ÎÅÑÍ∏∞ ÎïåÎ¨∏Ïóê ÎßàÏßÄÎßâÏóê Îã§Ïãú ÌôúÏÑ±Ìôî Ìï¥Ï§çÎãàÎã§.
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
             PreventCameraMoveAndClick(nextState);
             GameQuickSlot.SetActive(!nextState);
             InventoryManager.Instance.isInventoryOpen = nextState;
-            TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
 
             if (nextState)
+            {
+                SoundManager.Instance.PlayUISound(3);
+                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
+            }
+            else
             {
                 SoundManager.Instance.PlayUISound(2);
                 HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
                 Player.Instance.LowHPMat.SetFloat("_HP", 1f);
                 InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
             }
-            else
-            {
-                SoundManager.Instance.PlayUISound(3);
-                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
-            }
         }
-        else if (Inventory.activeSelf)
+        else if (InventoryManager.Instance.isInventoryOpen) // Îã´Í∏∞ Î°úÏßÅ
         {
             InventoryManager.Instance.uiMap.SetActive(nextState);
-            Inventory.SetActive(nextState);
-            InventoryManager.Instance.OnClickInfoTab();
+
+            if (nextState)
+            {
+                InventoryManager.Instance.ResetTabState();
+                InventoryManager.Instance.OnClickSettingTab();
+                Inventory.SetActive(true);
+            }
+            else
+            {
+                Inventory.SetActive(false);
+            }
+
             PreventCameraMoveAndClick(nextState);
             GameQuickSlot.SetActive(!nextState);
             InventoryManager.Instance.isInventoryOpen = nextState;
-            TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
 
             if (nextState)
             {
@@ -285,9 +394,6 @@ public class UIManager : MonoBehaviour
         yield return null;
     }
 
-    // =======================================================
-    // [√ﬂ∞°µ ] ∑ŒµÂµ» ¿Œ∫•≈‰∏Æ ƒ¸ΩΩ∑‘¿ª ∞‘¿” HUD ƒ¸ΩΩ∑‘¿∏∑Œ ∫π¡¶ µø±‚»≠
-    // =======================================================
     public void SyncGameQuickSlots()
     {
         if (InventoryManager.Instance == null) return;

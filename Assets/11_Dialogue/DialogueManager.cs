@@ -37,13 +37,37 @@ public class DialogueManager : MonoBehaviour
 
     public AudioClip typingSound;
     public float RandomSoundValue;
+
+    // ★ DOTween 겹침 방지용 시퀀스 제어 변수
+    private Sequence fadeSequence;
+
+    // ★ 입력 연타 방지 쿨다운 변수
+    private float lastInputTime = 0f;
+    private float inputCooldown = 0.1f;
+
     private void Awake()
     {
         Instance = this;
     }
 
-    private void Start()
+    // 안전한 입력을 보장하는 프로퍼티
+    private bool IsInputPressedThisFrame
     {
+        get
+        {
+            if (Time.unscaledTime - lastInputTime < inputCooldown) return false;
+
+            bool pressed = (Keyboard.current?.fKey.wasPressedThisFrame == true ||
+                            Mouse.current?.leftButton.wasPressedThisFrame == true);
+
+            if (pressed)
+            {
+                lastInputTime = Time.unscaledTime;
+                inputCooldown = 0.1f; // 이후 넘기기 연타는 0.1초 쿨다운
+                return true;
+            }
+            return false;
+        }
     }
 
     public void ShowMainDialogue()
@@ -51,23 +75,33 @@ public class DialogueManager : MonoBehaviour
         DialogueSet DialogueSet = LoadNextMainDialogueSet();
         if (DialogueSet != null)
         {
-            if (_currentDialogueCoroutine != null) StopCoroutine(_currentDialogueCoroutine);
-            _currentDialogueCoroutine = StartCoroutine(ShowDialogue(DialogueSet));
+            StartShowDialogue(DialogueSet);
         }
+    }
+
+    public void StartShowDialogue(DialogueSet DialogueSet, NPC npc = null)
+    {
+        if (IsDialogueActive || _currentDialogueCoroutine != null) return;
+
+        // ★ 대화 시작 시 0.2초간 무조건 입력 무시 (상호작용 연타 방지)
+        lastInputTime = Time.unscaledTime;
+        inputCooldown = 0.2f;
+
+        _currentDialogueCoroutine = StartCoroutine(ShowDialogue(DialogueSet, npc));
     }
 
     public void StopShowDialogue()
     {
         IsDialogueActive = false;
         Buttons.SetActive(false);
-        DialoguePanel.GetComponent<Image>().DOKill();
-        DIalogueArea.DOKill();
 
-        Sequence ClosefadeSequence = DOTween.Sequence();
+        // ★ DOTween 시퀀스 확실한 종료
+        if (fadeSequence != null) fadeSequence.Kill();
 
-        ClosefadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(0f, 0.25f));
-        ClosefadeSequence.Join(DIalogueArea.DOFade(0f, 0.25f));
-        ClosefadeSequence.OnComplete(() => {
+        fadeSequence = DOTween.Sequence();
+        fadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(0f, 0.25f));
+        fadeSequence.Join(DIalogueArea.DOFade(0f, 0.25f));
+        fadeSequence.OnComplete(() => {
             DialoguePanel.SetActive(false);
         });
 
@@ -84,43 +118,38 @@ public class DialogueManager : MonoBehaviour
         Player.Instance.isInteracting = false;
     }
 
-    public void StartShowDialogue(DialogueSet DialogueSet)
-    {
-        _currentDialogueCoroutine = StartCoroutine(ShowDialogue(DialogueSet));
-    }
     private int captureIndex = -1;
+
     public IEnumerator ShowDialogue(DialogueSet DialogueSet, NPC npc = null)
     {
         Player.Instance.isInteracting = true;
         UIManager.Instance.PreventCameraMoveAndClick(true);
         CurrentDialogueSet = DialogueSet;
-        Debug.Log($"ShowDialogue called with DialogueSet: {CurrentDialogueSet.name}");
         IsDialogueActive = true;
+
         DialoguePanel.SetActive(true);
+        if (CurrentDialogueSet.name.Contains("Teacher")) SoundManager.Instance.PlayTeacherSound();
 
-        DialoguePanel.GetComponent<Image>().DOKill();
-        DIalogueArea.DOKill();
-        Sequence OpenfadeSequence = DOTween.Sequence();
-        OpenfadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(1f, 0.25f));
-        OpenfadeSequence.Join(DIalogueArea.DOFade(1f, 0.25f));
+        // ★ 열릴 때 기존 닫기 애니메이션 파괴
+        if (fadeSequence != null) fadeSequence.Kill();
+        fadeSequence = DOTween.Sequence();
+        fadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(1f, 0.25f));
+        fadeSequence.Join(DIalogueArea.DOFade(1f, 0.25f));
 
-        if(CurrentDialogueSet == null)
+        if (CurrentDialogueSet == null)
         {
-            DialoguePanel.GetComponent<Image>().DOKill();
-            DIalogueArea.DOKill();
-
-            Sequence ClosefadeSequence = DOTween.Sequence();
-
-            ClosefadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(0f, 0.25f));
-            ClosefadeSequence.Join(DIalogueArea.DOFade(0f, 0.25f));
-            ClosefadeSequence.OnComplete(() => {
+            if (fadeSequence != null) fadeSequence.Kill();
+            fadeSequence = DOTween.Sequence();
+            fadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(0f, 0.25f));
+            fadeSequence.Join(DIalogueArea.DOFade(0f, 0.25f));
+            fadeSequence.OnComplete(() => {
                 DialoguePanel.SetActive(false);
                 IsDialogueActive = false;
             });
+
             yield return null;
             EndImage.SetActive(false);
             UIManager.Instance.PreventCameraMoveAndClick(false);
-
             Player.Instance.isInteracting = false;
             yield break;
         }
@@ -136,29 +165,32 @@ public class DialogueManager : MonoBehaviour
 
             while (_isTyping)
             {
-                bool isSkipPressed = !TutorialManager.instance.TutorialPanel.activeSelf &&
-                             (Keyboard.current?.fKey.wasPressedThisFrame == true ||
-                              Mouse.current?.leftButton.wasPressedThisFrame == true);
+                bool tutorialActive = TutorialManager.instance != null && TutorialManager.instance.TutorialPanel.activeSelf;
 
-                if (isSkipPressed)
+                if (!tutorialActive && IsInputPressedThisFrame)
                 {
                     StopCoroutine(typingCoroutine);
                     DIalogueArea.text = fullText;
                     _isTyping = false;
-
-                    yield return null;
                     break;
                 }
                 yield return null;
             }
+
+            yield return null;
             EndImage.SetActive(true);
-            yield return null;
-            yield return new WaitUntil(() => !TutorialManager.instance.TutorialPanel.activeSelf &&
-            (
-                (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) ||
-                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-            ));
-            yield return null;
+
+            while (true)
+            {
+                bool tutorialActive = TutorialManager.instance != null && TutorialManager.instance.TutorialPanel.activeSelf;
+
+                if (!tutorialActive && IsInputPressedThisFrame)
+                {
+                    break;
+                }
+                yield return null;
+            }
+
             EndImage.SetActive(false);
         }
 
@@ -167,61 +199,43 @@ public class DialogueManager : MonoBehaviour
             _isChoiceSelected = false;
             Button[] buttons = Buttons.GetComponentsInChildren<Button>(true);
             Buttons.SetActive(true);
-            foreach (Button i in buttons)
-            {
-                i.gameObject.SetActive(false);
-            }
+            foreach (Button i in buttons) i.gameObject.SetActive(false);
 
             for (int i = 0; i < DialogueSet.choiceOptions.Length; i++)
             {
                 int ClickIndex = i;
                 if (DialogueSet.choiceOptions[ClickIndex].needCheckCondition)
-                    if (!DialogueSet.choiceOptions[ClickIndex].CheckConditions())
-                        continue;
+                    if (!DialogueSet.choiceOptions[ClickIndex].CheckConditions()) continue;
 
                 buttons[i].gameObject.SetActive(true);
                 buttons[i].GetComponentInChildren<TextMeshProUGUI>().text = DialogueSet.choiceOptions[i].Text.GetLocalizedString();
-
                 buttons[i].onClick.RemoveAllListeners();
+
                 if (DialogueSet.choiceOptions[ClickIndex].isQuest)
                     if (!DialogueSet.choiceOptions[ClickIndex].IsQuestClear())
                         buttons[i].GetComponentInChildren<TextMeshProUGUI>().color = new Color32(133, 133, 133, 255);
-                buttons[i].onClick.AddListener(() => {
-                    bool isQuest = DialogueSet.choiceOptions[ClickIndex].isQuest;
-                    bool isClear = DialogueSet.choiceOptions[ClickIndex].IsQuestClear();
 
-                    Debug.Log($"버튼 {ClickIndex} 클릭됨 | 퀘스트 여부: {isQuest} | 클리어 여부: {isClear}");
+                buttons[i].onClick.AddListener(() => {
                     if (DialogueSet.choiceOptions[ClickIndex].isQuest)
-                        if (!DialogueSet.choiceOptions[ClickIndex].IsQuestClear())
-                            return;
+                        if (!DialogueSet.choiceOptions[ClickIndex].IsQuestClear()) return;
+
                     OnChoice(ClickIndex, npc);
                     captureIndex = ClickIndex;
                 });
             }
+
             RectTransform rectTransform = Buttons.GetComponent<RectTransform>();
-            if (DialogueSet.choiceOptions.Length == 1)
-            {
-                rectTransform.anchoredPosition = new Vector2(-100, 300);
-            }
-            else if(DialogueSet.choiceOptions.Length == 2)
-            {
-                rectTransform.anchoredPosition = new Vector2(-20, 330);
-            }
-            else if (DialogueSet.choiceOptions.Length == 3)
-            {
-                rectTransform.anchoredPosition = new Vector2(50, 400);
-            }
-            else if (DialogueSet.choiceOptions.Length == 4)
-            {
-                rectTransform.anchoredPosition = new Vector2(165, 500);
-            }
+            if (DialogueSet.choiceOptions.Length == 1) rectTransform.anchoredPosition = new Vector2(-100, 300);
+            else if (DialogueSet.choiceOptions.Length == 2) rectTransform.anchoredPosition = new Vector2(-20, 330);
+            else if (DialogueSet.choiceOptions.Length == 3) rectTransform.anchoredPosition = new Vector2(50, 400);
+            else if (DialogueSet.choiceOptions.Length == 4) rectTransform.anchoredPosition = new Vector2(165, 500);
 
             rectTransform.sizeDelta = new Vector2(200 * DialogueSet.choiceOptions.Length, 100);
 
             yield return new WaitUntil(() => _isChoiceSelected);
             Buttons.SetActive(false);
-
         }
+
         CurrentDialogueSet.GetImmadiately();
         if (needExecution)
         {
@@ -232,6 +246,10 @@ public class DialogueManager : MonoBehaviour
 
     public void ShowAutoShowDialogue(DialogueSet DialogueSet)
     {
+        if (IsDialogueActive || _currentDialogueCoroutine != null) return;
+
+        lastInputTime = Time.unscaledTime;
+        inputCooldown = 0.2f;
         _currentDialogueCoroutine = StartCoroutine(AutoShowDialogue(DialogueSet));
     }
 
@@ -242,11 +260,10 @@ public class DialogueManager : MonoBehaviour
         IsDialogueActive = true;
         DialoguePanel.SetActive(true);
 
-        DialoguePanel.GetComponent<Image>().DOKill();
-        DIalogueArea.DOKill();
-        Sequence OpenfadeSequence = DOTween.Sequence();
-        OpenfadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(1f, 0.25f));
-        OpenfadeSequence.Join(DIalogueArea.DOFade(1f, 0.25f));
+        if (fadeSequence != null) fadeSequence.Kill();
+        fadeSequence = DOTween.Sequence();
+        fadeSequence.Append(DialoguePanel.GetComponent<Image>().DOFade(1f, 0.25f));
+        fadeSequence.Join(DIalogueArea.DOFade(1f, 0.25f));
 
         foreach (LocalizedString str in DialogueSet.Script)
         {
@@ -257,17 +274,13 @@ public class DialogueManager : MonoBehaviour
 
             while (_isTyping)
             {
-                bool isSkipPressed = !TutorialManager.instance.TutorialPanel.activeSelf &&
-                             (Keyboard.current?.fKey.wasPressedThisFrame == true ||
-                              Mouse.current?.leftButton.wasPressedThisFrame == true);
+                bool tutorialActive = TutorialManager.instance != null && TutorialManager.instance.TutorialPanel.activeSelf;
 
-                if (isSkipPressed)
+                if (!tutorialActive && IsInputPressedThisFrame)
                 {
                     StopCoroutine(typingCoroutine);
                     DIalogueArea.text = fullText;
                     _isTyping = false;
-
-                    yield return null;
                     break;
                 }
                 yield return null;
@@ -275,37 +288,30 @@ public class DialogueManager : MonoBehaviour
             EndImage.SetActive(true);
             yield return null;
 
-            // ✨ 2. 타이핑 종료 후 다음 대화 대기 (튜토리얼 창이 꺼져있을 때만 흐르는 타이머)
-            float dialogueTimer = 0f; // 누적 시간을 담을 변수
-
-            while (dialogueTimer < 3f) // 3초가 채워질 때까지 반복
+            float dialogueTimer = 0f;
+            while (dialogueTimer < 3f)
             {
-                // 튜토리얼 창이 꺼져있을 때만 작동합니다.
-                if (!TutorialManager.instance.TutorialPanel.activeSelf)
+                bool tutorialActive = TutorialManager.instance != null && TutorialManager.instance.TutorialPanel.activeSelf;
+
+                if (!tutorialActive)
                 {
-                    // 시간이 실시간로 누적됩니다. (튜토리얼 창이 열리면 누적이 멈춤)
                     dialogueTimer += Time.deltaTime;
-
-                    // 타이머가 흐르는 도중 플레이어가 넘기기 입력을 한 경우 즉시 대기 종료
-                    if (Keyboard.current?.fKey.wasPressedThisFrame == true ||
-                        Mouse.current?.leftButton.wasPressedThisFrame == true)
-                    {
-                        break;
-                    }
+                    if (IsInputPressedThisFrame) break;
                 }
-
-                yield return null; // 다음 프레임까지 대기
+                yield return null;
             }
 
             yield return null;
             EndImage.SetActive(false);
         }
+
         if (!DialogueSet.isChoiceNode || CurrentDialogueSet.choiceOptions == null || CurrentDialogueSet.choiceOptions.Length == 0)
         {
             StopShowDialogue();
             yield return null;
         }
     }
+
     public float typePitch;
     private IEnumerator TypeText(string text, float delay)
     {
@@ -322,6 +328,7 @@ public class DialogueManager : MonoBehaviour
         }
         _isTyping = false;
     }
+
     [SerializeField]
     public Coroutine _currentDialogueCoroutine;
 
@@ -344,37 +351,24 @@ public class DialogueManager : MonoBehaviour
                 if (CurrentDialogueSet.choiceOptions[index].needCheckConditionForChooseNextDialogue)
                 {
                     if (CurrentDialogueSet.choiceOptions[index].NextDialogueSet.Count > 1)
-                    {
                         nextDialogue = CurrentDialogueSet.choiceOptions[index].GetValidNextDialogue();
-                    }
                     else
-                    {
                         nextDialogue = CurrentDialogueSet.choiceOptions[index].NextDialogueSet[0].dialogueSet;
-                    }
                 }
                 else
                 {
                     if (CurrentDialogueSet.choiceOptions[index].NextDialogueSet.Count > 1)
                     {
-                        nextDialogue =
-                            CurrentDialogueSet.
-                            choiceOptions[index].
-                            NextDialogueSet[UnityEngine.Random.Range(0, CurrentDialogueSet.choiceOptions[index].NextDialogueSet.Count)].
-                            dialogueSet;
+                        nextDialogue = CurrentDialogueSet.choiceOptions[index].NextDialogueSet[UnityEngine.Random.Range(0, CurrentDialogueSet.choiceOptions[index].NextDialogueSet.Count)].dialogueSet;
                     }
                     else
-                    {
                         nextDialogue = CurrentDialogueSet.choiceOptions[index].NextDialogueSet[0].dialogueSet;
-                    }
                 }
             }
             else
                 nextDialogue = CurrentDialogueSet.choiceOptions[index].questOption.NextDialogueSetIfQuestClear;
 
-            if (_currentDialogueCoroutine != null)
-            {
-                StopCoroutine(_currentDialogueCoroutine);
-            }
+            if (_currentDialogueCoroutine != null) StopCoroutine(_currentDialogueCoroutine);
 
             Buttons.SetActive(false);
 
@@ -387,7 +381,12 @@ public class DialogueManager : MonoBehaviour
             }
 
             if (nextDialogue != null)
+            {
+                // 선택지를 누른 후에도 약간의 쿨다운 적용
+                lastInputTime = Time.unscaledTime;
+                inputCooldown = 0.1f;
                 _currentDialogueCoroutine = StartCoroutine(ShowDialogue(nextDialogue, npc));
+            }
             else
                 StopShowDialogue();
         }
@@ -397,58 +396,40 @@ public class DialogueManager : MonoBehaviour
     {
         switch (CurrentDialogueSet.choiceOptions[index].questOption.questType)
         {
-            case QuestType.None:
-                break;
-
+            case QuestType.None: break;
             case QuestType.HasItem:
                 {
                     var questOpt = CurrentDialogueSet.choiceOptions[index].questOption;
-                    if (questOpt == null) break;
-                    if (InventoryManager.Instance == null) break;
-                    if (questOpt.requireItem == null || questOpt.requireItem.Length == 0) break;
+                    if (questOpt == null || InventoryManager.Instance == null || questOpt.requireItem == null) break;
 
                     foreach (var req in questOpt.requireItem)
                     {
-                        if (req == null || req.requireItem == null) continue;
-                        if (!req.isDeleteItem) continue;
+                        if (req == null || req.requireItem == null || !req.isDeleteItem) continue;
 
                         InventoryManager.InventoryType invType = default;
                         string id = null;
 
-                        if (req.requireItem.Weapon != null)
+                        if (req.requireItem.Weapon != null && !string.IsNullOrEmpty(req.requireItem.Weapon.Id))
                         {
-                            if (string.IsNullOrEmpty(req.requireItem.Weapon.Id)) continue;
-                            invType = InventoryManager.InventoryType.Weapon;
-                            id = req.requireItem.Weapon.Id;
+                            invType = InventoryManager.InventoryType.Weapon; id = req.requireItem.Weapon.Id;
                         }
-                        else if (req.requireItem.Armor != null)
+                        else if (req.requireItem.Armor != null && !string.IsNullOrEmpty(req.requireItem.Armor.Id))
                         {
-                            if (string.IsNullOrEmpty(req.requireItem.Armor.Id)) continue;
-                            invType = InventoryManager.InventoryType.Armor;
-                            id = req.requireItem.Armor.Id;
+                            invType = InventoryManager.InventoryType.Armor; id = req.requireItem.Armor.Id;
                         }
-                        else if (req.requireItem.SkillBook != null)
+                        else if (req.requireItem.SkillBook != null && !string.IsNullOrEmpty(req.requireItem.SkillBook.Id))
                         {
-                            if (string.IsNullOrEmpty(req.requireItem.SkillBook.Id)) continue;
-                            invType = InventoryManager.InventoryType.SkillBook;
-                            id = req.requireItem.SkillBook.Id;
+                            invType = InventoryManager.InventoryType.SkillBook; id = req.requireItem.SkillBook.Id;
                         }
-                        else if (req.requireItem.Consumable != null)
+                        else if (req.requireItem.Consumable != null && !string.IsNullOrEmpty(req.requireItem.Consumable.Id))
                         {
-                            if (string.IsNullOrEmpty(req.requireItem.Consumable.Id)) continue;
-                            invType = InventoryManager.InventoryType.Item;
-                            id = req.requireItem.Consumable.Id;
+                            invType = InventoryManager.InventoryType.Item; id = req.requireItem.Consumable.Id;
                         }
-                        else if (req.requireItem.NonConsumable != null)
+                        else if (req.requireItem.NonConsumable != null && !string.IsNullOrEmpty(req.requireItem.NonConsumable.Id))
                         {
-                            if (string.IsNullOrEmpty(req.requireItem.NonConsumable.Id)) continue;
-                            invType = InventoryManager.InventoryType.Item;
-                            id = req.requireItem.NonConsumable.Id;
+                            invType = InventoryManager.InventoryType.Item; id = req.requireItem.NonConsumable.Id;
                         }
-                        else
-                        {
-                            continue;
-                        }
+                        else continue;
 
                         var slot = InventoryManager.Instance.FindItem(invType, id);
                         if (slot != null)
@@ -461,18 +442,6 @@ public class DialogueManager : MonoBehaviour
                 }
                 InventoryManager.Instance.HideItemContextMenu();
                 UIManager.Instance.SyncGameQuickSlots();
-                break;
-
-            case QuestType.KillCount:
-                break;
-
-            case QuestType.MinimumGrade:
-                break;
-
-            case QuestType.MinimumGold:
-                break;
-
-            default:
                 break;
         }
     }
@@ -504,18 +473,9 @@ public class DialogueManager : MonoBehaviour
 
     public void SetFontSize(DialogueSet dialogueSet)
     {
-        if (dialogueSet.Whisper)
-        {
-            DIalogueArea.fontSize = 30;
-        }
-        else if (dialogueSet.Shout)
-        {
-            DIalogueArea.fontSize = 50;
-        }
-        else
-        {
-            DIalogueArea.fontSize = 40;
-        }
+        if (dialogueSet.Whisper) DIalogueArea.fontSize = 30;
+        else if (dialogueSet.Shout) DIalogueArea.fontSize = 50;
+        else DIalogueArea.fontSize = 40;
     }
 
     public void ResetDialogueIndex()
@@ -523,4 +483,3 @@ public class DialogueManager : MonoBehaviour
         DialogueIndex = 0;
     }
 }
-

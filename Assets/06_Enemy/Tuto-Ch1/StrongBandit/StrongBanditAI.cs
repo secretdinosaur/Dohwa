@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 
-[RequireComponent(typeof(SkillSelector))]
 public class StrongBanditAI : EnemyAIBase
 {
     [Header("Start Fight")]
@@ -11,11 +10,13 @@ public class StrongBanditAI : EnemyAIBase
     public float startFightAnimDuration = 2.0f;
 
     [Header("Behavior Tuning")]
-    public float walkApproachFactor = 1.5f;
+    [Range(0f, 100f)] public float moveBeforeAttackChance = 50f;
 
     [Header("Evasion Specific")]
     public float backWalkTriggerFactor = 0.7f;
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
+    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
     private bool lastActionWasBackWalk = false;
 
     [Header("Guard & Counter Specific")]
@@ -29,18 +30,28 @@ public class StrongBanditAI : EnemyAIBase
     public float guardStartupDelay = 0.5f;
     public float postStunGuardDelay = 2.0f;
 
-    private SkillSelector skillSelector;
+    [Header("Jump Counter Specific")]
+    public AnimationCurve jumpCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+    public float jumpHeight = 3f;
+    public float jumpDuration = 0.8f;
+    public float jumpLandingOffset = 1.5f;
+
     private float lastGuardTime = -9999f;
     private bool isStartingFight = false;
     private bool wasStunned = false;
     private float nextAllowedGuardTime = -9999f;
 
+    private bool hasStartedFight = false;
+
     private Action<float> currentAttackCompleteHandler;
+    private UnityEngine.AI.NavMeshAgent agent;
+    private Collider enemyCollider;
 
     protected override void Awake()
     {
         base.Awake();
-        skillSelector = GetComponent<SkillSelector>();
+        agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        enemyCollider = GetComponent<Collider>();
 
         core.OnPlayerDetected += HandlePlayerDetected;
         core.OnStunned += HandleInterruptSpecial;
@@ -62,16 +73,44 @@ public class StrongBanditAI : EnemyAIBase
         }
     }
 
+    private void SnapToGround()
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            Vector3 pos = transform.position;
+            pos.y = hit.position.y;
+            transform.position = pos;
+            if (agent != null && agent.enabled) agent.nextPosition = pos;
+        }
+    }
+
     private void HandleInterruptSpecial()
     {
         isStartingFight = false;
         core.isGuarding = false;
         wasStunned = true;
+
+        if (enemyCollider != null) enemyCollider.enabled = true;
+
+        if (agent != null && !agent.enabled && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+        }
     }
 
     private void HandleRevived()
     {
+        if (agent != null && !agent.enabled)
+        {
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
+        }
+
+        if (enemyCollider != null) enemyCollider.enabled = true;
+
         isStartingFight = false;
+        hasStartedFight = false;
         core.isGuarding = false;
         wasStunned = false;
         if (FightWall != null) FightWall.SetActive(false);
@@ -80,6 +119,9 @@ public class StrongBanditAI : EnemyAIBase
 
     private void HandlePlayerDetected()
     {
+        if (hasStartedFight) return;
+        hasStartedFight = true;
+
         StopActionRoutine();
         actionCoroutine = StartCoroutine(StartFightSequence());
     }
@@ -105,10 +147,10 @@ public class StrongBanditAI : EnemyAIBase
         actionCoroutine = null;
     }
 
-    protected override void HandleBehaviorLogic(float distToLastPos)
+    protected override void HandleBehaviorLogic(float dist)
     {
-        if (isAttacking || isStartingFight || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk) return;
         if (core.IsDead) return;
+        if (isAttacking || isStartingFight || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
 
         if (wasStunned)
         {
@@ -116,17 +158,17 @@ public class StrongBanditAI : EnemyAIBase
             nextAllowedGuardTime = Time.time + postStunGuardDelay;
         }
 
-        if (isMemorizingPlayer)
+        if (isDetectedPlayer || (core.currentState == EnemyState.Chase && dist <= chaseRange))
         {
             StopActionRoutine();
 
             bool canGuard = guardSkill != null
-                            && Time.time >= lastGuardTime + guardCooldown
-                            && Time.time >= nextAllowedGuardTime;
+                          && Time.time >= lastGuardTime + guardCooldown
+                          && Time.time >= nextAllowedGuardTime;
 
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
-            if (canGuard && hasMpForGuard && distToLastPos <= maxGuardDistance)
+            if (canGuard && hasMpForGuard && dist <= maxGuardDistance)
             {
                 if (UnityEngine.Random.Range(0f, 100f) < guardChancePerSec * Time.deltaTime)
                 {
@@ -138,47 +180,67 @@ public class StrongBanditAI : EnemyAIBase
 
             if (selectedSkill == null)
             {
-                selectedSkill = skillSelector.GetNextSkill(distToLastPos);
+                selectedSkill = core.skillSelector.GetNextSkill(dist);
             }
 
             if (selectedSkill == null)
             {
-                if (distToLastPos > 5f)
-                {
-                    UpdateChaseTarget();
-                }
-                else
-                {
-                    float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
-                }
+                UpdateChaseTarget();
                 return;
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             float backWalkRange = executeRange * backWalkTriggerFactor;
+            float guardTriggerRange = executeRange * guardTriggerFactor;
 
-            bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
+            bool canAttackGlobal = Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo;
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
 
-            if (distToLastPos <= executeRange)
+            if (dist < guardTriggerRange && canGuard && hasMpForGuard && UnityEngine.Random.value <= guardProbability && !core.skillSelector.HasPendingCombo)
             {
-                float guardTriggerRange = executeRange * guardTriggerFactor;
+                lastGuardTime = Time.time;
+                actionCoroutine = StartCoroutine(GuardSequence(guardSkill));
+                return;
+            }
 
-                if (distToLastPos < guardTriggerRange && canGuard && hasMpForGuard && UnityEngine.Random.value <= guardProbability && !skillSelector.HasPendingCombo)
+            if (isWithinAttackBox)
+            {
+                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
                 {
-                    lastGuardTime = Time.time;
-                    actionCoroutine = StartCoroutine(GuardSequence(guardSkill));
-                    return;
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                    }
+                    lastActionWasBackWalk = true;
                 }
-
-                if (distToLastPos < backWalkRange && !skillSelector.HasPendingCombo)
+                else if (canAttackGlobal && hasEnoughMP)
+                {
+                    actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
+                    lastActionWasBackWalk = false;
+                }
+                else
+                {
+                    float rand = UnityEngine.Random.Range(0f, 100f);
+                    if (rand < 60f)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    }
+                    lastActionWasBackWalk = false;
+                }
+            }
+            else
+            {
+                if (dist < backWalkRange)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
                     {
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), 1));
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                         lastActionWasBackWalk = false;
-                        return;
                     }
                     else
                     {
@@ -186,56 +248,10 @@ public class StrongBanditAI : EnemyAIBase
                         lastActionWasBackWalk = true;
                     }
                 }
-                else if (canAttackGlobal && hasEnoughMP)
-                {
-                    // 💡 공격이 가능한 상황에서도 20% 확률로 섣불리 공격하지 않고 간보기 (스텝, 게걸음 섞기)
-                    if (UnityEngine.Random.Range(0f, 100f) < 20f && !skillSelector.HasPendingCombo)
-                    {
-                        if (UnityEngine.Random.value < 0.5f)
-                        {
-                            actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                            lastActionWasBackWalk = true;
-                        }
-                        else
-                        {
-                            float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                            actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
-                            lastActionWasBackWalk = false;
-                        }
-                    }
-                    else
-                    {
-                        actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
-                        lastActionWasBackWalk = false;
-                    }
-                }
                 else
                 {
-                    float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
+                    UpdateChaseTarget();
                     lastActionWasBackWalk = false;
-                }
-            }
-            else
-            {
-                if (canAttackGlobal && hasEnoughMP)
-                {
-                    if (distToLastPos <= executeRange * walkApproachFactor)
-                        UpdateWalkApproachTarget();
-                    else
-                        UpdateChaseTarget();
-                }
-                else
-                {
-                    if (distToLastPos > executeRange * walkApproachFactor)
-                    {
-                        UpdateChaseTarget();
-                    }
-                    else
-                    {
-                        float runSpeed = UnityEngine.Random.value > 0.5f ? 2f : 1f;
-                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration), runSpeed));
-                    }
                 }
             }
         }
@@ -248,6 +264,8 @@ public class StrongBanditAI : EnemyAIBase
 
     public void TriggerCounter()
     {
+        if (core != null && core.isTakingDoT) return;
+
         if (counterSkill == null) return;
 
         core.isGuarding = false;
@@ -256,7 +274,7 @@ public class StrongBanditAI : EnemyAIBase
         Player.Instance.PlayerAttack.CancelCurrentSkill();
         ClearAttackHandler();
         core.CmdCancelAttack?.Invoke();
-        skillSelector.isInstantComboTriggered = false;
+        core.skillSelector.isInstantComboTriggered = false;
 
         actionCoroutine = StartCoroutine(CounterSequence(counterSkill));
     }
@@ -280,7 +298,7 @@ public class StrongBanditAI : EnemyAIBase
         bool actionFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
-            nextAttackTime = Time.time + skillSelector.GetLastSkillDelay();
+            nextAttackTime = Time.time + core.skillSelector.GetLastSkillDelay();
             actionFinished = true;
         };
 
@@ -313,26 +331,85 @@ public class StrongBanditAI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
 
+        if (agent != null) agent.enabled = false;
+        if (enemyCollider != null) enemyCollider.enabled = false;
+
         bool attackFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
-            nextAttackTime = Time.time + skillSelector.GetLastSkillDelay();
+            nextAttackTime = Time.time + core.skillSelector.GetLastSkillDelay();
             attackFinished = true;
         };
 
         core.OnAttackCompleted += currentAttackCompleteHandler;
-        core.CmdPerformAttack?.Invoke(skill);
+        core.CmdPerformInstantAttack?.Invoke(skill);
 
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead);
+        float prepTime = 0f;
+        while (prepTime < 1.72f)
+        {
+            if (core.skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
+            prepTime += Time.deltaTime;
+            yield return null;
+        }
+
+        Vector3 startPos = transform.position;
+        Vector3 playerPos = Player.Instance.transform.position;
+
+        Vector3 dirToPlayer = (playerPos - startPos).normalized;
+        dirToPlayer.y = 0f;
+
+        Vector3 targetPos = playerPos - (dirToPlayer * jumpLandingOffset);
+        targetPos.y = startPos.y;
+
+        float elapsed = 0f;
+        float moveDuration = jumpDuration * (0.7916f - 0.3f);
+
+        while (elapsed < moveDuration)
+        {
+            if (core.skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
+
+            float t = elapsed / moveDuration;
+            Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
+            currentPos.y += jumpCurve.Evaluate(t) * jumpHeight;
+            transform.position = currentPos;
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        if (!core.skillSelector.isInstantComboTriggered && !core.IsDead && core.currentState != EnemyState.Stun)
+        {
+            transform.position = targetPos;
+        }
+
+        if (enemyCollider != null) enemyCollider.enabled = true;
+
+        yield return new WaitUntil(() => attackFinished || core.skillSelector.isInstantComboTriggered || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead);
 
         ClearAttackHandler();
 
-        if (skillSelector.isInstantComboTriggered)
+        if (core.skillSelector.isInstantComboTriggered)
         {
-            skillSelector.isInstantComboTriggered = false;
+            core.skillSelector.isInstantComboTriggered = false;
+            core.CmdCancelAttack?.Invoke();
         }
 
+        if (agent != null && !core.IsDead)
+        {
+            SnapToGround();
+            agent.enabled = true;
+            core.CmdTrySnapToNavMesh?.Invoke();
+        }
+
+        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
         core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !core.skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+            lastActionWasBackWalk = true;
+        }
+
         ChainNextAttackOrIdle();
     }
 
@@ -345,25 +422,47 @@ public class StrongBanditAI : EnemyAIBase
         bool attackFinished = false;
 
         currentAttackCompleteHandler = (nextTime) => {
-            float delay = skillSelector.GetLastSkillDelay();
-            nextAttackTime = Time.time + delay;
+            nextAttackTime = Time.time + core.skillSelector.GetLastSkillDelay();
             attackFinished = true;
         };
 
         core.OnAttackCompleted += currentAttackCompleteHandler;
         core.CmdPerformAttack?.Invoke(skill);
 
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead);
+        yield return new WaitUntil(() => attackFinished || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead || core.skillSelector.isInstantComboTriggered);
 
-        ClearAttackHandler();
-
-        if (skillSelector.isInstantComboTriggered)
+        if (currentAttackCompleteHandler != null)
         {
-            skillSelector.isInstantComboTriggered = false;
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
+        }
+
+        core.StopEffects(skill.name);
+
+        if (core.skillSelector.isInstantComboTriggered)
+        {
+            core.skillSelector.isInstantComboTriggered = false;
             core.CmdCancelAttack?.Invoke();
         }
 
+        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
         core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && !core.skillSelector.HasPendingCombo)
+        {
+            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+            lastActionWasBackWalk = true;
+        }
+
         ChainNextAttackOrIdle();
+    }
+
+    protected void OnDisable()
+    {
+        if (currentAttackCompleteHandler != null && core != null)
+        {
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
+        }
     }
 }

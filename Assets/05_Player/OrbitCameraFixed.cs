@@ -1,21 +1,27 @@
 ﻿using UnityEngine;
 using Unity.Cinemachine;
 using System.Collections;
+using System.Collections.Generic; // 💡 List 사용을 위해 필요합니다.
 
 public class CameraController : MonoBehaviour
 {
     public CinemachineCamera freeLookCam;
     public CinemachineCamera lockOnCam;
     public CinemachineCamera cutsceneCam;
+    public CinemachineCamera knockdownCam;
 
     public CinemachineTargetGroup targetGroup;
     public CinemachineTargetGroup playerTargetGroup;
+    public CinemachineTargetGroup knockdownTargetGroup;
 
     public Transform playerTransform;
     public int lockOnTargetIndex = 1;
 
     public float customLockOnBlendTime = 0.5f;
     public float customLockOffBlendTime = 0.5f;
+
+    public float manualYawOffset = 0f;
+    public float manualPitchOffset = 0f;
 
     Transform LastTarget;
     bool isLockedOn = false;
@@ -28,6 +34,34 @@ public class CameraController : MonoBehaviour
     {
         Instance = this;
         cinemachineBrain = Camera.main.GetComponent<CinemachineBrain>();
+    }
+
+    private void Start()
+    {
+        if (knockdownTargetGroup != null)
+        {
+            // 💡 수정됨: 배열(Array) 대신 리스트(List)를 사용하여 타겟 슬롯을 확장합니다.
+            if (knockdownTargetGroup.Targets.Count < 2)
+            {
+                var newTargets = new List<CinemachineTargetGroup.Target>(knockdownTargetGroup.Targets);
+                while (newTargets.Count < 2)
+                {
+                    newTargets.Add(new CinemachineTargetGroup.Target());
+                }
+                knockdownTargetGroup.Targets = newTargets;
+            }
+
+            if (playerTransform != null)
+            {
+                var targets = knockdownTargetGroup.Targets;
+                var playerTarget = targets[0]; // Struct 복사
+                playerTarget.Object = playerTransform;
+                playerTarget.Weight = 1f;
+                playerTarget.Radius = 1f;
+                targets[0] = playerTarget; // 다시 덮어씌움
+                knockdownTargetGroup.Targets = targets;
+            }
+        }
     }
 
     public void SetCinematicCamera(bool isActive, CinemachineCamera specificCam = null)
@@ -59,6 +93,25 @@ public class CameraController : MonoBehaviour
                 lockOnCam.Priority = 5;
                 freeLookCam.Priority = 20;
             }
+        }
+    }
+
+    public void SetKnockdownCamera(bool isActive)
+    {
+        if (knockdownCam == null) return;
+
+        if (isActive)
+        {
+            if (knockdownTargetGroup != null)
+            {
+                knockdownCam.LookAt = knockdownTargetGroup.transform;
+            }
+
+            knockdownCam.Priority = 25;
+        }
+        else
+        {
+            knockdownCam.Priority = 0;
         }
     }
 
@@ -103,6 +156,7 @@ public class CameraController : MonoBehaviour
             finalTarget = enemyCore.cameraTarget;
         }
 
+        // 1. 기본 타겟 그룹 락온 등록
         var targets = targetGroup.Targets;
         var targetInfo = targets[lockOnTargetIndex];
         targetInfo.Object = finalTarget;
@@ -111,12 +165,22 @@ public class CameraController : MonoBehaviour
         targets[lockOnTargetIndex] = targetInfo;
         targetGroup.Targets = targets;
 
+        // 2. 넉다운 타겟 그룹에도 동일하게 락온 등록
+        if (knockdownTargetGroup != null && lockOnTargetIndex < knockdownTargetGroup.Targets.Count)
+        {
+            var kdTargets = knockdownTargetGroup.Targets;
+            var kdTargetInfo = kdTargets[lockOnTargetIndex];
+            kdTargetInfo.Object = finalTarget;
+            kdTargetInfo.Weight = 0.04f;
+            kdTargetInfo.Radius = 0.2f;
+            kdTargets[lockOnTargetIndex] = kdTargetInfo;
+            knockdownTargetGroup.Targets = kdTargets;
+        }
+
         LastTarget = enemyTransform;
         isLockedOn = true;
 
         lockOnCam.LookAt = finalTarget;
-
-        // 우선순위 변경 전 락온 블렌드 타임 적용
         if (cinemachineBrain != null)
         {
             var blend = cinemachineBrain.DefaultBlend;
@@ -132,6 +196,7 @@ public class CameraController : MonoBehaviour
     {
         isLockedOn = false;
 
+        // 1. 기본 타겟 그룹 락온 해제
         var targets = targetGroup.Targets;
         var targetInfo = targets[lockOnTargetIndex];
         targetInfo.Object = null;
@@ -139,15 +204,35 @@ public class CameraController : MonoBehaviour
         targets[lockOnTargetIndex] = targetInfo;
         targetGroup.Targets = targets;
 
-        var orbitalFollow = freeLookCam.GetComponent<CinemachineOrbitalFollow>();
-        if (orbitalFollow != null)
+        // 2. 넉다운 타겟 그룹 락온 해제
+        if (knockdownTargetGroup != null && lockOnTargetIndex < knockdownTargetGroup.Targets.Count)
         {
-            Vector3 camAngles = Camera.main.transform.eulerAngles;
-            orbitalFollow.HorizontalAxis.Value = camAngles.y + 180f;
-            orbitalFollow.VerticalAxis.Value = camAngles.x;
+            var kdTargets = knockdownTargetGroup.Targets;
+            var kdTargetInfo = kdTargets[lockOnTargetIndex];
+            kdTargetInfo.Object = null;
+            kdTargetInfo.Weight = 0f;
+            kdTargets[lockOnTargetIndex] = kdTargetInfo;
+            knockdownTargetGroup.Targets = kdTargets;
         }
 
-        // 우선순위 변경 전 락오프 블렌드 타임 적용
+        var orbitalFollow = freeLookCam.GetComponent<CinemachineOrbitalFollow>();
+        if (orbitalFollow != null && playerTargetGroup != null)
+        {
+            Vector3 camEuler = Camera.main.transform.eulerAngles;
+            Vector3 playerEuler = playerTargetGroup.transform.eulerAngles;
+
+            float targetYaw = camEuler.y - playerEuler.y + manualYawOffset;
+
+            float targetPitch = camEuler.x;
+            if (targetPitch > 180f) targetPitch -= 360f;
+            targetPitch += manualPitchOffset;
+
+            orbitalFollow.HorizontalAxis.Value = targetYaw;
+            orbitalFollow.VerticalAxis.Value = targetPitch;
+
+            freeLookCam.PreviousStateIsValid = false;
+        }
+
         if (cinemachineBrain != null)
         {
             var blend = cinemachineBrain.DefaultBlend;
@@ -222,6 +307,4 @@ public class CameraController : MonoBehaviour
         }
         playerTargetGroup.Targets = targets;
     }
-
-    private Vector3 originalPos;
 }

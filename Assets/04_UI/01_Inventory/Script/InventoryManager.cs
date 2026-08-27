@@ -35,7 +35,8 @@ public class InventoryManager : MonoBehaviour
         Setting,
         SettingGameSub,
         SettingKeySub,
-        SettingCreditSub
+        SettingCreditSub,
+        SettingTutorialSub // 추가됨
     }
 
     public static InventoryManager Instance;
@@ -80,20 +81,23 @@ public class InventoryManager : MonoBehaviour
     public GameObject Book;
     public GameObject BookInfo;
     public GameObject TreeInfo;
-    public GameObject InformationTab;
+    public GameObject InformationTab; // 복구됨
     public GameObject GradeTab;
+    public GameObject MouseItemInfoBackground;
     public GameObject MouseItemInfo;
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
+    public GameObject CantDeleteMessagePanel;
 
     [Header("Setting UI")]
     public GameObject SettingTab;
     public GameObject SettingGamePanel;
     public GameObject SettingKeyPanel;
     public GameObject SettingCreditPanel;
+    public GameObject SettingTutorialPanel; // 추가됨
 
     public Button EquipmentButton;
-    public Button InfoButton;
+    public Button InfoButton; // 복구됨
     public Button GradeButton;
     public Button SkillBookButton;
     public Button ItemButton;
@@ -105,6 +109,8 @@ public class InventoryManager : MonoBehaviour
     public Button SettingGameButton;
     public Button SettingKeyButton;
     public Button SettingCreditButton;
+    public Button SettingTutorialButton; // 추가됨
+
     public GameObject TitlePanel;
     public GameObject QuitPanel;
     public InventorySlot[] QuickSlots;
@@ -640,6 +646,7 @@ public class InventoryManager : MonoBehaviour
 
     public void ShowItemTooltip(InventoryItem item)
     {
+        if (isItemEmpty(item)) return;
         if (item.itemType == InventoryType.Weapon)
         {
             NormalItemInfoPanel.ItemIcon.sprite = item.weapon.icon;
@@ -742,23 +749,84 @@ public class InventoryManager : MonoBehaviour
                 NormalItemInfoPanel.EffectDescText.text = "";
                 NormalItemInfoPanel.EffectIcon.enabled = false;
             }
-
         }
-        InventorySlot Slot = item.GetComponentInParent<InventorySlot>();
-        float scaleFactor = InventoryBG.GetComponentInParent<Canvas>().scaleFactor;
+        if (item.itemType == InventoryType.SkillBook)
+        {
+            MouseItemInfoBackground.SetActive(false);
 
-        RectTransform infoRect = NormalItemInfoPanel.GetComponent<RectTransform>();
+            NormalItemInfoPanel.ItemIcon.sprite = item.skillBook.icon;
+            NormalItemInfoPanel.ItemNameText.text = item.skillBook.skillBookName;
+            NormalItemInfoPanel.ItemDescText.text = item.skillBook.skillBookItemDesc;
 
-        float syncPivotY = Slot.CalculatedPivotY;
-        infoRect.pivot = new Vector2(0f, syncPivotY);
+            System.Text.StringBuilder effectBuilder = new System.Text.StringBuilder();
 
-        NormalItemInfoPanel.transform.position = Slot.transform.position + (Slot.TooltipOffset * scaleFactor);
-        NormalItemInfoPanel.gameObject.SetActive(true);
+            if (item.skillBook.skillTree != null)
+            {
+                bool isB0 = item.skillBook.Id == "4a9a5dcc-df4c-4f47-940d-04d12d054268";
+                int unlockedCount = 0;
+
+                if (isB0)
+                {
+                    foreach (var node in item.skillBook.skillTree)
+                    {
+                        if (node.unlocked) unlockedCount++;
+                    }
+                }
+
+                for (int i = 0; i < item.skillBook.skillTree.Length; i++)
+                {
+                    var node = item.skillBook.skillTree[i];
+                    string alphaTag = node.unlocked ? "#FF" : "#80";
+
+                    string displayName = node.GetNodeName();
+
+                    if (isB0 && i >= unlockedCount)
+                    {
+                        displayName = "???";
+                    }
+
+                    effectBuilder.AppendLine($"<alpha={alphaTag}>{displayName}");
+                }
+            }
+
+            NormalItemInfoPanel.ItemEffectDescText.text = effectBuilder.ToString();
+            NormalItemInfoPanel.EffectNameText.text = "";
+            NormalItemInfoPanel.EffectDescText.text = "";
+            NormalItemInfoPanel.EffectIcon.enabled = false;
+
+            InventorySlot Slot = item.GetComponentInParent<InventorySlot>();
+            float scaleFactor = InventoryBG.GetComponentInParent<Canvas>().scaleFactor;
+
+            RectTransform infoRect = NormalItemInfoPanel.GetComponent<RectTransform>();
+
+            float syncPivotY = Slot.CalculatedPivotY;
+            infoRect.pivot = new Vector2(0f, syncPivotY);
+            NormalItemInfoPanel.GetComponent<Image>().color =
+                new Color(NormalItemInfoPanel.GetComponent<Image>().color.r,
+                          NormalItemInfoPanel.GetComponent<Image>().color.g,
+                          NormalItemInfoPanel.GetComponent<Image>().color.b,
+                          1f);
+            NormalItemInfoPanel.transform.position = Slot.transform.position + (Slot.TooltipOffset * scaleFactor);
+            NormalItemInfoPanel.gameObject.SetActive(true);
+        }
+        else
+        {
+            NormalItemInfoPanel.GetComponent<Image>().color =
+                new Color(NormalItemInfoPanel.GetComponent<Image>().color.r,
+                          NormalItemInfoPanel.GetComponent<Image>().color.g,
+                          NormalItemInfoPanel.GetComponent<Image>().color.b,
+                          0f);
+            NormalItemInfoPanel.gameObject.SetActive(true);
+            NormalItemInfoPanel.GetComponent<RectTransform>().pivot = new Vector2(0, 0.8f);
+            NormalItemInfoPanel.GetComponent<RectTransform>().anchoredPosition = new Vector3(-310, 234, 0);
+            MouseItemInfoBackground.SetActive(true);
+        }
     }
 
     public void HideItemTooltip()
     {
         NormalItemInfoPanel.gameObject.SetActive(false);
+        MouseItemInfoBackground.SetActive(false);
     }
 
     public InventorySlot selectedItem;
@@ -820,6 +888,7 @@ public class InventoryManager : MonoBehaviour
             }
         }
     }
+
     private void HideAllTabs()
     {
         if (Inventory != null) Inventory.SetActive(false);
@@ -828,7 +897,6 @@ public class InventoryManager : MonoBehaviour
         if (SkillBookInventory != null) SkillBookInventory.SetActive(false);
 
         if (ItemInventory != null) ItemInventory.SetActive(false);
-
 
         if (WeaponInventory != null) WeaponInventory.SetActive(false);
         if (ArmorInventory != null) ArmorInventory.SetActive(false);
@@ -843,9 +911,13 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(false);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(false);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(false);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(false); // 추가됨
+
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.SetActive(false); // 추가됨
+        if (MouseItemInfoBackground != null) MouseItemInfoBackground.SetActive(false);
         MouseItemInfo.SetActive(false);
         PeachTree.Instance.gameObject.SetActive(false);
         GradeManager.Instance.gradePanel.DisableUI(0f);
@@ -867,6 +939,7 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
         if (SettingKeyButton != null) SettingKeyButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
         if (SettingCreditButton != null) SettingCreditButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
+        if (SettingTutorialButton != null) SettingTutorialButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f); // 추가됨
         foreach (Camera cam in cameras)
         {
             if (cam != null)
@@ -876,10 +949,12 @@ public class InventoryManager : MonoBehaviour
         TitlePanel.gameObject.SetActive(false);
         SettingTab.gameObject.SetActive(false);
         QuickSlot.SetActive(false);
+        CantDeleteMessagePanel.SetActive(false);
         UIManager.Instance.GameQuickSlot.SetActive(false);
         UIManager.Instance.InteractPanel.SetActive(false);
 
         GradeManager.Instance.gradePanel.gameObject.SetActive(false);
+
         Destroy(LastSkillTree);
     }
 
@@ -1008,6 +1083,7 @@ public class InventoryManager : MonoBehaviour
         if (ArmorInventory != null) ArmorInventory.SetActive(true);
         if (EquippedArmorSlot != null) EquippedArmorSlot.gameObject.SetActive(true);
         if (EquipItemInfoPanel != null) EquipItemInfoPanel.gameObject.SetActive(true);
+
         EquipmentButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         ArmorButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
         SetInfoPanel(1);
@@ -1025,6 +1101,7 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
 
@@ -1043,12 +1120,14 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingManager.Instance.OnOpenSettings();
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(true);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingGameButton != null) SettingGameButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
     }
@@ -1065,12 +1144,14 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingManager.Instance.OnOpenSettings();
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(true);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingKeyButton != null) SettingKeyButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
@@ -1088,13 +1169,39 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(true);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingCreditButton != null) SettingCreditButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
+    }
+
+    // 새로 추가됨
+    public void OnClickSettingTutorialSubTab()
+    {
+        if (currentTab == TabType.SettingTutorialSub) return;
+
+        HideAllTabs();
+        currentTab = TabType.SettingTutorialSub;
+        SetInventoryBackground(5);
+
+        SettingTab.gameObject.SetActive(true);
+        if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
+        if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
+        if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true);
+
+        if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
+        if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
+        if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(true);
+
+        SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
+        if (SettingTutorialButton != null) SettingTutorialButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
     }
 
     public void ResetTabState()
@@ -1178,5 +1285,16 @@ public class InventoryManager : MonoBehaviour
                 slot.item.skillBook.CheckAndProcessAutoUnlocks();
             }
         }
+    }
+
+    public bool isItemEmpty(InventoryItem item)
+    {
+        if (item.weapon == null &&
+            item.armor == null &&
+            item.skillBook == null &&
+            item.consumable == null &&
+            item.nonConsumable == null)
+            return true;
+        return false;
     }
 }

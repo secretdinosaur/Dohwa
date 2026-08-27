@@ -30,6 +30,11 @@ public abstract class EnemyAIBase : MonoBehaviour
     public float targetUpdateInterval = 0.2f;
     public float firstDetectionDelay = 1.0f;
 
+    [Header("Predictive Chase (강강술래 방지)")]
+    public float maxPredictionTime = 0.7f;
+    protected Vector3 prevPlayerPos;
+    protected Vector3 playerVelocity;
+
     protected EnemyCore core;
     public bool isDetectedPlayer = false;
     public bool isMemorizingPlayer = false;
@@ -126,6 +131,13 @@ public abstract class EnemyAIBase : MonoBehaviour
             return;
         }
 
+        if (prevPlayerPos == Vector3.zero) prevPlayerPos = Player.Instance.transform.position;
+        playerVelocity = (Player.Instance.transform.position - prevPlayerPos) / Time.deltaTime;
+
+        if (playerVelocity.magnitude > 20f) playerVelocity = playerVelocity.normalized * 20f;
+
+        prevPlayerPos = Player.Instance.transform.position;
+
         float sqrDistToPlayer = (Player.Instance.transform.position - transform.position).sqrMagnitude;
         float cullSqrDist = disableLogicDistance * disableLogicDistance;
 
@@ -182,11 +194,11 @@ public abstract class EnemyAIBase : MonoBehaviour
         else
         {
             isDetectedPlayer = false;
+            core.SetPlayerDetection(false);
 
             if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
             {
                 isMemorizingPlayer = false;
-                core.SetPlayerDetection(false);
             }
         }
 
@@ -265,6 +277,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         }
     }
 
+    // 💡 수정됨: 뒤로 걷기 시 어는 버그 해결
     public IEnumerator BackWalkRoutine(float distance)
     {
         core.ChangeState(EnemyState.BackWalk);
@@ -274,23 +287,40 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         float movedDistance = 0f;
         float elapsedDuration = 0f;
-        Vector3 startPos = transform.position;
 
         while (movedDistance < distance && elapsedDuration < backWalkMaxDuration)
         {
             elapsedDuration += Time.deltaTime;
             Vector3 backDir = (-transform.forward).normalized;
-
             float step = core.BaseMovementSpeed * backWalkSpeedMultiplier * Time.deltaTime;
 
-            if (!Physics.SphereCast(transform.position + Vector3.up, 0.3f, backDir, out _, step, wallLayer))
+            bool isBlocked = false;
+
+            // 1. 내비메시 영역을 벗어나는지 체크
+            if (NavMesh.Raycast(transform.position, transform.position + backDir * 0.5f, out NavMeshHit navHit, NavMesh.AllAreas))
+            {
+                isBlocked = true;
+            }
+            // 2. 물리적 벽인지 체크 (자기 자신을 때리지 않도록 시작점을 살짝 뒤로 뺌)
+            else if (Physics.SphereCast(transform.position + Vector3.up * 0.5f + backDir * 0.3f, 0.2f, backDir, out RaycastHit hit, 0.2f, wallLayer))
+            {
+                // 법선(normal.y)이 평탄하면 바닥으로 간주하여 무시
+                if (hit.normal.y < 0.5f) isBlocked = true;
+            }
+
+            if (!isBlocked)
             {
                 core.CmdMoveDirection?.Invoke(backDir, backWalkSpeedMultiplier);
                 movedDistance += step;
             }
             else
             {
-                break;
+                break; // 막혔으면 뒤로 걷기 중단
+            }
+
+            if (Player.Instance != null)
+            {
+                core.CmdLookAt?.Invoke(Player.Instance.transform.position);
             }
 
             yield return null;
@@ -330,7 +360,17 @@ public abstract class EnemyAIBase : MonoBehaviour
         if (Time.time >= nextTargetUpdateTime)
         {
             nextTargetUpdateTime = Time.time + targetUpdateInterval;
-            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, chaseSpeedMultiplier);
+            Vector3 targetPos = lastKnownPlayerPos;
+
+            if (playerVelocity.sqrMagnitude > 1f)
+            {
+                Vector3 flatVelocity = new Vector3(playerVelocity.x, 0f, playerVelocity.z);
+                float dist = Vector3.Distance(transform.position, targetPos);
+                float predictionTime = Mathf.Clamp(dist / (core.BaseMovementSpeed * chaseSpeedMultiplier), 0f, maxPredictionTime);
+                targetPos += flatVelocity * predictionTime;
+            }
+
+            core.CmdMoveTo?.Invoke(targetPos, chaseSpeedMultiplier);
         }
     }
 
@@ -352,6 +392,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         return WalkStrafeRoutine(duration, run);
     }
 
+    // 💡 수정됨: 게걸음(Strafe) 시 어는 버그 해결
     protected IEnumerator WalkStrafeRoutine(float duration, float run)
     {
         core.ChangeState(EnemyState.CooldownWalk);
@@ -360,11 +401,14 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         float elapsed = 0f;
         float dirSign = UnityEngine.Random.value > 0.5f ? 1f : -1f;
+        float flipCooldown = 0f; // ★ 덜덜거림 방지용 쿨다운
 
         core.SetMoveAnimations(dirSign, 0f, run);
 
         while (elapsed < duration)
         {
+            if (flipCooldown > 0f) flipCooldown -= Time.deltaTime;
+
             if (Player.Instance != null)
             {
                 Vector3 dirToPlayer = (Player.Instance.transform.position - transform.position).normalized;
@@ -374,18 +418,36 @@ public abstract class EnemyAIBase : MonoBehaviour
                 core.CmdLookAt?.Invoke(transform.position + lookDir);
 
                 Vector3 orbitDir = Vector3.Cross(Vector3.up, dirToPlayer).normalized * dirSign;
+                float SpeedMultiplier = run >= 1.5f ? chaseSpeedMultiplier * 0.8f : strafeSpeedMultiplier;
 
-                float SpeedMultiplier = run >= 1.5f ? chaseSpeedMultiplier * 0.7f : strafeSpeedMultiplier;
-                float step = core.BaseMovementSpeed * SpeedMultiplier * Time.deltaTime;
+                bool isBlocked = false;
 
-                if (!Physics.SphereCast(transform.position + Vector3.up, 0.3f, orbitDir, out _, step, wallLayer))
+                // 쿨다운이 없을 때만 벽 검사 수행
+                if (flipCooldown <= 0f)
+                {
+                    // 1. 내비메시 영역을 벗어나는지 체크
+                    if (NavMesh.Raycast(transform.position, transform.position + orbitDir * 0.5f, out NavMeshHit navHit, NavMesh.AllAreas))
+                    {
+                        isBlocked = true;
+                    }
+                    // 2. 물리적 벽인지 체크 (자기 자신을 때리지 않도록 시작점을 살짝 앞/위로 뺌)
+                    else if (Physics.SphereCast(transform.position + Vector3.up * 0.5f + orbitDir * 0.3f, 0.2f, orbitDir, out RaycastHit hit, 0.2f, wallLayer))
+                    {
+                        if (hit.normal.y < 0.5f) isBlocked = true;
+                    }
+                }
+
+                // 막히지 않았거나 방금 막 방향을 꺾었을 경우(쿨다운 중) 해당 방향으로 이동
+                if (!isBlocked || flipCooldown > 0f)
                 {
                     core.CmdMoveDirection?.Invoke(orbitDir, SpeedMultiplier);
                 }
                 else
                 {
+                    // 막혔을 경우 방향을 전환하고 쿨다운 0.5초 부여 (무한 덜덜거림 방지)
                     dirSign *= -1f;
                     core.SetMoveAnimations(dirSign, 0f, run);
+                    flipCooldown = 0.5f;
                 }
             }
 
@@ -451,27 +513,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         return Vector3.Distance(transform.position, Player.Instance.transform.position) <= 2.5f * scale;
     }
-    protected float GetSkillOptimalDistance(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            return Mathf.Abs(m.hitDataList[0].centerOffset.z);
-        }
-        else if (skill is Skill_Range r)
-        {
-            return r.range * 0.8f;
-        }
-        return 2.5f;
-    }
 
-    protected float GetSkillBoxZExtents(SkillBase skill)
-    {
-        if (skill is Skill_Melee m && m.hitDataList != null && m.hitDataList.Count > 0)
-        {
-            return m.hitDataList[0].boxSize.z / 2f;
-        }
-        return 1.0f;
-    }
     protected void CancelCurrentSkillAction()
     {
         core.animator.CrossFade("Idle", 0.25f);

@@ -161,6 +161,7 @@ GameObject:
   - component: {fileID: 946067793457482148}
   - component: {fileID: 6651476408382776519}
   - component: {fileID: 7814350501004818403}
+  - component: {fileID: 4079594717089338931}
   m_Layer: 5
   m_Name: SkillBookName
   m_TagString: Untagged
@@ -217,8 +218,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Skill Book Name
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
-  m_sharedMaterial: {fileID: 7826149323827114221, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 103c0b7122116d247b09b942b5667e7e, type: 2}
+  m_sharedMaterial: {fileID: 7826149323827114221, guid: 103c0b7122116d247b09b942b5667e7e, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -287,6 +288,27 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4079594717089338931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671711931571139974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db12964eddf617140a6876a3912d5607, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedTMPFont
+  targetText: {fileID: 7814350501004818403}
+  localizedFont:
+    m_TableReference:
+      m_TableCollectionName: GUID:ef3e0bc7cbec4cf409ba022dffb531aa
+    m_TableEntryReference:
+      m_KeyId: 10945363968
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
 --- !u!1 &5222226775712623489
 GameObject:
   m_ObjectHideFlags: 0

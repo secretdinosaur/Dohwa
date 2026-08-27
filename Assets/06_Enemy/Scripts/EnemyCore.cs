@@ -7,9 +7,7 @@ using UnityEngine;
 
 public enum EnemyState { Idle, Chase, Attack, Stun, Dead, BackWalk, CooldownWalk }
 
-[RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(SkillSelector))]
-public class EnemyCore : MonoBehaviour, IDamageable
+public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 {
     public EnemyState currentState = EnemyState.Idle;
     [HideInInspector] public Transform cameraTarget;
@@ -40,6 +38,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Func<Vector3> QueryOriginalPosition;
 
     public Action<SkillBase> CmdPerformAttack;
+    public Action<SkillBase> CmdPerformInstantAttack;
     public Action CmdCancelAttack;
     public Action<float> OnAttackCompleted;
     public Action<SkillBase, int> PlayHitSound;
@@ -49,6 +48,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     public Action<float> CmdConsumeMP;
     public Func<float, bool> QueryHasEnoughMP;
     public Action<bool> CmdSetIgnorePlayerCollision;
+    public Func<float> QueryCurrentHP;
 
     public event Action<float> OnDamageTaken;
     public event Action<float> OnParryDamageTaken;
@@ -68,6 +68,7 @@ public class EnemyCore : MonoBehaviour, IDamageable
     [HideInInspector] public bool isDetectingPlayer = false;
     [HideInInspector] public bool isForceDetected = false;
     [HideInInspector] public bool isIgnoringPlayer = false;
+    [HideInInspector] public bool isTakingDoT = false;
 
     [HideInInspector] public SkillSelector skillSelector;
 
@@ -92,6 +93,8 @@ public class EnemyCore : MonoBehaviour, IDamageable
     private float targetMoveX;
     private float targetMoveZ;
     private float targetRun;
+
+    private Coroutine bleedCoroutine;
 
     protected virtual void Awake()
     {
@@ -156,6 +159,83 @@ public class EnemyCore : MonoBehaviour, IDamageable
             animator.SetFloat("MoveZ", targetMoveZ, 0.25f, Time.deltaTime);
             animator.SetFloat("Speed", targetRun, 0.25f, Time.deltaTime);
         }
+    }
+
+    public void ApplyBleed(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (IsDead) return;
+
+        if (bleedCoroutine != null)
+        {
+            StopCoroutine(bleedCoroutine);
+        }
+        bleedCoroutine = StartCoroutine(BleedRoutine(ticksPerSecond, bleedSkill, bleedEffect, effectDir));
+    }
+
+    private IEnumerator BleedRoutine(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        float interval = 1f / ticksPerSecond;
+        int totalTicks = 10 * ticksPerSecond;
+
+        for (int i = 0; i < totalTicks; i++)
+        {
+            if (IsDead)
+            {
+                bleedCoroutine = null;
+                yield break;
+            }
+
+            float currentHp = QueryCurrentHP != null ? QueryCurrentHP.Invoke() : 0f;
+            float tickDamage = (currentHp * 0.1f) / totalTicks;
+
+            isTakingDoT = true;
+            TakeDamage(tickDamage, bleedSkill, null, bleedEffect, 0);
+            isTakingDoT = false;
+
+            PlayBleedHitEffect(bleedSkill, effectDir);
+
+            yield return new WaitForSeconds(interval);
+        }
+
+        bleedCoroutine = null;
+    }
+
+    private void PlayBleedHitEffect(SkillBase skill, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (SkillEffectManager.Instance == null) return;
+
+        Vector3 hitPoint = GetComponent<Collider>().bounds.center;
+        Quaternion effectRotation = CalculateBleedRotation(effectDir);
+        SkillEffectManager.Instance.PlayHitEffect(gameObject, skill, hitPoint, effectRotation, 0);
+    }
+
+    private Quaternion CalculateBleedRotation(SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        int dirIndex = (int)effectDir - 1;
+        if (dirIndex <= 11)
+        {
+            float rotY = transform.eulerAngles.y;
+            float rotX = dirIndex * 30f;
+            // 타격자 기준이 아닌 피격자 기준이므로 180도 뒤집어 -90f로 오프셋 적용
+            return Quaternion.Euler(rotX, rotY - 90f, 0f);
+        }
+
+        Vector3 effectDirection = -transform.forward;
+        Vector3 effectUp = transform.up;
+
+        if (effectDir.ToString() == "Forward")
+        {
+            effectDirection = transform.up;
+            effectUp = transform.forward;
+        }
+        else if (effectDir.ToString() == "Backward")
+        {
+            effectDirection = transform.up;
+            effectUp = -transform.forward;
+        }
+
+        if (effectDirection == Vector3.zero) effectDirection = -transform.forward;
+        return Quaternion.LookRotation(effectDirection, effectUp);
     }
 
     private void HandleSetIgnorePlayerCollision(bool ignore)
@@ -344,6 +424,13 @@ public class EnemyCore : MonoBehaviour, IDamageable
         ChangeState(EnemyState.Stun);
         OnStunned?.Invoke();
         StopAllEffects();
+
+        if (EnemyLockOnImage.Instance != null &&
+            EnemyLockOnImage.Instance.target != null &&
+            EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
+        {
+            EnemyLockOnImage.Instance.TriggerStrongAttackEffect();
+        }
     }
 
     public void TriggerStunEnd()
@@ -352,6 +439,13 @@ public class EnemyCore : MonoBehaviour, IDamageable
         {
             ChangeState(EnemyState.Idle);
             wasParried = false;
+
+            if (EnemyLockOnImage.Instance != null &&
+                EnemyLockOnImage.Instance.target != null &&
+                EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
+            {
+                EnemyLockOnImage.Instance.CancelStrongAttackEffect();
+            }
         }
         OnStunEnd?.Invoke();
     }
@@ -535,6 +629,16 @@ public class EnemyCore : MonoBehaviour, IDamageable
         targetMoveX = moveX;
         targetMoveZ = moveZ;
         targetRun = run / 2;
+    }
+
+    public void ShakeCamera(float strength)
+    {
+        if (isTakingDoT) return;
+
+        if (Player.Instance != null && Player.Instance.impulseSource != null)
+        {
+            Player.Instance.impulseSource.GenerateImpulse(strength);
+        }
     }
 
     public void OnDrawGizmos()

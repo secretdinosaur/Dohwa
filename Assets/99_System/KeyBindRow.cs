@@ -39,8 +39,7 @@ public class KeybindRow : MonoBehaviour
 
         rebindOperation = primaryAction.action.PerformInteractiveRebinding(primaryIndex)
             .WithExpectedControlType("Button")
-            .WithControlsExcluding("<Mouse>/position")
-            .WithControlsExcluding("<Mouse>/delta")
+            .WithControlsExcluding("<Mouse>")
             .WithControlsExcluding("<Gamepad>")
             .WithCancelingThrough("<Keyboard>/escape")
             .OnComplete(operation => CompleteRebind())

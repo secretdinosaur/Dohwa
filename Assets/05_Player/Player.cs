@@ -2,10 +2,11 @@
 using System.Collections;
 using System.IO;
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour, IDamageable
+public class Player : MonoBehaviour, IDamageable, IBleedable
 {
     #region Components & References
     [Header("Core Components")]
@@ -42,6 +43,10 @@ public class Player : MonoBehaviour, IDamageable
     public bool isDeathPanelOn = false;
     public bool isAirborne = false;
     public bool isWakingUp = false;
+
+    [HideInInspector] public bool isTakingDoT = false;
+
+    public event Action OnParrySuccess;
 
     private Vector3 savedGrabOffset;
     private int detectedByEnemyCount = 0;
@@ -99,11 +104,11 @@ public class Player : MonoBehaviour, IDamageable
     public bool isEating => animator.GetCurrentAnimatorStateInfo(1).IsTag("Eat");
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
-    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp;
+    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp && !isAirborne && !PlayerMove.isKnockedBack;
     public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
     public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp;
     public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
-    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isEating && !isWakingUp;
+    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isEating && !isWakingUp;
     public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
     public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating && !isWakingUp;
     public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isWakingUp;
@@ -140,6 +145,7 @@ public class Player : MonoBehaviour, IDamageable
     public enum StunType { Stagger, Stun, Grabbed }
     public Coroutine currentStunRoutine;
     private Coroutine DeathRoutine;
+    private Coroutine EatRoutine;
     private StunType currentStunType;
     private Transform grabTargetTransform;
     private Vector3 grabTargetOffset;
@@ -152,6 +158,8 @@ public class Player : MonoBehaviour, IDamageable
 
     private float _motionTimeOffset = 0f;
     private int currentSkillStateIndex = 1;
+
+    private int lastStunFrame = -1;
     #endregion
 
     #region Unity Lifecycle
@@ -172,26 +180,23 @@ public class Player : MonoBehaviour, IDamageable
 
     private void Start()
     {
-        try
-        {
-            HP = StatManager.Instance.MaxHp;
-            MP = StatManager.Instance.MaxMp;
-            StartCoroutine(FullHpRoutine());
-            StartCoroutine(RecoveryRoutine());
-            StartCoroutine(LowHpMatRoutine());
-            StartCoroutine(InitialAttackPreventRoutine());
-        }
-        catch { }
+        HP = StatManager.Instance.MaxHp;
+        MP = StatManager.Instance.MaxMp;
+        StartCoroutine(FullHpRoutine());
+        StartCoroutine(RecoveryRoutine());
+        StartCoroutine(LowHpMatRoutine());
+        StartCoroutine(InitialAttackPreventRoutine());
     }
 
     IEnumerator FullHpRoutine()
     {
         yield return null;
+        yield return null;
+        yield return null;
 
         hasTriggered66 = false;
         hasTriggered33 = false;
         decalGenerator?.ClearDecals();
-
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;
     }
@@ -298,18 +303,22 @@ public class Player : MonoBehaviour, IDamageable
         GuardableData gData = skill.GetGuardData(hitIndex);
         bool skillIsGuardable = gData != null ? gData.guardable : true;
         bool skillIsParryable = gData != null ? gData.parryable : true;
-        float ShakePower = 1f;
 
+        skillIsGuardable = isTakingDoT ? false : skillIsGuardable;
+        skillIsParryable = isTakingDoT ? false : skillIsParryable;
+
+        float ShakePower = 1f;
         if (damage >= (hp * 0.3f)) ShakePower = 3f;
         else if (damage >= (hp * 0.5f)) ShakePower = 10f;
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
 
-        float actualDamage = ApplyArmorReduction(damage);
+        float actualDamage = isTakingDoT ? damage : ApplyArmorReduction(damage);
+
         bool willDie = (HP - actualDamage) <= 0;
 
         if ((isParrying || isGuarding) && skillIsGuardable)
         {
-            if (Mathf.Abs(Vector3.Dot(transform.forward, (caster.position - transform.position).normalized)) < GuardAngleThreshold)
+            if (Vector3.Dot(transform.forward, (caster.position - transform.position).normalized) < GuardAngleThreshold)
             {
                 isParrying = false;
                 isGuarding = false;
@@ -324,7 +333,8 @@ public class Player : MonoBehaviour, IDamageable
             SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, effectName);
 
             SoundManager.Instance.PlayMovementSound(11);
-            Animator_SetTrigger("parrySuccess");
+            Animator_SetFloat("Random", UnityEngine.Random.Range(-1, 1));
+            StartCoroutine(Animator_SetBool_Time("GuardHitted"));
 
             if (caster.TryGetComponent<EnemyCore>(out var enemy))
             {
@@ -332,6 +342,9 @@ public class Player : MonoBehaviour, IDamageable
             }
 
             SpecialSkillManager.Instance.Trigger(transform, SkillBase.TriggerType.OnParry);
+
+            OnParrySuccess?.Invoke();
+
             impulseSource.GenerateImpulse(ShakePower);
             return;
         }
@@ -376,12 +389,25 @@ public class Player : MonoBehaviour, IDamageable
             return;
         }
 
+        bool hasKnockback = false;
+        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
+        {
+            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+        }
+        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
+        {
+            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+        }
+
         bool isStunApplied = false;
-        if (skill.GetStunData(hitIndex) != null)
+        if (skill.GetStunData(hitIndex) != null && !isTakingDoT)
         {
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
+                if (!hasKnockback && PlayerMove != null)
+                    PlayerMove.CancelKnockBack();
+
                 Transform grabTarget = null;
                 if (stunData.stunType == StunType.Grabbed)
                 {
@@ -393,26 +419,13 @@ public class Player : MonoBehaviour, IDamageable
             }
         }
 
-        bool hasKnockback = false;
-        if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex)
-        {
-            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
-        }
-        else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex)
-        {
-            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
-        }
-
-        if (!isStunApplied && !willDie && !hasKnockback)
+        if (!isStunApplied && !willDie && !hasKnockback && !isTakingDoT)
         {
             CancelCurrentAction();
+            ClearStun();
+            if (PlayerMove != null) PlayerMove.CancelKnockBack();
 
-            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
-            bool isPlayingKnockMotion = state.IsName("KnockBack") || state.IsName("KnockBackEnd") ||
-                                        state.IsName("KnockDown1") || state.IsName("KnockDown1End") ||
-                                        state.IsName("KnockDown2") || state.IsName("KnockDown2End");
-
-            if (animator != null && currentStunRoutine == null && !isAirborne && !isWakingUp && !isPlayingKnockMotion)
+            if (animator != null)
             {
                 animator.ResetTrigger("Hitted1");
                 animator.ResetTrigger("Hitted2");
@@ -420,15 +433,18 @@ public class Player : MonoBehaviour, IDamageable
             }
         }
 
-        if (skill.HitSound != null && skill.HitSound.Length > hitIndex && skill.HitSound[hitIndex])
-            SoundManager.Instance.PlaySound(skill.HitSound[hitIndex]);
+        if (!isTakingDoT)
+        {
+            if (skill.HitSound != null && skill.HitSound.Length > hitIndex && skill.HitSound[hitIndex])
+                SoundManager.Instance.PlaySound(skill.HitSound[hitIndex]);
 
-        if (hitEffect != null)
+            impulseSource.GenerateImpulse(ShakePower);
+        }
+
+        if (hitEffect != null && !isTakingDoT)
             InkBrushEffectManager.Instance.PlayHitEffect(hitEffect);
 
-        impulseSource.GenerateImpulse(ShakePower);
-
-        if (actualDamage > 0) TryApplyRandomWound();
+        if (actualDamage > 0 && !isTakingDoT) TryApplyRandomWound();
         HP -= actualDamage;
 
         if (caster.TryGetComponent<EnemyCore>(out var enemyCore))
@@ -455,6 +471,13 @@ public class Player : MonoBehaviour, IDamageable
 
     public void ClearStun()
     {
+        if (Time.frameCount == lastStunFrame) return;
+
+        ForceClearStun();
+    }
+
+    private void ForceClearStun()
+    {
         if (currentStunRoutine != null)
         {
             StopCoroutine(currentStunRoutine);
@@ -464,12 +487,17 @@ public class Player : MonoBehaviour, IDamageable
         currentStunType = StunType.Stagger;
         animator.SetBool("isGrabbed", false);
         animator.ResetTrigger("Stagger");
+
+        PreventMove = false;
+        PreventAttack = false;
     }
 
     public void ApplyStun(float stunDuration, StunType type, Transform targetTransform = null, Vector3 grabOffset = default, bool isRealtimeFollow = true)
     {
         CancelCurrentAction();
-        ClearStun();
+        ForceClearStun();
+
+        lastStunFrame = Time.frameCount;
 
         currentStunType = type;
         grabTargetTransform = targetTransform;
@@ -547,24 +575,28 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    public void StartWakeUp(float wakeUpDuration)
+    public void StartWakeUp(float animDuration)
     {
         CancelCurrentAction();
-        ClearStun();
-        StartCoroutine(WakeUpRoutine(wakeUpDuration));
+        ForceClearStun();
+        StartCoroutine(WakeUpRoutine(animDuration));
     }
 
-    private IEnumerator WakeUpRoutine(float duration)
+    private IEnumerator WakeUpRoutine(float animDuration)
     {
-        // 💡 기존의 불필요한 3초 대기 시간을 삭제했습니다.
         isWakingUp = true;
         isAirborne = false;
 
         Animator_SetTrigger("WakeUp");
 
-        yield return new WaitForSeconds(duration);
+        yield return new WaitForSeconds(animDuration);
 
         isWakingUp = false;
+
+        if (animator != null && animator.layerCount > 1)
+        {
+            animator.SetLayerWeight(1, 1f);
+        }
     }
 
     private float mpRecoveryDelay;
@@ -577,8 +609,6 @@ public class Player : MonoBehaviour, IDamageable
         while (true)
         {
             float mult = isGuarding ? 0.1f : 1f;
-
-            HP += StatManager.Instance.HpRecoveryAmount * Time.deltaTime * mult;
 
             if (mpRecoveryDelay > 0)
             {
@@ -618,7 +648,7 @@ public class Player : MonoBehaviour, IDamageable
             {
                 while (HP < StatManager.Instance.MaxHp * 0.7)
                 {
-                    HP += StatManager.Instance.MaxHp * Time.deltaTime / 3;
+                    HP += StatManager.Instance.MaxHp * Time.deltaTime / 3 * StatManager.Instance.HpRecoveryAmount;
                     yield return null;
                 }
                 reachedCheckPoint = false;
@@ -630,6 +660,106 @@ public class Player : MonoBehaviour, IDamageable
     public void TakeArbitraryDamage(int damage)
     {
         HP -= damage;
+    }
+
+    public EnemyCore GetTargetForStrongAttack(float searchRadius = 5f, int enemyLayerMask = -1)
+    {
+        enemyLayerMask = LayerMask.GetMask("Enemy");
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayerMask);
+        EnemyCore closestVulnerableEnemy = null;
+        float minDistance = float.MaxValue;
+
+        foreach (Collider hit in hits)
+        {
+            EnemyCore enemy = hit.GetComponent<EnemyCore>();
+            if (enemy != null && enemy.currentState == EnemyState.Stun && !enemy.IsDead)
+            {
+                float distance = Vector3.Distance(transform.position, enemy.transform.position);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestVulnerableEnemy = enemy;
+                }
+            }
+        }
+        return closestVulnerableEnemy;
+    }
+
+    private Coroutine bleedCoroutine;
+
+    public void ApplyBleed(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (HP <= 0) return;
+
+        if (bleedCoroutine != null)
+        {
+            StopCoroutine(bleedCoroutine);
+        }
+        bleedCoroutine = StartCoroutine(BleedRoutine(ticksPerSecond, bleedSkill, bleedEffect, effectDir));
+    }
+
+    private IEnumerator BleedRoutine(int ticksPerSecond, SkillBase bleedSkill, HitEffectData bleedEffect, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        float interval = 1f / ticksPerSecond;
+        int totalTicks = 10 * ticksPerSecond;
+
+        for (int i = 0; i < totalTicks; i++)
+        {
+            if (HP <= 0)
+            {
+                bleedCoroutine = null;
+                yield break;
+            }
+
+            float tickDamage = (HP * 0.1f) / totalTicks;
+
+            isTakingDoT = true;
+            TakeDamage(tickDamage * (1 - StatManager.Instance.BleedResistance), bleedSkill, transform, bleedEffect, 0);
+            isTakingDoT = false;
+
+            PlayBleedHitEffect(bleedSkill, effectDir);
+            yield return new WaitForSeconds(interval);
+        }
+
+        bleedCoroutine = null;
+    }
+
+    private void PlayBleedHitEffect(SkillBase skill, SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        if (SkillEffectManager.Instance == null) return;
+
+        Vector3 hitPoint = GetComponent<Collider>().bounds.center;
+        Quaternion effectRotation = CalculateBleedRotation(effectDir);
+        SkillEffectManager.Instance.PlayHitEffect(gameObject, skill, hitPoint, effectRotation, 0);
+    }
+
+    private Quaternion CalculateBleedRotation(SkillBase.EnemyHitEffectDirection effectDir)
+    {
+        int dirIndex = (int)effectDir - 1;
+        if (dirIndex <= 11)
+        {
+            float rotY = transform.eulerAngles.y;
+            float rotX = dirIndex * 30f;
+            return Quaternion.Euler(rotX, rotY - 90f, 0f);
+        }
+
+        Vector3 effectDirection = -transform.forward;
+        Vector3 effectUp = transform.up;
+
+        if (effectDir.ToString() == "Forward")
+        {
+            effectDirection = transform.up;
+            effectUp = transform.forward;
+        }
+        else if (effectDir.ToString() == "Backward")
+        {
+            effectDirection = transform.up;
+            effectUp = -transform.forward;
+        }
+
+        if (effectDirection == Vector3.zero) effectDirection = -transform.forward;
+        return Quaternion.LookRotation(effectDirection, effectUp);
     }
     #endregion
 
@@ -788,6 +918,7 @@ public class Player : MonoBehaviour, IDamageable
         decalGenerator?.ClearDecals();
         hasTriggered66 = false;
         hasTriggered33 = false;
+        isTakingDoT = false;
 
         HP = StatManager.Instance.MaxHp;
         MP = StatManager.Instance.MaxMp;
@@ -797,6 +928,12 @@ public class Player : MonoBehaviour, IDamageable
         isParrying = false;
         isAirborne = false;
         isWakingUp = false;
+        if (PlayerMove != null)
+        {
+            PlayerMove.isKnockedBack = false;
+            PlayerMove.isKnockedDown = false;
+        }
+
         if (PlayerAttack != null)
         {
             PlayerAttack.isLockedOn = false;
@@ -807,6 +944,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             animator.Rebind();
             animator.Update(0f);
+            if (animator.layerCount > 1) animator.SetLayerWeight(1, 1f);
         }
 
         detectedByEnemyCount = 0;
@@ -846,6 +984,42 @@ public class Player : MonoBehaviour, IDamageable
             if (result != null) return result;
         }
         return null;
+    }
+
+    public void StartUseItemRoutine(InventorySlot Slot)
+    {
+        if (!CanInteract()) return;
+        InventoryItem item = Slot.item;
+        if ((item == null || EatRoutine != null) ||
+            (item.consumable == null && item.nonConsumable == null))
+        {
+            return;
+        }
+        if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
+            EatRoutine = StartCoroutine(UseItemRoutine(Slot));
+    }
+
+    IEnumerator UseItemRoutine(InventorySlot Slot)
+    {
+        if (UIManager.Instance.Inventory.activeSelf)
+            UIManager.Instance.ToggleInventory();
+        Animator_SetTrigger("Eat");
+        yield return new WaitForSeconds(1.16f);
+
+        InventoryItem item = Slot.item;
+        // 아이템 사용
+        if (item.consumable != null)
+            item.consumable.Use();
+        else if (item.nonConsumable != null)
+            item.nonConsumable.Use();
+        item.Count--;
+        if(Slot.GetComponent<QuickSlot>() != null)
+        {
+            Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;
+            UIManager.Instance.SyncGameQuickSlots();
+        }
+        Slot.GetComponent<CanvasGroup>().blocksRaycasts = true;
+        EatRoutine = null;
     }
 
     #endregion
@@ -970,6 +1144,12 @@ public class Player : MonoBehaviour, IDamageable
     {
         while (true)
         {
+            if (Time.timeScale == 0f)
+            {
+                yield return null;
+                continue;
+            }
+
             float max = StatManager.Instance.MaxHp;
             float ratio = Mathf.Clamp01(HP / max);
 

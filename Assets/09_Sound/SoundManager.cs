@@ -1,9 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Redcode.Pools;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Linq;
+
 public class SoundManager : MonoBehaviour
 {
     public static SoundManager Instance;
@@ -12,7 +13,8 @@ public class SoundManager : MonoBehaviour
     public AudioClip[] UIsounds;
     public AudioClip[] MovementSounds;
     public AudioClip[] bgmClips;
-
+    public AudioClip teacherSound;
+    public AudioClip CriticalSound;
     public AudioSource bgmSource;
     [Range(0f, 1f)] public float masterVolume = 0.5f;
     [Range(0f, 1f)] public float sfxVolume = 0.5f;
@@ -20,16 +22,20 @@ public class SoundManager : MonoBehaviour
 
     private List<SoundObject> activeSFXList = new List<SoundObject>();
 
+    // ğŸ’¡ ì (EnemySound)ë“¤ì˜ AudioSourceë¥¼ ì¶”ì í•˜ê¸° ìœ„í•œ ë¦¬ìŠ¤íŠ¸ ì¶”ê°€
+    private List<AudioSource> enemyAudioSources = new List<AudioSource>();
+
     private AudioClip lastPlayedBGM;
     private Coroutine fadeCoroutine;
     private float idleTimer = 0f;
     private float autoPlayInterval = 120f;
 
-    // Æ¯º° BGM Á¾·á ¿¹¾àÀ» ÃßÀûÇÏ±â À§ÇÑ º¯¼ö
+    // íŠ¹ë³„ BGM ì¢…ë£Œ ì˜ˆì•½ì„ ì¶”ì í•˜ê¸° ìœ„í•œ ë³€ìˆ˜
     private bool isStoppingSpecialBGM = false;
 
 
     public Button[] NotUseDefaultSoundButton;
+
     private void Awake()
     {
         Instance = this;
@@ -43,21 +49,21 @@ public class SoundManager : MonoBehaviour
         Button[] allButtons = FindObjectsByType<Button>(FindObjectsInactive.Include);
         foreach (Button btn in allButtons)
         {
-            if(NotUseDefaultSoundButton.Contains(btn)) continue;
+            if (NotUseDefaultSoundButton.Contains(btn)) continue;
             btn.onClick.AddListener(() => SoundManager.Instance.PlayUISound(4));
         }
     }
 
     private void Update()
     {
-        // bgmÀÌ ²¨Á®ÀÖÀ» ¶§¸¸ Å¸ÀÌ¸Ó¸¦ µ¹·Á ÀÚµ¿ Àç»ı
+        // bgmì´ êº¼ì ¸ìˆì„ ë•Œë§Œ íƒ€ì´ë¨¸ë¥¼ ëŒë ¤ ìë™ ì¬ìƒ
         if (!bgmSource.isPlaying)
         {
-            // ·çÇÁ ÇØÁ¦·Î Æ¯º° BGMÀÌ ÀÚ¿¬½º·´°Ô ³¡³µÀ» ¶§¸¦ ´ëºñÇØ »óÅÂ ÃÊ±âÈ­
+            // ë£¨í”„ í•´ì œë¡œ íŠ¹ë³„ BGMì´ ìì—°ìŠ¤ëŸ½ê²Œ ëë‚¬ì„ ë•Œë¥¼ ëŒ€ë¹„í•´ ìƒíƒœ ì´ˆê¸°í™”
             if (isStoppingSpecialBGM)
             {
                 isStoppingSpecialBGM = false;
-                idleTimer = 0f; // BGMÀÌ ³¡³ªÀÚ¸¶ÀÚ ´ÙÀ½ ÀÚµ¿Àç»ı Å¸ÀÌ¸Ó ½ÃÀÛ
+                idleTimer = 0f; // BGMì´ ëë‚˜ìë§ˆì ë‹¤ìŒ ìë™ì¬ìƒ íƒ€ì´ë¨¸ ì‹œì‘
             }
 
             idleTimer += Time.deltaTime;
@@ -72,6 +78,15 @@ public class SoundManager : MonoBehaviour
         }
     }
 
+    public void PlayTeacherSound()
+    {
+        PlaySound(teacherSound);
+    }
+
+    public void PlayCriticalSound()
+    {
+               PlaySound(CriticalSound);
+    }
     public void SetMasterVolume(float volume)
     {
         masterVolume = volume;
@@ -101,6 +116,7 @@ public class SoundManager : MonoBehaviour
 
     private void UpdateSFXVolume()
     {
+        // 1. ê¸°ì¡´ ì‚¬ìš´ë“œ í’€ ê°ì²´ë“¤ ë³¼ë¥¨ ì¡°ì ˆ
         for (int i = 0; i < activeSFXList.Count; i++)
         {
             if (activeSFXList[i] != null && activeSFXList[i].audioSource != null)
@@ -108,7 +124,40 @@ public class SoundManager : MonoBehaviour
                 activeSFXList[i].audioSource.volume = masterVolume * sfxVolume;
             }
         }
+
+        // 2. ğŸ’¡ ë§µì— ì¡´ì¬í•˜ëŠ” ëª¨ë“  Enemyì˜ AudioSource ë³¼ë¥¨ ì¡°ì ˆ
+        for (int i = enemyAudioSources.Count - 1; i >= 0; i--)
+        {
+            if (enemyAudioSources[i] == null)
+            {
+                // ì ì´ íŒŒê´´ë˜ì—ˆì„ ê²½ìš° ë¦¬ìŠ¤íŠ¸ì—ì„œ ìë™ ì •ë¦¬
+                enemyAudioSources.RemoveAt(i);
+            }
+            else
+            {
+                enemyAudioSources[i].volume = masterVolume * sfxVolume;
+            }
+        }
     }
+
+    // ====== ğŸ’¡ EnemySoundì—ì„œ ì§ì ‘ í˜¸ì¶œí•  ë“±ë¡/í•´ì œ í•¨ìˆ˜ ======
+    public void RegisterEnemyAudioSource(AudioSource source)
+    {
+        if (source != null && !enemyAudioSources.Contains(source))
+        {
+            enemyAudioSources.Add(source);
+            source.volume = masterVolume * sfxVolume; // ë“±ë¡ë˜ëŠ” ì¦‰ì‹œ í˜„ì¬ ì„¤ì •ëœ ë³¼ë¥¨ ì ìš©
+        }
+    }
+
+    public void UnregisterEnemyAudioSource(AudioSource source)
+    {
+        if (enemyAudioSources.Contains(source))
+        {
+            enemyAudioSources.Remove(source);
+        }
+    }
+    // ==========================================================
 
     private void SetNextAutoPlayInterval()
     {
@@ -134,11 +183,11 @@ public class SoundManager : MonoBehaviour
 
         lastPlayedBGM = nextClip;
         isStoppingSpecialBGM = false;
-        PlayBGMCore(nextClip, false); // ·£´ı BGMÀº ·çÇÁ ¾È ÇÔ
+        PlayBGMCore(nextClip, false); // ëœë¤ BGMì€ ë£¨í”„ ì•ˆ í•¨
         SetNextAutoPlayInterval();
     }
 
-    // ¿ÜºÎ¿¡¼­ Æ¯Á¤ Å¬¸³À» Àç»ı½ÃÅ³ ¶§ »ç¿ë
+    // ì™¸ë¶€ì—ì„œ íŠ¹ì • í´ë¦½ì„ ì¬ìƒì‹œí‚¬ ë•Œ ì‚¬ìš©
     public void PlaySpecialBGM(AudioClip specialClip)
     {
         if (fadeCoroutine != null)
@@ -149,12 +198,12 @@ public class SoundManager : MonoBehaviour
         fadeCoroutine = StartCoroutine(FadeOutAndPlay(specialClip));
     }
 
-    // ====== »õ·Ó°Ô Ãß°¡µÈ Á¾·á ¿¹¾à ÇÔ¼ö ======
+    // íŠ¹ë³„ BGM ì¢…ë£Œ ì˜ˆì•½ì„ ì¶”ì í•˜ê¸° ìœ„í•œ ë³€ìˆ˜
     public void StopSpecialBGMSequence()
     {
         if (bgmSource != null && bgmSource.isPlaying && bgmSource.loop)
         {
-            // Áï½Ã ²ôÁö ¾Ê°í ¹İº¹¸¸ Ç®¾îÁÜ -> ÇöÀç Àç»ı ÁßÀÎ Å¬¸³ÀÌ ³¡±îÁö Àç»ıµÈ ÈÄ ¸ØÃã
+            // ì¦‰ì‹œ ë„ì§€ ì•Šê³  ë°˜ë³µë§Œ í’€ì–´ì¤Œ -> í˜„ì¬ ì¬ìƒ ì¤‘ì¸ í´ë¦½ì´ ëê¹Œì§€ ì¬ìƒëœ í›„ ë©ˆì¶¤
             bgmSource.loop = false;
             isStoppingSpecialBGM = true;
         }
@@ -162,7 +211,7 @@ public class SoundManager : MonoBehaviour
 
     private IEnumerator FadeOutAndPlay(AudioClip newClip)
     {
-        float fadeSpeed = bgmSource.volume / 1f; // 1ÃÊ µ¿¾È ÆäÀÌµå¾Æ¿ô
+        float fadeSpeed = bgmSource.volume / 1f; // 1ì´ˆ ë™ì•ˆ í˜ì´ë“œì•„ì›ƒ
 
         while (bgmSource.volume > 0)
         {
@@ -173,7 +222,7 @@ public class SoundManager : MonoBehaviour
         bgmSource.Stop();
         lastPlayedBGM = null;
 
-        // Æ¯º° BGMÀº ±âº»ÀûÀ¸·Î ¹«ÇÑ ¹İº¹(loop: true)
+        // íŠ¹ë³„ BGMì€ ê¸°ë³¸ì ìœ¼ë¡œ ë¬´í•œ ë°˜ë³µ(loop: true)
         PlayBGMCore(newClip, true);
     }
 
@@ -202,7 +251,9 @@ public class SoundManager : MonoBehaviour
     {
         SoundObject sound = poolManager.GetFromPool<SoundObject>();
         sound.audioSource.pitch = pitch;
+
         sound.audioSource.volume = masterVolume * sfxVolume;
+
         sound.audioSource.clip = clip;
         sound.audioSource.Play();
 
@@ -251,10 +302,11 @@ public class SoundManager : MonoBehaviour
                 StopCoroutine(fadeCoroutine);
             }
 
-            isStoppingSpecialBGM = false; // ÀÚ¿¬ Á¾·á ¿¹¾àÀ» Ãë¼ÒÇÏ°í °­Á¦ Á¾·á·Î ÀüÈ¯
+            isStoppingSpecialBGM = false; // ìì—° ì¢…ë£Œ ì˜ˆì•½ì„ ì·¨ì†Œí•˜ê³  ê°•ì œ ì¢…ë£Œë¡œ ì „í™˜
             fadeCoroutine = StartCoroutine(FadeOutAndStopRoutine());
         }
     }
+
     public void StopSound(SoundObject soundObject)
     {
         if (soundObject != null && soundObject.audioSource != null && soundObject.audioSource.isPlaying)
@@ -263,9 +315,10 @@ public class SoundManager : MonoBehaviour
             ReturnSoundObject(soundObject);
         }
     }
+
     private IEnumerator FadeOutAndStopRoutine()
     {
-        float fadeSpeed = bgmSource.volume / 1f; // 1ÃÊ µ¿¾È ÆäÀÌµå¾Æ¿ô
+        float fadeSpeed = bgmSource.volume / 1f; // 1ì´ˆ ë™ì•ˆ í˜ì´ë“œì•„ì›ƒ
 
         while (bgmSource.volume > 0)
         {
@@ -276,8 +329,21 @@ public class SoundManager : MonoBehaviour
         bgmSource.Stop();
         lastPlayedBGM = null;
 
-        // ´ÙÀ½¹ø¿¡ Àç»ıµÉ °î(ÀÚµ¿ ·£´ı BGM µî)ÀÌ ¼Ò¸®°¡ 0À¸·Î ³ª¿ÀÁö ¾Êµµ·Ï º¼·ıÀ» ¿ø»ó º¹±¸ÇØ µÓ´Ï´Ù.
+        // ë‹¤ìŒë²ˆì— ì¬ìƒë  ê³¡(ìë™ ëœë¤ BGM ë“±)ì´ ì†Œë¦¬ê°€ 0ìœ¼ë¡œ ë‚˜ì˜¤ì§€ ì•Šë„ë¡ ë³¼ë¥¨ì„ ì›ìƒ ë³µêµ¬í•´ ë‘¡ë‹ˆë‹¤.
         UpdateBGMVolume();
+    }
+
+    public IEnumerator FadeOutAndStopSpecificRoutine(SoundObject obj)
+    {
+        float fadeSpeed = obj.audioSource.volume / 3f; // 1ì´ˆ ë™ì•ˆ í˜ì´ë“œì•„ì›ƒ
+
+        while (obj.audioSource.volume > 0)
+        {
+            obj.audioSource.volume -= fadeSpeed * Time.deltaTime;
+            yield return null;
+        }
+
+        obj.audioSource.Stop();
     }
 
     public void ReturnSoundObject(SoundObject soundObject)
@@ -286,7 +352,7 @@ public class SoundManager : MonoBehaviour
         {
             activeSFXList.Remove(soundObject);
         }
-        if(soundObject.gameObject.activeSelf)
+        if (soundObject.gameObject.activeSelf)
             poolManager.TakeToPool<SoundObject>(soundObject);
     }
 

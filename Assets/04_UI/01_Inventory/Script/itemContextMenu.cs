@@ -2,7 +2,6 @@ using DG.Tweening;
 using JetBrains.Annotations;
 using System.Collections;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -70,6 +69,7 @@ public class itemContextMenu : MonoBehaviour
                 break;
         }
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
     }
 
     public void OnSetQuickSlot()
@@ -102,6 +102,7 @@ public class itemContextMenu : MonoBehaviour
             InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
         }
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
         UIManager.Instance.SyncGameQuickSlots();
     }
 
@@ -135,15 +136,22 @@ public class itemContextMenu : MonoBehaviour
         InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
         InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
         InventoryManager.Instance.HideItemContextMenu();
+        InventoryManager.Instance.HideItemTooltip();
         UIManager.Instance.SyncGameQuickSlots();
     }
 
     public void OnUse()
     {
-        if (slot.item.consumable != null)
+        var item = InventoryManager.Instance.selectedItem.item;
+        if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
+            Player.Instance.StartUseItemRoutine(InventoryManager.Instance.selectedItem);
+        else if (slot.item.consumable != null)
         {
             if(slot.item.Count == 1)
+            {
                 InventoryManager.Instance.HideItemContextMenu();
+                InventoryManager.Instance.HideItemTooltip();
+            }
             slot.item.consumable.Use();
             slot.item.Count--;
             InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
@@ -165,7 +173,34 @@ public class itemContextMenu : MonoBehaviour
         {
             OpenCheckDeleteItemPenel();
         }
+        else if((slot.item.weapon != null && !slot.item.weapon.isDeletable)
+            || (slot.item.armor != null && !slot.item.armor.isDeletable)
+            || (slot.item.consumable != null && !slot.item.consumable.isDeletable)
+            || (slot.item.nonConsumable != null && !slot.item.nonConsumable.isDeletable))
+        {
+            ShowCantDeleteMessagePanel();
+        }
     }
+
+    private void ShowCantDeleteMessagePanel()
+    {
+        CanvasGroup canvasGroup = InventoryManager.Instance.CantDeleteMessagePanel.GetComponent<CanvasGroup>();
+        canvasGroup.DOKill();
+        InventoryManager.Instance.CantDeleteMessagePanel.SetActive(true);
+        canvasGroup.alpha = 0f;
+
+        Sequence fadeSequence = DOTween.Sequence();
+
+        fadeSequence
+            .Append(canvasGroup.DOFade(1f, 0.2f))
+            .AppendInterval(2f)
+            .Append(canvasGroup.DOFade(0f, 0.2f))
+            .OnComplete(() => {
+                InventoryManager.Instance.CantDeleteMessagePanel.SetActive(false);
+            }).SetUpdate(true);
+
+    }
+
     Coroutine checkDeleteCoroutine;
     public void OpenCheckDeleteItemPenel()
     {
@@ -209,6 +244,7 @@ public class itemContextMenu : MonoBehaviour
                 InventoryManager.Instance.UpdateSlots(InventoryManager.InventoryType.Item);
             }
             InventoryManager.Instance.HideItemContextMenu();
+            InventoryManager.Instance.HideItemTooltip();
             UIManager.Instance.SyncGameQuickSlots();
             InventoryManager.Instance.CheckDeleteItemPenel.SetActive(false);
             StopCoroutine(checkDeleteCoroutine);

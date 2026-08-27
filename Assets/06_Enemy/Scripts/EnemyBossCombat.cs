@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using DG.Tweening;
 using System.Collections.Generic;
 using System.Collections;
@@ -40,6 +40,8 @@ public class EnemyBossCombat : MonoBehaviour
         core.OnStunned += CancelCurrentSkillAction;
 
         core.CmdPerformAttack += InitiateAttack;
+        // 💡 추가됨: 즉시 스킬 공격 발동 연결
+        core.CmdPerformInstantAttack += InitiateInstantAttack;
         core.CmdCancelAttack += CancelCurrentSkillAction;
     }
 
@@ -50,6 +52,7 @@ public class EnemyBossCombat : MonoBehaviour
         core.OnStunned -= CancelCurrentSkillAction;
 
         core.CmdPerformAttack -= InitiateAttack;
+        core.CmdPerformInstantAttack -= InitiateInstantAttack;
         core.CmdCancelAttack -= CancelCurrentSkillAction;
     }
 
@@ -58,16 +61,26 @@ public class EnemyBossCombat : MonoBehaviour
         bool isCombo = attackRoutine != null;
 
         if (attackRoutine != null) StopCoroutine(attackRoutine);
-        attackRoutine = StartCoroutine(PerformAttackRoutine(skill, isCombo));
+        // 기본 딜레이 적용
+        attackRoutine = StartCoroutine(PerformAttackRoutine(skill, isCombo, isCombo ? 0.2f : 0.1f));
     }
 
-    private IEnumerator PerformAttackRoutine(SkillBase skill, bool isCombo)
+    // 💡 추가됨: 크로스페이드 없이 즉시 공격 시작
+    private void InitiateInstantAttack(SkillBase skill)
+    {
+        bool isCombo = attackRoutine != null;
+        if (attackRoutine != null) StopCoroutine(attackRoutine);
+        // 전환 시간(crossFadeDuration)을 0f로 넘겨줌
+        attackRoutine = StartCoroutine(PerformAttackRoutine(skill, isCombo, 0f));
+    }
+
+    private IEnumerator PerformAttackRoutine(SkillBase skill, bool isCombo, float crossFadeDuration)
     {
         core.CmdStopMovement?.Invoke();
         currentActiveSkill = skill;
         core.ChangeState(EnemyState.Attack);
 
-        if (!isCombo)
+        if (!isCombo && crossFadeDuration != 0f)
         {
             float elapsed = 0f;
             while (elapsed < preAttackLookDelay)
@@ -78,7 +91,7 @@ public class EnemyBossCombat : MonoBehaviour
             }
         }
 
-        Animator_PlaySkill(skill, isCombo ? 0.2f : 0.1f);
+        Animator_PlaySkill(skill, crossFadeDuration);
         core.CmdConsumeMP?.Invoke(skill.MP_cost);
         if (sound != null) sound.PlaySkillSound(skill.sound);
         core.PlayEffects(skill.name);
@@ -97,7 +110,15 @@ public class EnemyBossCombat : MonoBehaviour
         overrideController[targetState] = skill.clip;
         processedHitIndices.Clear();
 
-        core.animator.CrossFadeInFixedTime(targetState, crossFadeDuration);
+        // 💡 0 이하일 경우 CrossFade 대신 Play를 사용하여 프레임 끊김 없이 즉시 재생
+        if (crossFadeDuration <= 0f)
+        {
+            core.animator.Play(targetState, 0, 0f);
+        }
+        else
+        {
+            core.animator.CrossFadeInFixedTime(targetState, crossFadeDuration);
+        }
 
         currentSkillStateIndex = currentSkillStateIndex == 1 ? 2 : 1;
     }

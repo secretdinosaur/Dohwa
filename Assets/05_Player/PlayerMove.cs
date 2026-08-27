@@ -9,12 +9,14 @@ public class PlayerMove : MonoBehaviour
     [HideInInspector] public Transform cameraTransform;
     [HideInInspector] public Rigidbody _rb;
     #endregion
+
     [Header("Fall Damage Settings")]
     public float safeFallDistance = 10f;
     public float fatalFallDistance = 30f;
     public float deathYLevel = -50f;
     public float maxSlopeAngle = 40f;
     public float maxJumpSlopeAngle = 60f;
+
     #region Movement Settings
     [Header("Movement Settings")]
     [SerializeField] private float dashForce = 10f;
@@ -30,6 +32,7 @@ public class PlayerMove : MonoBehaviour
     #region State Flags & Internal Variables
     [Header("Status Flags")]
     public bool isGrounded = true;
+    public bool isKnockedDown = false;
     private float _lastJumpTime = 0f;
     private Vector2 _inputMove;
     private Vector2 _smoothInput;
@@ -75,6 +78,7 @@ public class PlayerMove : MonoBehaviour
     private float landingPredictThresholdLockOn = 0.12f;
     private float landingAnimBufferTime = 0.5f;
     private float wakeUpAnimDuration = 2f;
+    private float airborneWakeUpDelay = 3f;
     [HideInInspector] public float knockbackForceThreshold = 9f;
     private float knockbackGuardReduction = 0.7f;
     private float knockbackDurationDivisor = 30f;
@@ -124,6 +128,7 @@ public class PlayerMove : MonoBehaviour
         {
             sprintLockoutTimer -= Time.deltaTime;
         }
+
 
         if (Player.Instance == null || !Player.Instance.CanMove() || (Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isAttacking))
         {
@@ -533,8 +538,11 @@ public class PlayerMove : MonoBehaviour
 
                     if (Player.Instance.isAirborne)
                     {
-                        Player.Instance.StartWakeUp(wakeUpAnimDuration);
                         _isStopping = true;
+
+                        yield return new WaitForSeconds(airborneWakeUpDelay);
+
+                        Player.Instance.StartWakeUp(wakeUpAnimDuration);
                         yield return new WaitForSeconds(wakeUpAnimDuration);
                         _isStopping = false;
                     }
@@ -573,13 +581,89 @@ public class PlayerMove : MonoBehaviour
     #region Knockback & Dash Mechanics
     private Coroutine currentKnockBackRoutine;
 
-    // 💡 넉다운 지속 시간(knockdownDuration) 매개변수 추가
+    public void CancelKnockBack()
+    {
+        if (currentKnockBackRoutine != null)
+        {
+            StopCoroutine(currentKnockBackRoutine);
+            currentKnockBackRoutine = null;
+        }
+
+        isKnockedBack = false;
+        isKnockedDown = false;
+
+        // 💡 추가됨: 강제 넉백 종료 시 카메라도 즉시 원상 복구
+        if (CameraController.Instance != null)
+        {
+            CameraController.Instance.SetKnockdownCamera(false);
+        }
+
+        if (Player.Instance != null)
+        {
+            Player.Instance.isWakingUp = false;
+            Player.Instance.isAirborne = false;
+            Player.Instance.PreventMove = false;
+            Player.Instance.PreventAttack = false;
+
+            if (Player.Instance.animator != null)
+            {
+                Player.Instance.animator.ResetTrigger("KnockBack");
+                Player.Instance.animator.ResetTrigger("KnockDown1");
+                Player.Instance.animator.ResetTrigger("KnockDown2");
+                Player.Instance.animator.ResetTrigger("Airborne");
+
+                if (Player.Instance.animator.layerCount > 1)
+                {
+                    Player.Instance.animator.SetLayerWeight(1, 1f);
+                }
+            }
+        }
+
+        if (_rb != null && (Player.Instance == null || !Player.Instance.IsGrabbed))
+        {
+            _rb.linearVelocity = Vector3.zero;
+        }
+    }
+    private IEnumerator LookAtTargetOnKnockDown()
+    {
+        if (Player.Instance.PlayerAttack == null || !Player.Instance.PlayerAttack.isLockedOn || Player.Instance.PlayerAttack.currentTarget == null)
+            yield break;
+
+        Transform target = Player.Instance.PlayerAttack.currentTarget;
+        float elapsed = 0f;
+        float duration = 0.2f;
+
+        while (elapsed < duration)
+        {
+            if (target == null) break;
+
+            Vector3 dir = target.position - transform.position;
+            dir.y = 0;
+
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
+                if (_rb != null) _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, targetRot, Time.deltaTime * 50f));
+                else transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 50f);
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
     public void KnockBack(Vector3 force, int knockdownType = 0, float knockdownDuration = 1.5f)
     {
         if (force.magnitude == 0 && knockdownType == 0) return;
 
-        Player.Instance.CancelCurrentAction();
+        if (Player.Instance != null && (Player.Instance.isGuarding || Player.Instance.isParrying))
+        {
+            knockdownType = 0;
+            force.y = Mathf.Min(force.y, 0f);
+        }
 
+        if (Player.Instance != null) Player.Instance.ClearStun();
+
+        Player.Instance.CancelCurrentAction();
         _isStopping = false;
 
         if (currentKnockBackRoutine != null)
@@ -598,10 +682,23 @@ public class PlayerMove : MonoBehaviour
         bool shouldPlayAnim = (forceMag > knockbackForceThreshold || knockdownType > 0) && (!Player.Instance.IsStunned || knockdownType > 0) && !Player.Instance.isGuarding;
 
         isKnockedBack = true;
-
+        if (knockdownType > 0 || becomeAirborne)
+        {
+            isKnockedDown = true;
+            // 💡 추가됨: 넉다운 되거나 에어본이 되면 카메라 전환
+            if (CameraController.Instance != null)
+            {
+                CameraController.Instance.SetKnockdownCamera(true);
+            }
+        }
+        StartCoroutine(LookAtTargetOnKnockDown());
         if (becomeAirborne || shouldPlayAnim)
         {
-            // 그랩(리얼타임 팔로우) 중 넉다운이 겹치더라도 강제로 풀지 않고 유지합니다.
+            if (Player.Instance.animator.layerCount > 1)
+            {
+                Player.Instance.animator.SetLayerWeight(1, 0f);
+            }
+
             Player.Instance.animator.ResetTrigger("Hitted1");
             Player.Instance.animator.ResetTrigger("Hitted2");
             Player.Instance.animator.ResetTrigger("Stagger");
@@ -647,16 +744,11 @@ public class PlayerMove : MonoBehaviour
         {
             if (knockdownType > 0)
             {
-                // 💡 인스펙터에서 설정한 넉다운 시간만큼 대기
                 yield return new WaitForSeconds(knockdownDuration);
 
-                // 💡 넉다운 지속시간이 끝나면 그랩도 강제 해제하고 자동으로 WakeUp 애니메이션 전환
-                Player.Instance.ClearStun();
-                Player.Instance.StartWakeUp(wakeUpAnimDuration);
+                yield return new WaitForSeconds(3f);
 
-                string kdName = "KnockDown" + knockdownType;
-                Player.Instance.animator.ResetTrigger(kdName);
-                Player.Instance.Animator_SetTrigger(kdName + "End");
+                Player.Instance.StartWakeUp(wakeUpAnimDuration);
             }
             else
             {
@@ -664,6 +756,11 @@ public class PlayerMove : MonoBehaviour
 
                 Player.Instance.animator.ResetTrigger("KnockBack");
                 Player.Instance.Animator_SetTrigger("KnockBackEnd");
+
+                if (Player.Instance.animator.layerCount > 1)
+                {
+                    Player.Instance.animator.SetLayerWeight(1, 1f);
+                }
             }
         }
         else if (becomeAirborne)
@@ -678,6 +775,13 @@ public class PlayerMove : MonoBehaviour
         }
 
         isKnockedBack = false;
+        isKnockedDown = false;
+
+        // 💡 추가됨: 넉다운 상태가 끝나고 기상이 완료되면 원래 카메라로 복구
+        if (CameraController.Instance != null)
+        {
+            CameraController.Instance.SetKnockdownCamera(false);
+        }
 
         if (Player.Instance != null && Player.Instance.currentStunRoutine == null)
         {

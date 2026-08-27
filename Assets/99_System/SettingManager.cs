@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using Unity.Cinemachine;
@@ -8,6 +9,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -269,6 +271,8 @@ public class SettingManager : MonoBehaviour
         isChangingLanguage = false;
     }
 
+    [SerializeField] private List<TextMeshProUGUI> excludeTexts; // 또는 List<GameObject>
+
     public async void ChangeAllFonts()
     {
         var handle = LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TMP_FontAsset>(
@@ -281,7 +285,6 @@ public class SettingManager : MonoBehaviour
 
         if (font == null)
         {
-            Debug.LogError("Font not found.");
             return;
         }
 
@@ -289,9 +292,17 @@ public class SettingManager : MonoBehaviour
 
         foreach (var text in texts)
         {
+            // 제외 리스트에 포함된 경우 스킵
+            if (excludeTexts != null && excludeTexts.Contains(text))
+                continue;
+
             text.font = font;
             text.UpdateFontAsset();
         }
+
+        Player.Instance.PlayerAttack.UpdateCommandUI();
+        if (UIManager.Instance?.BossName != null)
+            UIManager.Instance.UpdateBossNameUI();
     }
 
     public void OnClickResetButton() => ResetPanel.SetActive(true);

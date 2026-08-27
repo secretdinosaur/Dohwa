@@ -16,8 +16,9 @@ public class Tutorial : ScriptableObject
 [System.Serializable]
 public class TutorialPage
 {
-    public Sprite Image;
+    public LocalizedSprite Localize_Image;
 
     public LocalizedString Localize_Text;
     public string Text => Localize_Text.GetLocalizedString();
+    public Sprite Image => Localize_Image.LoadAssetAsync().WaitForCompletion();
 }

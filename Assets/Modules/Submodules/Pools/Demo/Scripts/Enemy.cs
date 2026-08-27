@@ -16,7 +16,6 @@ public class Enemy1 : MonoBehaviour, IPoolObject
         _state = State.Alive;
         Health = 100;
 
-        print(_state);
     }
 
     public void OnCreatedInPool()

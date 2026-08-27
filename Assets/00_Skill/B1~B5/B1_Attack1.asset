@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 02000000
   MP_cost: 10
-  clip: {fileID: 7400000, guid: d0affde06f47cbc48ac035423535d349, type: 2}
+  clip: {fileID: 7400000, guid: 1d9d0d1f5cf9054469c7027c07b153c5, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: ecab12d58e6a0b04384b840b3996b62f, type: 3}
   effect: {fileID: 0}
@@ -67,7 +67,9 @@ MonoBehaviour:
     boxSize: {x: 1, y: 0.5, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 15
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
     effectDirection: 7
     playerHitEffect: {fileID: 0}
@@ -81,6 +83,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 1
+    debuffChance: 1
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

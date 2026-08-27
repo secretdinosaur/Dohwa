@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TerrainGridLODManager : MonoBehaviour
 {
-    public Transform player;
+    public Transform playerTransform;
     public float tileSize = 100f;
 
     private Terrain[] terrainTiles;
@@ -11,14 +11,15 @@ public class TerrainGridLODManager : MonoBehaviour
 
     void Start()
     {
+        playerTransform = Player.Instance.transform;
         terrainTiles = Terrain.activeTerrains;
 
         // Start 단계에서 플레이어의 위치를 먼저 한 번 계산해줍니다.
-        if (player != null)
+        if (playerTransform != null)
         {
             currentPlayerGridPos = new Vector2Int(
-                Mathf.FloorToInt(player.position.x / tileSize),
-                Mathf.FloorToInt(player.position.z / tileSize)
+                Mathf.FloorToInt(playerTransform.position.x / tileSize),
+                Mathf.FloorToInt(playerTransform.position.z / tileSize)
             );
         }
 
@@ -27,11 +28,11 @@ public class TerrainGridLODManager : MonoBehaviour
 
     void Update()
     {
-        if (player == null || terrainTiles == null || terrainTiles.Length == 0) return;
+        if (playerTransform == null || terrainTiles == null || terrainTiles.Length == 0) return;
 
         Vector2Int currentGridPos = new Vector2Int(
-            Mathf.FloorToInt(player.position.x / tileSize),
-            Mathf.FloorToInt(player.position.z / tileSize)
+            Mathf.FloorToInt(playerTransform.position.x / tileSize),
+            Mathf.FloorToInt(playerTransform.position.z / tileSize)
         );
 
         // 그리드 위치가 달라졌을 때만(타일을 넘어갔을 때만) LOD를 업데이트하여 최적화

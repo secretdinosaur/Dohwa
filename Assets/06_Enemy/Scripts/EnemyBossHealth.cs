@@ -24,6 +24,8 @@ public class EnemyBossHealth : MonoBehaviour
     private bool hasTriggered66 = false;
     private bool hasTriggered33 = false;
 
+    private Coroutine stunCoroutine;
+
     private void Awake()
     {
         core = GetComponent<EnemyCore>();
@@ -41,6 +43,7 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = HasEnoughMP;
         core.CmdConsumeMP += ConsumeMP;
+        core.QueryCurrentHP = () => currentHp;
     }
 
     private void OnDisable()
@@ -51,12 +54,40 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.QueryHasEnoughMP = null;
         core.CmdConsumeMP -= ConsumeMP;
+        core.QueryCurrentHP = null;
     }
 
     private void Update()
     {
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
+
+        if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
+        {
+            // 페이즈 전환 중이거나 죽었을 때는 무조건 숨김
+            if (isTransitioningPhase || core.IsDead)
+            {
+                if (UIManager.Instance.BossStatus.gameObject.activeSelf)
+                    UIManager.Instance.BossStatus.gameObject.SetActive(false);
+            }
+            else
+            {
+                bool isLockedOn = EnemyLockOnImage.Instance != null &&
+                                  EnemyLockOnImage.Instance.target != null &&
+                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
+
+                if (isLockedOn || currentHp < maxHP)
+                {
+                    if (!UIManager.Instance.BossStatus.gameObject.activeSelf)
+                        UIManager.Instance.BossStatus.gameObject.SetActive(true);
+                }
+                else
+                {
+                    if (UIManager.Instance.BossStatus.gameObject.activeSelf)
+                        UIManager.Instance.BossStatus.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     private void HandleDamage(float damage)
@@ -67,6 +98,17 @@ public class EnemyBossHealth : MonoBehaviour
         {
             core.TriggerGuardSuccess();
             return;
+        }
+
+        if (core.currentState == EnemyState.Stun)
+        {
+            if (stunCoroutine != null)
+            {
+                StopCoroutine(stunCoroutine);
+                stunCoroutine = null;
+            }
+            UpdateMP(maxMP);
+            core.TriggerStunEnd();
         }
 
         currentHp -= damage;
@@ -84,8 +126,15 @@ public class EnemyBossHealth : MonoBehaviour
         }
 
         core.TriggerHpChanged(currentHp, maxHP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        core.PlayHitSound(core.HittedSkill, core.HitIndex);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+
+        if (!core.isTakingDoT)
+        {
+            core.PlayHitSound(core.HittedSkill, core.HitIndex);
+        }
+
         if (currentHp <= 0)
         {
             if (currentPhase < maxPhase)
@@ -108,7 +157,8 @@ public class EnemyBossHealth : MonoBehaviour
         if (currentMp <= 0 && core.currentState != EnemyState.Stun)
         {
             core.TriggerParried();
-            StartCoroutine(StunRoutine());
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+            stunCoroutine = StartCoroutine(StunRoutine());
         }
     }
 
@@ -157,8 +207,11 @@ public class EnemyBossHealth : MonoBehaviour
             core.TriggerHpChanged(currentHp, maxHP);
             core.TriggerMpChanged(currentMp, maxMP);
 
-            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+                UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+            }
 
             yield return null;
         }
@@ -168,8 +221,12 @@ public class EnemyBossHealth : MonoBehaviour
 
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+        }
     }
 
     private IEnumerator StunRoutine()
@@ -187,13 +244,16 @@ public class EnemyBossHealth : MonoBehaviour
         }
         UpdateMP(maxMP);
         core.TriggerStunEnd();
+        stunCoroutine = null;
     }
 
     public void UpdateMP(float value)
     {
         currentMp = Mathf.Clamp(value, 0, maxMP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
     }
 
     private void ResetHealth()
@@ -206,10 +266,20 @@ public class EnemyBossHealth : MonoBehaviour
         hasTriggered66 = false;
         hasTriggered33 = false;
 
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+            stunCoroutine = null;
+        }
+
         core.TriggerHpChanged(currentHp, maxHP);
         core.TriggerMpChanged(currentMp, maxMP);
-        UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
-        UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateBossHpUI(currentHp / maxHP);
+            UIManager.Instance.UpdateBossMpUI(currentMp / maxMP);
+        }
     }
 
     private bool HasEnoughMP(float requiredMp) => currentMp >= requiredMp;

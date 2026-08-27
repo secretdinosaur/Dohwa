@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 [RequireComponent(typeof(EnemyCore))]
 public class EnemySound : MonoBehaviour
@@ -33,6 +34,17 @@ public class EnemySound : MonoBehaviour
         core.OnStunned += CancelAttackSound;
         core.CmdCancelAttack += CancelAttackSound;
         core.PlayHitSound += PlayHitSound;
+
+        
+
+        footstepAS.spatialBlend = 1f;
+    }
+
+    private void Start()
+    {
+        SoundManager.Instance.RegisterEnemyAudioSource(footstepAS);
+        SoundManager.Instance.RegisterEnemyAudioSource(attackAS);
+        SoundManager.Instance.RegisterEnemyAudioSource(etcAS);
     }
 
     private void OnDestroy()
@@ -46,9 +58,12 @@ public class EnemySound : MonoBehaviour
             core.OnStunned -= CancelAttackSound;
             core.CmdCancelAttack -= CancelAttackSound;
             core.PlayHitSound -= PlayHitSound;
+
+            SoundManager.Instance.UnregisterEnemyAudioSource(footstepAS);
+            SoundManager.Instance.UnregisterEnemyAudioSource(attackAS);
+            SoundManager.Instance.UnregisterEnemyAudioSource(etcAS);
         }
     }
-
     private void PlayHitSound(SkillBase skill, int hitIndex)
     {
         if (skill.HitSound != null && skill.HitSound.Length > hitIndex && skill.HitSound[hitIndex])
@@ -58,10 +73,10 @@ public class EnemySound : MonoBehaviour
     public void PlayFootstepSound()
     {
         if (Time.time - lastFootstepTime < FootstepCooldown) return;
-
         if (footstepSounds != null && footstepSounds.Length > 0 && footstepAS != null)
         {
             lastFootstepTime = Time.time;
+
             footstepAS.PlayOneShot(footstepSounds[Random.Range(0, footstepSounds.Length)]);
         }
     }

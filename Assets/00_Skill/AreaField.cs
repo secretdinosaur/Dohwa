@@ -128,24 +128,42 @@ public class AreaField : MonoBehaviour
     {
         if (cols == null || cols.Length == 0) return;
 
+        bool isCasterPlayer = caster != null && caster.GetComponent<Player>() != null;
+        bool isCriticalChecked = false;
+        bool isCriticalHit = false;
+
         foreach (var col in cols)
         {
             if (col == null) continue;
             if (col.TryGetComponent<IDamageable>(out var target))
             {
-                // 💡 자신 타격 방지 (하위 충돌체도 안전하게 걸러냄)
                 if (caster != null && target.transform == caster) continue;
 
-                PlayHitSound();
+                if (!isCriticalChecked)
+                {
+                    isCriticalHit = UnityEngine.Random.value < StatManager.Instance.VitalStrikeRate && isCasterPlayer;
+                    if (isCriticalHit) Player.Instance.impulseSource.GenerateImpulse(3f);
+                    isCriticalChecked = true;
+                }
 
-                // 💡 NRE 방지: 하드코딩된 null 대신 실제 스킬의 HitEffectData를 안전하게 넘김
+                float finalDamage = isCriticalHit ? tickDamage * StatManager.Instance.VitalStrikeDamage : tickDamage;
+
+                if (isCriticalHit)
+                {
+                    SoundManager.Instance.PlayCriticalSound();
+                }
+                else
+                {
+                    PlayHitSound();
+                }
+
                 HitEffectData effect = null;
                 if (ownerSkill != null && ownerSkill.HitEffects != null && hitindex < ownerSkill.HitEffects.Length)
                 {
                     effect = ownerSkill.HitEffects[hitindex];
                 }
 
-                target.TakeDamage(tickDamage, ownerSkill, caster, effect, hitindex);
+                target.TakeDamage(finalDamage, ownerSkill, caster, effect, hitindex);
             }
         }
     }

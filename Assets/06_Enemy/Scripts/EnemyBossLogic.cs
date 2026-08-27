@@ -87,6 +87,7 @@ public class EnemyBossLogic : MonoBehaviour
         EnableCheckPoint();
         StopBGM();
         isdead = true;
+        UIManager.Instance.BossName = null;
     }
 
     private void ShowBossStatus()
@@ -96,10 +97,9 @@ public class EnemyBossLogic : MonoBehaviour
         UIManager.Instance.UpdateBossHpUI(1f);
         UIManager.Instance.UpdateBossMpUI(1f);
 
-        if (BossName != null)
-            UIManager.Instance.BossNameText.text = BossName.GetLocalizedString();
-        else
-            UIManager.Instance.BossNameText.text = "???";
+        UIManager.Instance.BossName = BossName;
+
+        UIManager.Instance.UpdateBossNameUI();
     }
 
     protected virtual void PlayerDead()
@@ -107,6 +107,7 @@ public class EnemyBossLogic : MonoBehaviour
         if (FightWall != null)
             FightWall.SetActive(false);
         fightStarted = false;
+        UIManager.Instance.BossName = null;
         UIManager.Instance.BossStatus.gameObject.SetActive(false);
     }
 

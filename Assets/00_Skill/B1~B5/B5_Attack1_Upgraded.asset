@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 01000000020000000300000000000000
   MP_cost: 30
-  clip: {fileID: 7400000, guid: 0ce00a1a38d2d3b468b7fd7cfad3964a, type: 2}
+  clip: {fileID: 7400000, guid: ebd885c7b65d5c24d88f42ade62a3b53, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: 3008ed8efade7ad4ea9219e2e3d94296, type: 3}
   effect: {fileID: 1174498981424498684, guid: fc59283b099d47543afb68355731534f, type: 3}
@@ -79,7 +79,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 6
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
     effectDirection: 3
     playerHitEffect: {fileID: 0}
@@ -103,7 +105,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 6
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
     effectDirection: 10
     playerHitEffect: {fileID: 0}
@@ -127,7 +131,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 6
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
     effectDirection: 4
     playerHitEffect: {fileID: 0}
@@ -151,7 +157,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 6
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
     effectDirection: 8
     playerHitEffect: {fileID: 0}
@@ -175,7 +183,9 @@ MonoBehaviour:
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 6
-    knockbackForce: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
     hitSound: {fileID: 8300000, guid: 10f75003a99bcd945a3742175273a584, type: 3}
     effectDirection: 6
     playerHitEffect: {fileID: 0}

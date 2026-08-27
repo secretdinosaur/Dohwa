@@ -15,7 +15,6 @@ public class sign : InteractableObj
     public override void Interact(bool ShowPanelImmediately = true, bool LookPlayer = true)
     {
         base.Interact();
-        print("Interacted sign: " + gameObject.name);
 
         string finalizedText = TextTagParser.Parse(showText.GetLocalizedString());
         show = StartCoroutine(UIManager.Instance.ShowSign(finalizedText, ExecutionFunctionSet));

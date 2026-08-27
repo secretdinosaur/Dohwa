@@ -1999,7 +1999,7 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -8539,8 +8539,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC0C8 \uAC8C\uC784"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
-  m_sharedMaterial: {fileID: 7826149323827114221, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9606,7 +9606,7 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -9859,7 +9859,7 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -16568,8 +16568,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC885\uB8CC"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
-  m_sharedMaterial: {fileID: 7826149323827114221, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -17820,6 +17820,8 @@ MonoBehaviour:
   MovementSounds: []
   bgmClips:
   - {fileID: 8300000, guid: 2d9159e90e8c25c4882ccbcb6e59f93d, type: 3}
+  teacherSound: {fileID: 0}
+  CriticalSound: {fileID: 0}
   bgmSource: {fileID: 1519057993}
   masterVolume: 0.5
   sfxVolume: 0.5
@@ -18550,6 +18552,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -20748,8 +20751,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC774\uC5B4\uD558\uAE30"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
-  m_sharedMaterial: {fileID: 7826149323827114221, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -23115,7 +23118,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2010748396}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
@@ -23167,7 +23170,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -23390,7 +23393,13 @@ MonoBehaviour:
   resoltionDropdown: {fileID: 1090745306}
   screenDropdown: {fileID: 1062235952}
   languageDropdown: {fileID: 1009758039}
+  fontTable:
+    m_TableCollectionName: 
+  fontKey:
+    m_KeyId: 0
+    m_Key: 
   cursorTexture: {fileID: 2800000, guid: 2c1733b6e618c7e49853e782ac5eecda, type: 3}
+  excludeTexts: []
 --- !u!4 &2040033000
 Transform:
   m_ObjectHideFlags: 0
@@ -23465,8 +23474,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC124\uC815"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
-  m_sharedMaterial: {fileID: 7826149323827114221, guid: 9cf10155d33a3e9498732b9f13fc9a77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

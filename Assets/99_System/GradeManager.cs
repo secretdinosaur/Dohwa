@@ -11,6 +11,7 @@ public class GradeManager : MonoBehaviour
 
     public LocalizedString[] LocalizedGrades;
     public LocalizedString[] LocalizedGradeAbilityDescriptions;
+    public LocalizedString MaxGradeText;
     public int CurrentGradeIndex = 0;
     float currentExp = 0;
     public int maxGrade = 3;
@@ -79,9 +80,9 @@ public class GradeManager : MonoBehaviour
                     if (UIManager.Instance.ExpBarFill.material != null)
                         UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", 1f);
 
-                    UIManager.Instance.NextGradeText.text = "Max Grade (Demo)";
+                    UIManager.Instance.NextGradeText.text = MaxGradeText.GetLocalizedString();
                     UIManager.Instance.GradeAbilityText.text = "";
-                    UIManager.Instance.ExpText.text = "MAX";
+                    UIManager.Instance.ExpText.text = "";
                 }
                 else
                 {
@@ -118,7 +119,7 @@ public class GradeManager : MonoBehaviour
                 UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", 1f);
 
             UIManager.Instance.ExpText.text = "";
-            UIManager.Instance.NextGradeText.text = "최고 경지";
+            UIManager.Instance.NextGradeText.text = MaxGradeText.GetLocalizedString();
             UIManager.Instance.GradeAbilityText.text = "";
         }
         else
@@ -511,16 +512,42 @@ public class GradeManager : MonoBehaviour
 
     public void Apply_Ability_SecondClass()
     {
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.MaxMp, 20f);
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpRecovery, 5f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 5f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 10f);
     }
+
     public void Apply_Ability_FirstClass()
     {
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.Attack, 20f);
-        StatManager.Instance.ApplySingleStat(StatManager.StatType.Defense, 20f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 8f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 15f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
     }
-    public void Apply_Ability_Peak() { }
-    public void Apply_Ability_SuperPeak() { }
-    public void Apply_Ability_TransformationRealm() { }
-    public void Apply_Ability_ProfoundRealm() { }
+
+    public void Apply_Ability_Peak()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 15f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 30f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_SuperPeak()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 30f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 50f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_TransformationRealm()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 50f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 80f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
+
+    public void Apply_Ability_ProfoundRealm()
+    {
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.ExternalArt, 80f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.InnerArt, 100f);
+        StatManager.Instance.ApplySingleStat(StatManager.StatType.MpConsumptionReduction, 0.05f);
+    }
 }

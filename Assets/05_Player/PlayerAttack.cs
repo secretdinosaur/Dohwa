@@ -29,6 +29,8 @@ public class PlayerAttack : MonoBehaviour
     public Transform currentTarget;
     public List<SkillBase> acquiredSkills = new List<SkillBase>();
     public SkillBase ViewSkill;
+    public SkillBase strongAttackSkill;
+
     SkillEffect CurrentEffect;
     [HideInInspector] public float lastAttackTime = 0f;
     [HideInInspector] public float lastAttackEndTime = 0f;
@@ -54,9 +56,9 @@ public class PlayerAttack : MonoBehaviour
 
     #region Combat & Tuning Settings
     [Header("Lock-On Settings")]
-    [SerializeField] private float detectionRadius = 15f;
-    private float lockOnMaintainTime = 2f;
-    private float lockOnCooldown = 2f;
+    [SerializeField] private float detectionRadius = 25f;
+    private float lockOnMaintainTime = 0.5f;
+    private float lockOnCooldown = 0.5f;
     private float lockOnStepDelay = 0.6f;
 
     [Header("Auto Aim Settings")]
@@ -64,13 +66,12 @@ public class PlayerAttack : MonoBehaviour
     private float autoAimAngle = 22.5f;
 
     [Header("Timing Settings")]
-    private float guardCooldown = 0.5f;
+    private float guardCooldown = 0.3f;
     private float attackComboThreshold = 0.125f;
     private float autoSheathDelay = 20f;
     private float drawAnimDuration = 0.25f;
     private float sheathAnimDuration = 0.1f;
     private float sheathPostDelay = 2f;
-
     #endregion
 
     #region Constants
@@ -116,12 +117,15 @@ public class PlayerAttack : MonoBehaviour
     public void OnCommandD(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.D); }
     public void OnCommandJump(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.J); }
 
+    public void UpdateCommandUI() { UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray()); }
+
     private void AddCommand(SkillBase.Command cmd)
     {
+        if (Player.Instance.isAirborne || Player.Instance.isCinematic || Player.Instance.IsStunned || Player.Instance.PlayerMove.isKnockedDown) return;
         commandBuffer.Add(cmd);
         if (commandBuffer.Count > MaxCommandBuffer) commandBuffer.RemoveAt(0);
 
-        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
+        UpdateCommandUI();
     }
 
     private string CommandsToString(IEnumerable<SkillBase.Command> cmds, bool forText = true)
@@ -228,7 +232,6 @@ public class PlayerAttack : MonoBehaviour
 
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
-
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
@@ -238,7 +241,67 @@ public class PlayerAttack : MonoBehaviour
         if (isAttacking && !canComboInput) return;
         if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) return;
 
+        EnemyCore targetEnemy = GetClosestStunnedEnemy();
+        if (targetEnemy != null && strongAttackSkill != null)
+        {
+            ExecuteStrongAttack(targetEnemy);
+            return;
+        }
+
         StartCoroutine(AttackRoutine());
+    }
+
+    private EnemyCore GetClosestStunnedEnemy(float searchRadius = 5f)
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayer);
+        EnemyCore closestEnemy = null;
+        float minDistance = float.MaxValue;
+
+        foreach (Collider hit in hits)
+        {
+            EnemyCore enemy = hit.GetComponent<EnemyCore>();
+            if (enemy != null && enemy.currentState == EnemyState.Stun && !enemy.IsDead)
+            {
+                float dist = Vector3.Distance(transform.position, enemy.transform.position);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestEnemy = enemy;
+                }
+            }
+        }
+        return closestEnemy;
+    }
+
+    private void ExecuteStrongAttack(EnemyCore targetEnemy)
+    {
+        ClearCommandBuffer();
+        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
+        CancelCurrentSkill();
+
+        Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
+        direction.y = 0f;
+        if (direction != Vector3.zero)
+        {
+            if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
+            else transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+
+        if (!isArmed)
+        {
+            if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
+        }
+        else
+        {
+            Attack(strongAttackSkill);
+        }
+    }
+
+    private IEnumerator DrawSwordImmediateAndAttack(SkillBase skillToUse)
+    {
+        yield return StartCoroutine(DrawSword());
+        Attack(skillToUse);
     }
 
     private IEnumerator AttackRoutine()
@@ -301,12 +364,12 @@ public class PlayerAttack : MonoBehaviour
         Player.Instance.mpRecoveryDelayStart();
         Attack(skillToUse);
     }
+
     private SoundObject currentSkillSound;
     public void Attack(SkillBase skillToUse)
     {
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
         if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
-
         Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
@@ -469,7 +532,6 @@ public class PlayerAttack : MonoBehaviour
         if (lastActivatedSkill == null || Time.time - lastAttackTime < 0.1f || processedHitIndices.Contains(HitIndex)) return;
 
         processedHitIndices.Add(HitIndex);
-
         float baseDamage = StatManager.Instance.AttackPower / 100f;
         lastActivatedSkill.ExecuteHitCheck(Player.Instance.transform, baseDamage, HitIndex);
     }
@@ -705,7 +767,7 @@ public class PlayerAttack : MonoBehaviour
             currentTarget = target;
             isLockedOn = true;
 
-            if(EnemyLockOnImage.Instance != null)
+            if (EnemyLockOnImage.Instance != null)
                 EnemyLockOnImage.Instance.SetTarget(currentTarget);
 
             Camera.main.GetComponent<CameraController>().SetLockOn(currentTarget);

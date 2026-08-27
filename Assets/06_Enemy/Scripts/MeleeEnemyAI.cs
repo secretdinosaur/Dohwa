@@ -1,14 +1,22 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
 public class MeleeEnemyAI : EnemyAIBase
 {
     [Header("Melee Specific")]
-    public float moveBeforeAttackChance = 0.5f;
-    public float parriedBackWalkChance = 60f;
-    public float normalBackWalkChance = 20f;
+    [Tooltip("너무 가까울 때 공격 전 위치를 다시 잡을 확률 (0~100)")]
+    [Range(0f, 100f)] public float moveBeforeAttackChance = 50f;
+
+    [Tooltip("패링 당했을 때 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
+
+    [Tooltip("일반 공격 종료 후 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
+
     public float backWalkTriggerFactor = 0.7f;
+
+    [Tooltip("위치 다시 잡기 발동 시, 뒤로 안 가고 옆(Strafe)으로 걸을 확률 (0~100)")]
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
 
     private bool lastActionWasBackWalk = false;
@@ -40,9 +48,13 @@ public class MeleeEnemyAI : EnemyAIBase
             bool canAttackGlobal = Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo;
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            if (dist <= executeRange)
+            // 💡 추가됨: 단순 거리 비교 대신 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
+            bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
+
+            if (isWithinAttackBox)
             {
-                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.value < moveBeforeAttackChance)
+                // 타격 박스 안이지만, 플레이어가 너무 바짝 붙었을 경우 위치를 다시 잡을지 결정
+                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
                     {
@@ -61,13 +73,40 @@ public class MeleeEnemyAI : EnemyAIBase
                 }
                 else
                 {
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    // 쿨타임/MP 대기 중
+                    float rand = UnityEngine.Random.Range(0f, 100f);
+
+                    if (rand < 60f)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                    }
+
                     lastActionWasBackWalk = false;
                 }
             }
             else
             {
-                UpdateChaseTarget();
+                // 💡 추가됨: 타격 박스 밖에 있을 때의 유동적 위치 선정 로직
+                if (dist < backWalkRange)
+                {
+                    // 거리는 너무 가까운데 각도가 빗나간 경우 -> 회피기동이나 뒤로 물러나면서 각도를 잼
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    {
+                        actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
+                        lastActionWasBackWalk = false;
+                    }
+                    else
+                    {
+                        actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
+                        lastActionWasBackWalk = true;
+                    }
+                }
+                else
+                {
+                    // 멀리 있는 경우 추적하여 간격 좁히기
+                    UpdateChaseTarget();
+                    lastActionWasBackWalk = false;
+                }
             }
         }
         else
@@ -116,5 +155,14 @@ public class MeleeEnemyAI : EnemyAIBase
         }
 
         ChainNextAttackOrIdle();
+    }
+
+    protected void OnDisable()
+    {
+        if (currentAttackCompleteHandler != null && core != null)
+        {
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
+        }
     }
 }
