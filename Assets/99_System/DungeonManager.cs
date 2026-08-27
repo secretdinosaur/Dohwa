@@ -107,7 +107,6 @@ public class DungeonManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("다음 스테이지로 가려면 현재 스테이지의 보스를 처치해야 합니다.");
         }
     }
 
@@ -141,7 +140,6 @@ public class DungeonManager : MonoBehaviour
 
         if (currentStage > 0)
         {
-            Debug.Log("보스 처치됨: " + currentStage);
             CurrentStage++;
             BossCleared = true;
         }
@@ -214,7 +212,6 @@ public class DungeonManager : MonoBehaviour
         }
 
         currentRespawnIndex = idx;
-        Debug.Log($"[DungeonManager] Respawn Point Set to idx={idx} ({cp.name})");
 
         if (CheckPointPanel != null)
         {

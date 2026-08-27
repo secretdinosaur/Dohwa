@@ -99,13 +99,11 @@ public class UpgradeSkillPassive : PassiveLogic
     {
         if (Player.Instance == null || Player.Instance.PlayerAttack == null)
         {
-            Debug.LogWarning("[UpgradeSkillPassive] Player 또는 PlayerAttack이 없습니다.");
             return;
         }
 
         if (baseSkill == null)
         {
-            Debug.LogWarning("[UpgradeSkillPassive] baseSkill이 지정되지 않았습니다.");
             return;
         }
 
@@ -143,7 +141,6 @@ public class UpgradeSkillPassive : PassiveLogic
     {
         if (Player.Instance == null || Player.Instance.PlayerAttack == null)
         {
-            Debug.LogWarning("[UpgradeSkillPassive] Player 또는 PlayerAttack이 없습니다.");
             return;
         }
 

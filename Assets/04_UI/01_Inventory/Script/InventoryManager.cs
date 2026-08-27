@@ -35,7 +35,8 @@ public class InventoryManager : MonoBehaviour
         Setting,
         SettingGameSub,
         SettingKeySub,
-        SettingCreditSub
+        SettingCreditSub,
+        SettingTutorialSub // 추가됨
     }
 
     public static InventoryManager Instance;
@@ -80,7 +81,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject Book;
     public GameObject BookInfo;
     public GameObject TreeInfo;
-    public GameObject InformationTab;
+    public GameObject InformationTab; // 복구됨
     public GameObject GradeTab;
     public GameObject MouseItemInfoBackground;
     public GameObject MouseItemInfo;
@@ -93,9 +94,10 @@ public class InventoryManager : MonoBehaviour
     public GameObject SettingGamePanel;
     public GameObject SettingKeyPanel;
     public GameObject SettingCreditPanel;
+    public GameObject SettingTutorialPanel; // 추가됨
 
     public Button EquipmentButton;
-    public Button InfoButton;
+    public Button InfoButton; // 복구됨
     public Button GradeButton;
     public Button SkillBookButton;
     public Button ItemButton;
@@ -107,6 +109,8 @@ public class InventoryManager : MonoBehaviour
     public Button SettingGameButton;
     public Button SettingKeyButton;
     public Button SettingCreditButton;
+    public Button SettingTutorialButton; // 추가됨
+
     public GameObject TitlePanel;
     public GameObject QuitPanel;
     public InventorySlot[] QuickSlots;
@@ -884,6 +888,7 @@ public class InventoryManager : MonoBehaviour
             }
         }
     }
+
     private void HideAllTabs()
     {
         if (Inventory != null) Inventory.SetActive(false);
@@ -892,7 +897,6 @@ public class InventoryManager : MonoBehaviour
         if (SkillBookInventory != null) SkillBookInventory.SetActive(false);
 
         if (ItemInventory != null) ItemInventory.SetActive(false);
-
 
         if (WeaponInventory != null) WeaponInventory.SetActive(false);
         if (ArmorInventory != null) ArmorInventory.SetActive(false);
@@ -907,9 +911,12 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(false);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(false);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(false);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(false); // 추가됨
+
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.SetActive(false); // 추가됨
         if (MouseItemInfoBackground != null) MouseItemInfoBackground.SetActive(false);
         MouseItemInfo.SetActive(false);
         PeachTree.Instance.gameObject.SetActive(false);
@@ -932,6 +939,7 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
         if (SettingKeyButton != null) SettingKeyButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
         if (SettingCreditButton != null) SettingCreditButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f);
+        if (SettingTutorialButton != null) SettingTutorialButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 150 / 255f); // 추가됨
         foreach (Camera cam in cameras)
         {
             if (cam != null)
@@ -946,7 +954,7 @@ public class InventoryManager : MonoBehaviour
         UIManager.Instance.InteractPanel.SetActive(false);
 
         GradeManager.Instance.gradePanel.gameObject.SetActive(false);
-        
+
         Destroy(LastSkillTree);
     }
 
@@ -1093,6 +1101,7 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
 
@@ -1111,12 +1120,14 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingManager.Instance.OnOpenSettings();
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(true);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingGameButton != null) SettingGameButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
     }
@@ -1133,12 +1144,14 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         SettingManager.Instance.OnOpenSettings();
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(true);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingKeyButton != null) SettingKeyButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
@@ -1156,13 +1169,39 @@ public class InventoryManager : MonoBehaviour
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
         if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true); // 추가됨
 
         if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
         if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
         if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(true);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(false); // 추가됨
 
         SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
         if (SettingCreditButton != null) SettingCreditButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
+    }
+
+    // 새로 추가됨
+    public void OnClickSettingTutorialSubTab()
+    {
+        if (currentTab == TabType.SettingTutorialSub) return;
+
+        HideAllTabs();
+        currentTab = TabType.SettingTutorialSub;
+        SetInventoryBackground(5);
+
+        SettingTab.gameObject.SetActive(true);
+        if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
+        if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
+        if (SettingCreditButton != null) SettingCreditButton.gameObject.SetActive(true);
+        if (SettingTutorialButton != null) SettingTutorialButton.gameObject.SetActive(true);
+
+        if (SettingGamePanel != null) SettingGamePanel.SetActive(false);
+        if (SettingKeyPanel != null) SettingKeyPanel.SetActive(false);
+        if (SettingCreditPanel != null) SettingCreditPanel.gameObject.SetActive(false);
+        if (SettingTutorialPanel != null) SettingTutorialPanel.gameObject.SetActive(true);
+
+        SettingButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
+        if (SettingTutorialButton != null) SettingTutorialButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0, 0, 0, 1);
     }
 
     public void ResetTabState()
@@ -1250,7 +1289,7 @@ public class InventoryManager : MonoBehaviour
 
     public bool isItemEmpty(InventoryItem item)
     {
-        if (item.weapon == null && 
+        if (item.weapon == null &&
             item.armor == null &&
             item.skillBook == null &&
             item.consumable == null &&

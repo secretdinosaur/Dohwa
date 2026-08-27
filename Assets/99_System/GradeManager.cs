@@ -11,6 +11,7 @@ public class GradeManager : MonoBehaviour
 
     public LocalizedString[] LocalizedGrades;
     public LocalizedString[] LocalizedGradeAbilityDescriptions;
+    public LocalizedString MaxGradeText;
     public int CurrentGradeIndex = 0;
     float currentExp = 0;
     public int maxGrade = 3;
@@ -79,9 +80,9 @@ public class GradeManager : MonoBehaviour
                     if (UIManager.Instance.ExpBarFill.material != null)
                         UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", 1f);
 
-                    UIManager.Instance.NextGradeText.text = "Max Grade (Demo)";
+                    UIManager.Instance.NextGradeText.text = MaxGradeText.GetLocalizedString();
                     UIManager.Instance.GradeAbilityText.text = "";
-                    UIManager.Instance.ExpText.text = "MAX";
+                    UIManager.Instance.ExpText.text = "";
                 }
                 else
                 {
@@ -118,7 +119,7 @@ public class GradeManager : MonoBehaviour
                 UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", 1f);
 
             UIManager.Instance.ExpText.text = "";
-            UIManager.Instance.NextGradeText.text = "최고 경지";
+            UIManager.Instance.NextGradeText.text = MaxGradeText.GetLocalizedString();
             UIManager.Instance.GradeAbilityText.text = "";
         }
         else

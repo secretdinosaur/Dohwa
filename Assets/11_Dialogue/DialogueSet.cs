@@ -44,7 +44,6 @@ public class DialogueSet : ScriptableObject
         if (Player.Instance == null) return;
         if (gettingWhat.GettingType.HasFlag(GettingType.Item))
         {
-            Debug.Log("Give Item");
         }
         if (gettingWhat.GettingType.HasFlag(GettingType.Stat))
         {
@@ -221,7 +220,6 @@ public class ChoiceOption
         if (Player.Instance == null) return;
         if (questRewardOption.rewardType.HasFlag(RewardType.Item))
         {
-            Debug.Log("Give Item");
         }
         if (questRewardOption.rewardType.HasFlag(RewardType.Stat))
         {
