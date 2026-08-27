@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using static InventoryManager;
 using static SkillBookBase;
-using TMPro;
 
 public class InventoryManager : MonoBehaviour
 {
@@ -89,6 +91,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject CheckDeleteItemPenel;
     public GameObject CantDeleteMessagePanel;
     public GameObject StatToolTip;
+    Coroutine StatToolTipRoutine;
 
     [Header("Setting UI")]
     public GameObject SettingTab;
@@ -856,6 +859,45 @@ public class InventoryManager : MonoBehaviour
         if (selectedItem != null)
             selectedItem.canvasGroup.blocksRaycasts = true;
         ItemContextMenu.gameObject.SetActive(false);
+    }
+
+    public void StartShowStatToolTip(string tooltip, RectTransform targetRect)
+    {
+        StatToolTipRoutine = StartCoroutine(ShowStatToolTip(tooltip, targetRect));
+
+        TextMeshProUGUI text = StatToolTip.GetComponentInChildren<TextMeshProUGUI>();
+        text.text = tooltip;
+
+        if (targetRect != null)
+        {
+            StatToolTip.GetComponent<RectTransform>().position = targetRect.position;
+        }
+
+        StatToolTip.SetActive(true);
+    }
+
+    IEnumerator ShowStatToolTip(string tooltip, RectTransform targetRect)
+    {
+        yield return new WaitForSeconds(1f);
+        TextMeshProUGUI text = StatToolTip.GetComponentInChildren<TextMeshProUGUI>();
+        text.text = tooltip;
+
+        if (targetRect != null)
+        {
+            StatToolTip.GetComponent<RectTransform>().position = targetRect.position + new Vector3(0f, 10f);
+        }
+
+        StatToolTip.SetActive(true);
+    }
+
+    public void HideStatToolTip()
+    {
+        if (StatToolTipRoutine != null)
+        {
+            StopCoroutine(StatToolTipRoutine);
+            StatToolTipRoutine = null;
+        }
+        StatToolTip.SetActive(false);
     }
 
     GameObject LastSkillTree;
