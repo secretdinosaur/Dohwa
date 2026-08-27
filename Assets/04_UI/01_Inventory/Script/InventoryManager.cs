@@ -646,7 +646,12 @@ public class InventoryManager : MonoBehaviour
 
     public void ShowItemTooltip(InventoryItem item)
     {
-        if (isItemEmpty(item)) return;
+        if (isItemEmpty(item))
+        {
+            MouseItemInfoBackground.SetActive(false);
+            NormalItemInfoPanel.gameObject.SetActive(false);
+            return;
+        }
         if (item.itemType == InventoryType.Weapon)
         {
             NormalItemInfoPanel.ItemIcon.sprite = item.weapon.icon;
