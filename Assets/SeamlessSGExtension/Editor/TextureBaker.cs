@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2023 Léo Chaumartin
+   Copyright (c) 2023 L? Chaumartin
    All rights reserved.
 */
 

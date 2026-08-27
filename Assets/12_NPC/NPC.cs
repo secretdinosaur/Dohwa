@@ -25,7 +25,6 @@ public class NPC : InteractableObj
         if (DialogueManager.Instance.IsDialogueActive) return;
 
         base.Interact();
-        print("Interacted with NPC: " + gameObject.name);
 
         if (LookPlayer)
         {
