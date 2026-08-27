@@ -102,12 +102,10 @@ public class DataManager : MonoBehaviour
                 if (File.Exists(path))
                 {
                     File.Delete(path);
-                    Debug.Log($"파일 삭제 완료: {fileName}");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"{fileName} 파일 삭제 중 오류 발생: {e.Message}");
             }
         }
     }
@@ -156,7 +154,6 @@ public class DataManager : MonoBehaviour
         // 데이터 개수 검증 (데이터가 깨졌을 때를 대비한 안전장치)
         if (data.Length < 7)
         {
-            Debug.LogError("Settings.data 파일이 손상되었습니다. 백업을 취소합니다.");
             return;
         }
 
@@ -191,6 +188,8 @@ public class DataManager : MonoBehaviour
           .Append(backup_LocaleIndex).Append("/")
           .Append(backup_ResolutionIndex).Append("/")
           .Append(backup_ScreenModeIndex);
+
+        File.WriteAllText(path, sb.ToString());
     }
 
     void ResetScriptableObjects()
@@ -302,11 +301,9 @@ public class DataManager : MonoBehaviour
         try
         {
             File.WriteAllText(path, sb.ToString());
-            Debug.Log($"데이터 저장 완료: {path}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"데이터 저장 실패: {e.Message}");
         }
     }
 
@@ -413,11 +410,9 @@ public class DataManager : MonoBehaviour
         try
         {
             File.WriteAllText(path, sb.ToString());
-            Debug.Log($"데이터 저장 완료: {path}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"데이터 저장 실패: {e.Message}");
         }
     }
 
@@ -685,7 +680,6 @@ public class DataManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"데이터 저장 실패: {e.Message}");
         }
     }
 
@@ -807,11 +801,9 @@ public class DataManager : MonoBehaviour
         try
         {
             File.WriteAllText(path, sb.ToString());
-            Debug.Log($"데이터 저장 완료: {path}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"데이터 저장 실패: {e.Message}");
         }
     }
 

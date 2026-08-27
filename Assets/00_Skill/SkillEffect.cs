@@ -24,8 +24,6 @@ public class SkillEffect : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            print(name);
-            print(skill);
         }
     }
 }

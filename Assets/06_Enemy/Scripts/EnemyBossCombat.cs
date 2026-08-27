@@ -69,7 +69,6 @@ public class EnemyBossCombat : MonoBehaviour
     private void InitiateInstantAttack(SkillBase skill)
     {
         bool isCombo = attackRoutine != null;
-        print("InitiateInstantAttack");
         if (attackRoutine != null) StopCoroutine(attackRoutine);
         // 전환 시간(crossFadeDuration)을 0f로 넘겨줌
         attackRoutine = StartCoroutine(PerformAttackRoutine(skill, isCombo, 0f));
@@ -114,7 +113,6 @@ public class EnemyBossCombat : MonoBehaviour
         // 💡 0 이하일 경우 CrossFade 대신 Play를 사용하여 프레임 끊김 없이 즉시 재생
         if (crossFadeDuration <= 0f)
         {
-            print("anim play");
             core.animator.Play(targetState, 0, 0f);
         }
         else

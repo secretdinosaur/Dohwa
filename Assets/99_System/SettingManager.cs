@@ -285,7 +285,6 @@ public class SettingManager : MonoBehaviour
 
         if (font == null)
         {
-            Debug.LogError("Font not found.");
             return;
         }
 

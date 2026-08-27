@@ -17,7 +17,6 @@ public static class LocalizationGoogleSheetsPullTool
 
         if (collections.Count == 0)
         {
-            Debug.LogWarning("[Localization Pull] 프로젝트에 String Table Collection이 존재하지 않습니다.");
             return;
         }
 

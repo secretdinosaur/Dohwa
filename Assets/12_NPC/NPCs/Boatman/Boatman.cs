@@ -71,12 +71,10 @@ public class Boatman : NPC
 
     public void OnSelectYesToBoard()
     {
-        print(1);
         if (DataManager.Instance != null && DataManager.Instance.IsEventCleared(eventSaveKey))
         {
             if (endingSceneManager != null)
             {
-        print(2);
                 endingSceneManager.StartCutscene();
             }
         }
