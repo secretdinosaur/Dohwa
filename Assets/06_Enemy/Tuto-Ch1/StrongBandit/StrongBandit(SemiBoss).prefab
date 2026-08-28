@@ -3089,7 +3089,7 @@ GameObject:
   - component: {fileID: 6612731263931740685}
   - component: {fileID: 6141236220954738026}
   m_Layer: 7
-  m_Name: StrongBandit
+  m_Name: StrongBandit(SemiBoss)
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3532,6 +3532,7 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
@@ -3642,6 +3643,20 @@ MonoBehaviour:
     instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0
+  - skill: {fileID: 11400000, guid: 7dab344497609af4885de1eaa6ae5046, type: 2}
+    minDistance: 0
+    maxDistance: 0
+    baseWeight: 0
+    weightIncreaseAmount: 0
+    nextAttackDelay: 0
+    cooldown: 3
+    minPhase: 9
+    maxPhase: 9
+    comboSkills: []
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 0
   isNextSkillCombo: 0
   isInstantComboTriggered: 0
   currentPhase: 1
@@ -3714,7 +3729,7 @@ MonoBehaviour:
   FightWall: {fileID: 0}
   startFightPreDelay: 0
   startFightAnimDuration: 4
-  walkApproachFactor: 1.5
+  moveBeforeAttackChance: 50
   backWalkTriggerFactor: 0.7
   strafeOnCloseChance: 30
   parriedBackWalkChance: 60

@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d6cb460c5e307a42adda57a4889bc7f, type: 3}
-  m_Name: Bandit3_Attack1
+  m_Name: Attack1
   m_EditorClassIdentifier: Assembly-CSharp::Skill_Slash
   isEnemySkill: 1
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
-  MP_cost: 15
-  clip: {fileID: 7400000, guid: 1b6c9f07e6290d34d88e6f2e91ce4c32, type: 2}
+  MP_cost: 25
+  clip: {fileID: 7400000, guid: 67a623285e9f9084f968cab84bf8a980, type: 2}
   icon: {fileID: 0}
-  sound: {fileID: 8300000, guid: df6cb60e61cf10b45962b85360be1d89, type: 3}
+  sound: {fileID: 8300000, guid: 06f90662c976569488a022f146b68925, type: 3}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -50,12 +50,12 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 5
+  - 10
   HitSound:
-  - {fileID: 8300000, guid: 5043c001f673682468e172443f07f137, type: 3}
+  - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
   HitEffects:
-  - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-  enemyHitEffectDirections: 07000000
+  - {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
+  enemyHitEffectDirections: 08000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -63,19 +63,21 @@ MonoBehaviour:
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
   hitDataList:
-  - centerOffset: {x: 0, y: 1, z: 1.4}
-    boxSize: {x: 1.47, y: 1.7, z: 1.5}
+  - centerOffset: {x: 0, y: 1.5, z: 1}
+    boxSize: {x: 1.5, y: 1, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
-    knockbackForce: 0
-    hitSound: {fileID: 8300000, guid: 5043c001f673682468e172443f07f137, type: 3}
-    effectDirection: 7
-    playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
+    damageMultiplier: 10
+    knockbackForce: {x: 0, y: 0, z: 0}
+    knockdownType: 0
+    knockdownDuration: 1.5
+    hitSound: {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
+    effectDirection: 8
+    playerHitEffect: {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
     guardData:
-      guardable: 0
-      parryable: 0
+      guardable: 1
+      parryable: 1
     stunData:
       stunType: 0
       offset: {x: 0, y: 0, z: 0}
@@ -84,9 +86,9 @@ MonoBehaviour:
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
-    areaDuration: 6
-    areaTickInterval: 1
-    areaDamageMultiplier: 1
+    areaDuration: 0
+    areaTickInterval: 0
+    areaDamageMultiplier: 0
   references:
     version: 2
     RefIds: []

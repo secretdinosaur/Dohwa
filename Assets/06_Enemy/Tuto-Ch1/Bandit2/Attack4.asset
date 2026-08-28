@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d6cb460c5e307a42adda57a4889bc7f, type: 3}
-  m_Name: Bandit2_Attack2
+  m_Name: Attack4
   m_EditorClassIdentifier: Assembly-CSharp::Skill_Slash
   isEnemySkill: 1
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
   MP_cost: 25
-  clip: {fileID: 7400000, guid: c2829b972c201a44786148d1bc3aee61, type: 2}
+  clip: {fileID: 7400000, guid: 626f63efb8c606a4fb8171570773cbde, type: 2}
   icon: {fileID: 0}
-  sound: {fileID: 8300000, guid: a8a1473e963702245813888cf59e0737, type: 3}
+  sound: {fileID: 8300000, guid: 9511c543bf3c3814d873afa46a729e1f, type: 3}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -51,14 +51,11 @@ MonoBehaviour:
     m_LocalVariables: []
   damageMultipliers:
   - 10
-  - 10
   HitSound:
-  - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
-  - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
+  - {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
   HitEffects:
-  - {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
-  - {fileID: 11400000, guid: 7ea488816118b344d93bd109996172e8, type: 2}
-  enemyHitEffectDirections: 0800000004000000
+  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  enemyHitEffectDirections: 0e000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -67,41 +64,15 @@ MonoBehaviour:
   triggerMaxUsesPerCaster: 0
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 1}
-    boxSize: {x: 1.5, y: 1, z: 2}
-    boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
-    knockbackForce: {x: 0, y: 0, z: 0}
-    knockdownType: 0
-    knockdownDuration: 1.5
-    hitSound: {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
-    effectDirection: 8
-    playerHitEffect: {fileID: 11400000, guid: 5f7801ca86f18e642896ec6d1e53771b, type: 2}
-    useGuardSettings: 0
-    useStunSettings: 0
-    guardData:
-      guardable: 1
-      parryable: 1
-    stunData:
-      stunType: 0
-      offset: {x: 0, y: 0, z: 0}
-      isRealtimeFollow: 0
-      stunDuration: 0
-    useAreaSpawn: 0
-    areaPrefab: {fileID: 0}
-    areaOffset: {x: 0, y: 0, z: 0}
-    areaDuration: 0
-    areaTickInterval: 0
-    areaDamageMultiplier: 0
-  - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 2.5, y: 1, z: 1.5}
     boxRotation: {x: 0, y: 0, z: 0}
     damageMultiplier: 10
-    knockbackForce: {x: 0, y: 0, z: 0}
+    knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5
-    hitSound: {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
-    effectDirection: 4
-    playerHitEffect: {fileID: 11400000, guid: 7ea488816118b344d93bd109996172e8, type: 2}
+    hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
+    effectDirection: 14
+    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
     useGuardSettings: 0
     useStunSettings: 0
     guardData:

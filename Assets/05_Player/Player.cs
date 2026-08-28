@@ -82,7 +82,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             }
 
             if (hp <= 0 && DeathRoutine == null) DeathRoutine = StartCoroutine(PlayerDead());
-            UIManager.Instance.HpText.text = StatManager.Instance.MaxHp.ToString();
         }
     }
 
@@ -94,8 +93,13 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             mp = Mathf.Clamp(value, 0, StatManager.Instance.MaxMp);
             UIManager.Instance.UpdateMpUI(mp / StatManager.Instance.MaxMp);
-            UIManager.Instance.MpText.text = StatManager.Instance.MaxMp.ToString();
         }
+    }
+
+    // 💡 추가됨: 마나 소모 공통 메서드
+    public void ConsumeMP(float amount)
+    {
+        MP -= amount * (1 - StatManager.Instance.MpConsumptionReduction);
     }
 
     public bool IsGrabbed => currentStunRoutine != null && currentStunType == StunType.Grabbed;
@@ -353,13 +357,17 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             ShakePower = 2f;
             if (skill.SpecialGuardEffect) SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, skill.SpecialGuardEffect.name);
             else SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, "GuardEffect");
+
             float RemainingDamage = 0;
-            if (MP > StatManager.Instance.GuardSuccessCostMpMult * damage)
-                MP -= StatManager.Instance.GuardSuccessCostMpMult * damage;
+            float mpCost = StatManager.Instance.GuardSuccessCostMpMult * damage;
+
+            // 💡 ConsumeMP 적용
+            if (MP > mpCost)
+                ConsumeMP(mpCost);
             else
             {
                 RemainingDamage = damage - MP / StatManager.Instance.GuardSuccessCostMpMult;
-                MP = 0;
+                ConsumeMP(MP);
             }
 
             if (MP <= 0)
@@ -1013,7 +1021,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         else if (item.nonConsumable != null)
             item.nonConsumable.Use();
         item.Count--;
-        if(Slot.GetComponent<QuickSlot>() != null)
+        if (Slot.GetComponent<QuickSlot>() != null)
         {
             Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;
             UIManager.Instance.SyncGameQuickSlots();

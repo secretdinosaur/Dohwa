@@ -42,7 +42,7 @@ public class StatManager : MonoBehaviour
         }
     }
     #region Stat Variables and Texts
-    [SerializeField] private float attackPower = 100f;
+    [SerializeField] private float attackPower = 90f;
     public float AttackPower
     {
         get => attackPower;
@@ -53,14 +53,15 @@ public class StatManager : MonoBehaviour
     public float MaxHp
     {
         get => maxHp;
-        set { maxHp = value; }
+            
+        set { maxHp = value; UIManager.Instance.HpText.text = ((int)MaxHp).ToString(); }
     }
 
     [SerializeField] private float maxMp = 100f;
     public float MaxMp
     {
         get => maxMp;
-        set { maxMp = value; }
+        set { maxMp = value; UIManager.Instance.MpText.text = ((int)MaxMp).ToString();  }
     }
 
     [SerializeField] private float armor = 0f;
@@ -88,21 +89,21 @@ public class StatManager : MonoBehaviour
     public float VitalStrikeRate
     {
         get => vitalStrikeRate;
-        set { vitalStrikeRate = value; UIManager.Instance.VitalStrikeRateText.text = (vitalStrikeRate * 100f).ToString("0.#") + "%"; }
+        set { vitalStrikeRate = value; UIManager.Instance.VitalStrikeRateText.text = ((int)(vitalStrikeRate * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float vitalStrikeDamage = 1.1f;
     public float VitalStrikeDamage
     {
         get => vitalStrikeDamage;
-        set { vitalStrikeDamage = value; UIManager.Instance.VitalStrikeDamageText.text = (vitalStrikeDamage * 100f).ToString("0.#") + "%"; }
+        set { vitalStrikeDamage = value; UIManager.Instance.VitalStrikeDamageText.text = ((int)(vitalStrikeDamage * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float hpRecoveryAmount = 1f;
     public float HpRecoveryAmount
     {
         get => hpRecoveryAmount;
-        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = (HpRecoveryAmount * 100f).ToString("0.#") + "%"; }
+        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = ((int)(hpRecoveryAmount * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float mpRecoveryAmount = 10f;
@@ -123,28 +124,28 @@ public class StatManager : MonoBehaviour
     public float PoisonResistance
     {
         get => poisonResistance;
-        set { poisonResistance = value; UIManager.Instance.PoisonResistanceText.text = (poisonResistance * 100f).ToString("0.#") + "%"; }
+        set { poisonResistance = value; UIManager.Instance.PoisonResistanceText.text = ((int)(poisonResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float bleedResistance = 0f;
     public float BleedResistance
     {
         get => bleedResistance;
-        set { bleedResistance = value; UIManager.Instance.BleedResistanceText.text = (bleedResistance * 100f).ToString("0.#") + "%"; }
+        set { bleedResistance = value; UIManager.Instance.BleedResistanceText.text = ((int)(bleedResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float fireResistance = 0f;
     public float FireResistance
     {
         get => fireResistance;
-        set { fireResistance = value; UIManager.Instance.FireResistanceText.text = (fireResistance * 100f).ToString("0.#") + "%"; }
+        set { fireResistance = value; UIManager.Instance.FireResistanceText.text = ((int)(fireResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float lightningResistance = 0f;
     public float LightningResistance
     {
         get => lightningResistance;
-        set { lightningResistance = value; UIManager.Instance.LightningResistanceText.text = (lightningResistance * 100f).ToString("0.#") + "%"; }
+        set { lightningResistance = value; UIManager.Instance.LightningResistanceText.text = ((int)(lightningResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float orthodox = 0f;
@@ -172,7 +173,7 @@ public class StatManager : MonoBehaviour
     public float MpConsumptionReduction
     {
         get => mpConsumptionReduction;
-        set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = (mpConsumptionReduction * 100f).ToString("0.#") + "%"; }
+        set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = ((int)(mpConsumptionReduction * 100f)).ToString() + "%"; }
     }
 
     public float ParryMpRecovery = 20f;
@@ -183,30 +184,6 @@ public class StatManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-
-        armor = 0f;
-        attackPower = 280f;
-        maxHp = 100f;
-        maxMp = 100f;
-
-        externalArt = 0f;
-        innerArt = 0f;
-        vitalStrikeRate = 0f;
-        vitalStrikeDamage = 1.1f;
-        moveSpeed = 5f;
-
-        poisonResistance = 0f;
-        bleedResistance = 0f;
-        fireResistance = 0f;
-        lightningResistance = 0f;
-
-        orthodox = 0f;
-        unorthodox = 0f;
-        demonic = 0f;
-
-        hpRecoveryAmount = 10f;
-        mpRecoveryAmount = 10f;
-        mpConsumptionReduction = 0f;
 
         Armor = armor;
         AttackPower = attackPower;
