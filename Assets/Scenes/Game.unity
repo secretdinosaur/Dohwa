@@ -90332,6 +90332,7 @@ GameObject:
   - component: {fileID: 883616601}
   - component: {fileID: 883616603}
   - component: {fileID: 883616602}
+  - component: {fileID: 883616604}
   m_Layer: 5
   m_Name: UpperBar
   m_TagString: Untagged
@@ -90400,6 +90401,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 883616600}
   m_CullTransparentMesh: 1
+--- !u!225 &883616604
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883616600}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &885156905
 GameObject:
   m_ObjectHideFlags: 0
@@ -211984,6 +211997,7 @@ GameObject:
   - component: {fileID: 1442565671}
   - component: {fileID: 1442565670}
   - component: {fileID: 1442565669}
+  - component: {fileID: 1442565672}
   m_Layer: 5
   m_Name: Flower
   m_TagString: Untagged
@@ -212126,6 +212140,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!225 &1442565672
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1442565667}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1442694560
 GameObject:
   m_ObjectHideFlags: 0

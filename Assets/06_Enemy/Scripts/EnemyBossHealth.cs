@@ -59,6 +59,7 @@ public class EnemyBossHealth : MonoBehaviour
 
     private void Update()
     {
+        if (core.isCulled) return;
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
 
@@ -69,23 +70,6 @@ public class EnemyBossHealth : MonoBehaviour
             {
                 if (UIManager.Instance.BossStatus.gameObject.activeSelf)
                     UIManager.Instance.BossStatus.gameObject.SetActive(false);
-            }
-            else
-            {
-                bool isLockedOn = EnemyLockOnImage.Instance != null &&
-                                  EnemyLockOnImage.Instance.target != null &&
-                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
-
-                if (isLockedOn || currentHp < maxHP)
-                {
-                    if (!UIManager.Instance.BossStatus.gameObject.activeSelf)
-                        UIManager.Instance.BossStatus.gameObject.SetActive(true);
-                }
-                else
-                {
-                    if (UIManager.Instance.BossStatus.gameObject.activeSelf)
-                        UIManager.Instance.BossStatus.gameObject.SetActive(false);
-                }
             }
         }
     }

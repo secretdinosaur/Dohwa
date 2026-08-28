@@ -69,6 +69,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     [HideInInspector] public bool isForceDetected = false;
     [HideInInspector] public bool isIgnoringPlayer = false;
     [HideInInspector] public bool isTakingDoT = false;
+    [HideInInspector] public bool isCulled;
 
     [HideInInspector] public SkillSelector skillSelector;
 
