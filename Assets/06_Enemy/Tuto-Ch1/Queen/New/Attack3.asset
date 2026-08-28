@@ -58,7 +58,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
   - {fileID: 8300000, guid: 8eee2d16541c6744e83770776e156dfc, type: 3}
   HitEffects:
-  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
   - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
   enemyHitEffectDirections: 000000000e0000000e000000
@@ -78,7 +78,7 @@ MonoBehaviour:
     knockdownDuration: 1.5
     hitSound: {fileID: 0}
     effectDirection: 0
-    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+    playerHitEffect: {fileID: 0}
     useGuardSettings: 0
     useStunSettings: 0
     guardData:
@@ -89,6 +89,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -115,6 +118,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -141,6 +147,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
