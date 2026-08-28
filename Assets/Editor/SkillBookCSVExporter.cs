@@ -8,16 +8,13 @@ using System.Linq;
 
 public class SkillBookGoogleSheetSyncWindow : EditorWindow
 {
-    private string webAppUrl = "https://script.google.com/macros/s/AKfycbxVgGFYfBN5LksLaAr43lqMPlF6OoXUNfFG4Ofm475jPd5dbXk_bojXVqIHveMLlntYXQ/exec";
+    private string webAppUrl = "https://script.google.com/macros/s/AKfycbylQmkk4__fy-oOHmULz3lUy-s2iZVK-bJh_u78IfmDzV6zxrESfdQ6Xk6wz9Whr81ZJw/exec";
     private bool isWorking = false;
 
     [Serializable]
-    private class GoogleSheetData
-    {
-        public List<string> Active;
-        public List<string> Passive;
-        public List<string> Stat;
-    }
+    private class GASResponse { public List<SheetData> sheets; }
+    [Serializable]
+    private class SheetData { public string sheetName; public List<string> rows; }
 
     [MenuItem("Tools/SkillBook Google Sheet Sync")]
     public static void ShowWindow()
@@ -38,12 +35,11 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
         EditorGUILayout.HelpBox(
             "[⬆️ Push (내보내기)]\n현재 유니티에 있는 스킬 데이터를 구글 시트로 전송하여 덮어씌웁니다.\n\n" +
-            "[⬇️ Pull (가져오기)]\n구글 시트의 수정된 기획 수치(Cost, MP Cost, 스탯량)를 유니티로 가져옵니다.",
+            "[⬇️ Pull (가져오기)]\n구글 시트의 수정된 기획 수치(Cost, MP Cost, Damage, 스탯량)를 유니티로 가져옵니다.",
             MessageType.Info);
 
         GUILayout.Space(20);
 
-        // 작업 중이거나 URL이 비어있으면 버튼 비활성화
         EditorGUI.BeginDisabledGroup(isWorking || string.IsNullOrEmpty(webAppUrl));
 
         if (GUILayout.Button("⬆️ Push (유니티 -> 구글 시트)", GUILayout.Height(40)))
@@ -118,7 +114,6 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
             List<string> statNames = uniqueStatTypes.ToList();
 
-            // 💡 요청하신 스탯 열(Column) 우선 정렬 로직
             List<string> preferredOrder = new List<string>
             {
                 "ExternalArt", "InnerArt", "HpRecovery", "MpRecovery", "VitalStrikeDamage", "VitalStrikeRate"
@@ -129,10 +124,10 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                 int idxA = preferredOrder.IndexOf(a);
                 int idxB = preferredOrder.IndexOf(b);
 
-                if (idxA != -1 && idxB != -1) return idxA.CompareTo(idxB); // 둘 다 우선순위 목록에 있으면 순서대로
-                if (idxA != -1) return -1; // a만 우선순위 목록에 있으면 a를 앞으로
-                if (idxB != -1) return 1;  // b만 우선순위 목록에 있으면 b를 앞으로
-                return a.CompareTo(b);     // 둘 다 없으면 남은 것들끼리 알파벳순 정렬
+                if (idxA != -1 && idxB != -1) return idxA.CompareTo(idxB);
+                if (idxA != -1) return -1;
+                if (idxB != -1) return 1;
+                return a.CompareTo(b);
             });
 
             List<string> statHeader = new List<string> { "Skill Book", "Stat Name", "Cost" };
@@ -168,7 +163,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                 string dpcStr = (cost > 0 && dmgSum > 0) ? (dmgSum / cost).ToString("F2") : "";
                                 string dpmStr = (node.activeSkill.MP_cost > 0 && dmgSum > 0) ? (dmgSum / node.activeSkill.MP_cost).ToString("F2") : "";
 
-                                string skillDisplayName = !string.IsNullOrEmpty(node.activeSkill.skillName) ? node.activeSkill.skillName : node.activeSkill.name;
+                                string skillDisplayName = GetSafeSkillName(node.activeSkill);
                                 activeData.Add(new List<string> { bookDisplayName, skillDisplayName, cost.ToString(), dmgInfo, mpStr, dmgSumStr, dpcStr, dpmStr });
                             }
                             break;
@@ -194,8 +189,8 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                         linkedSkill = AssetDatabase.LoadAssetAtPath<SkillBase>(AssetDatabase.GUIDToAssetPath(guidsFound[0]));
                                 }
 
-                                string linkedName = linkedSkill != null ? (!string.IsNullOrEmpty(linkedSkill.skillName) ? linkedSkill.skillName : linkedSkill.name) : "";
-                                string passiveDisplayName = !string.IsNullOrEmpty(node.passiveSkill.passiveName) ? node.passiveSkill.passiveName : node.passiveSkill.name;
+                                string linkedName = linkedSkill != null ? GetSafeSkillName(linkedSkill) : "";
+                                string passiveDisplayName = GetSafePassiveName(node.passiveSkill);
 
                                 passiveData.Add(new List<string> { bookDisplayName, passiveDisplayName, cost.ToString(), linkedName });
 
@@ -269,7 +264,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                 string dmgSumStr = dmgSum > 0 ? dmgSum.ToString("F2") : "";
                 string dpmStr = (skill.MP_cost > 0 && dmgSum > 0) ? (dmgSum / skill.MP_cost).ToString("F2") : "";
 
-                string unlinkedDisplayName = !string.IsNullOrEmpty(skill.skillName) ? skill.skillName : skill.name;
+                string unlinkedDisplayName = GetSafeSkillName(skill);
                 activeData.Add(new List<string> { "Unlinked Skills", unlinkedDisplayName, "", dmgInfo, mpStr, dmgSumStr, "", dpmStr });
             }
 
@@ -310,31 +305,41 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
     {
         isWorking = true;
         Repaint();
-        Debug.Log("구글 시트에서 데이터를 불러오는 중...");
+        Debug.Log("\n<color=yellow>==================== [디버그 Pull 시작] ====================</color>");
 
         using (HttpClient client = new HttpClient())
         {
             try
             {
                 HttpResponseMessage response = await client.GetAsync(webAppUrl);
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    Debug.LogError($"데이터 불러오기 실패: {response.StatusCode}");
+                    Debug.LogError($"[오류] 데이터 불러오기 실패. 상태 코드: {response.StatusCode}");
                     return;
                 }
 
-                string jsonResponse = await response.Content.ReadAsStringAsync();
-                GoogleSheetData data = JsonUtility.FromJson<GoogleSheetData>(jsonResponse);
+                GASResponse data = JsonUtility.FromJson<GASResponse>(jsonResponse);
 
-                if (data != null)
+                if (data == null || data.sheets == null)
                 {
-                    ApplyDataToAssets(data);
-                    Debug.Log("✅ 구글 시트 기획 데이터(Pull) 유니티 적용 완료!");
+                    Debug.LogError("🚨 [오류] JSON 파싱 실패! 데이터가 비어있거나 형식이 맞지 않습니다.");
+                    return;
                 }
+
+                Debug.Log($"[디버그] 서버에서 받아온 총 시트(탭) 개수: {data.sheets.Count}");
+                foreach (var s in data.sheets)
+                {
+                    Debug.Log($"   -> 탭 이름: [{s.sheetName}], 행(Row) 개수: {s.rows?.Count ?? 0}");
+                }
+
+                ApplyDataToAssets(data);
+                Debug.Log("<color=green>✅ [디버그 Pull 종료]</color>\n");
             }
             catch (Exception e)
             {
-                Debug.LogError($"에러 발생: {e.Message}");
+                Debug.LogError($"[오류] Pull 중 예외 발생: {e.Message}\n{e.StackTrace}");
             }
             finally
             {
@@ -344,8 +349,10 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         }
     }
 
-    private void ApplyDataToAssets(GoogleSheetData data)
+    private void ApplyDataToAssets(GASResponse data)
     {
+        Debug.Log("\n--- [1단계] 유니티 에셋 메모리 매핑 시작 ---");
+
         string[] bookGuids = AssetDatabase.FindAssets("t:SkillBookBase");
         Dictionary<string, SkillBookBase> bookDict = new Dictionary<string, SkillBookBase>();
 
@@ -353,135 +360,207 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
             SkillBookBase skillBook = AssetDatabase.LoadAssetAtPath<SkillBookBase>(path);
-            string bookName = !string.IsNullOrEmpty(skillBook.skillBookName) ? skillBook.skillBookName : skillBook.name;
+            string bookName = !string.IsNullOrEmpty(skillBook.skillBookName) ? skillBook.skillBookName.Trim() : skillBook.name.Trim();
             bookDict[bookName] = skillBook;
+            Debug.Log($"   스킬북 에셋 발견: [{bookName}]");
         }
 
-        // 1. Active 적용
-        if (data.Active != null && data.Active.Count > 1)
+        string[] skillGuids = AssetDatabase.FindAssets("t:SkillBase");
+        Dictionary<string, SkillBase> skillDict = new Dictionary<string, SkillBase>();
+
+        foreach (string guid in skillGuids)
         {
-            string[] headers = data.Active[0].Split("|||");
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            SkillBase skill = AssetDatabase.LoadAssetAtPath<SkillBase>(path);
+            if (skill == null) continue;
+
+            string skillName = GetSafeSkillName(skill).Trim();
+            if (!skillDict.ContainsKey(skillName))
+            {
+                skillDict[skillName] = skill;
+            }
+        }
+        Debug.Log($"   총 스킬 에셋 로드 개수: {skillDict.Count}개");
+
+        var activeSheet = data.sheets.FirstOrDefault(s => string.Equals(s.sheetName?.Trim(), "Active", StringComparison.OrdinalIgnoreCase));
+        List<string> activeRows = activeSheet?.rows;
+
+        // ==============================================================
+        // 1. Active 적용 및 상세 디버그
+        // ==============================================================
+        Debug.Log("\n--- [2단계] Active 시트 데이터 정밀 검사 및 적용 ---");
+        if (activeRows == null)
+        {
+            Debug.LogError("❌ [치명적 오류] 'Active' 탭을 찾지 못했습니다!");
+        }
+        else if (activeRows.Count <= 1)
+        {
+            Debug.LogWarning("⚠️ [경고] 'Active' 탭에 데이터 행이 없습니다 (헤더만 존재).");
+        }
+        else
+        {
+            Debug.Log($"   Active 탭 총 행 개수: {activeRows.Count}개");
+            string[] headers = activeRows[0].Split(new string[] { "|||" }, StringSplitOptions.None).Select(h => h.Trim()).ToArray();
+            Debug.Log($"   Active 헤더 목록: {string.Join(" / ", headers)}");
+
             int bookIdx = Array.IndexOf(headers, "Skill Book");
             int skillIdx = Array.IndexOf(headers, "Skill Name");
             int costIdx = Array.IndexOf(headers, "Cost");
+            int dmgIdx = Array.IndexOf(headers, "Damage");
             int mpCostIdx = Array.IndexOf(headers, "MP Cost");
 
-            for (int i = 1; i < data.Active.Count; i++)
+            Debug.Log($"   인덱스 매칭 결과 -> BookIdx:{bookIdx}, SkillIdx:{skillIdx}, CostIdx:{costIdx}, DmgIdx:{dmgIdx}, MpIdx:{mpCostIdx}");
+
+            if (bookIdx == -1 || skillIdx == -1)
             {
-                string[] row = data.Active[i].Split("|||");
-                if (row.Length <= mpCostIdx) continue;
-
-                string bookName = row[bookIdx];
-                string skillName = row[skillIdx];
-
-                if (bookDict.TryGetValue(bookName, out SkillBookBase book))
-                {
-                    foreach (var node in book.skillTree)
-                    {
-                        if (node.nodeType == SkillBookBase.NodeType.ActiveSkill && node.activeSkill != null)
-                        {
-                            string sName = !string.IsNullOrEmpty(node.activeSkill.skillName) ? node.activeSkill.skillName : node.activeSkill.name;
-                            if (sName == skillName)
-                            {
-                                if (int.TryParse(row[costIdx], out int cost)) node.cost = cost;
-                                if (float.TryParse(row[mpCostIdx], out float mp)) node.activeSkill.MP_cost = mp;
-
-                                EditorUtility.SetDirty(node.activeSkill);
-                                EditorUtility.SetDirty(book);
-                            }
-                        }
-                    }
-                }
+                Debug.LogError("❌ [오류] 헤더에서 'Skill Book' 또는 'Skill Name'을 찾지 못했습니다!");
             }
-        }
-
-        // 2. Passive 적용
-        if (data.Passive != null && data.Passive.Count > 1)
-        {
-            string[] headers = data.Passive[0].Split("|||");
-            int bookIdx = Array.IndexOf(headers, "Skill Book");
-            int passiveIdx = Array.IndexOf(headers, "Passive Name");
-            int costIdx = Array.IndexOf(headers, "Cost");
-
-            for (int i = 1; i < data.Passive.Count; i++)
+            else
             {
-                string[] row = data.Passive[i].Split("|||");
-                if (row.Length <= costIdx) continue;
-
-                string bookName = row[bookIdx];
-                string passiveName = row[passiveIdx];
-
-                if (bookDict.TryGetValue(bookName, out SkillBookBase book))
+                for (int i = 1; i < activeRows.Count; i++)
                 {
-                    foreach (var node in book.skillTree)
+                    string rowLine = activeRows[i];
+                    string[] row = rowLine.Split(new string[] { "|||" }, StringSplitOptions.None);
+
+                    Debug.Log($"   [행 {i}] 원본 데이터열 개수: {row.Length}개 (내용: {rowLine})");
+
+                    if (row.Length <= skillIdx)
                     {
-                        if (node.nodeType == SkillBookBase.NodeType.PassiveSkill && node.passiveSkill != null)
-                        {
-                            string pName = !string.IsNullOrEmpty(node.passiveSkill.passiveName) ? node.passiveSkill.passiveName : node.passiveSkill.name;
-                            if (pName == passiveName)
-                            {
-                                if (int.TryParse(row[costIdx], out int cost)) node.cost = cost;
-                                EditorUtility.SetDirty(book);
-                            }
-                        }
+                        Debug.LogWarning($"     -> 스킵됨: 행의 데이터 개수가 너무 적습니다.");
+                        continue;
                     }
-                }
-            }
-        }
 
-        // 3. Stat 적용
-        if (data.Stat != null && data.Stat.Count > 1)
-        {
-            string[] headers = data.Stat[0].Split("|||");
-            int bookIdx = Array.IndexOf(headers, "Skill Book");
-            int statNameIdx = Array.IndexOf(headers, "Stat Name");
-            int costIdx = Array.IndexOf(headers, "Cost");
+                    string bookName = row[bookIdx].Trim();
+                    string skillName = row[skillIdx].Trim();
 
-            for (int i = 1; i < data.Stat.Count; i++)
-            {
-                string[] row = data.Stat[i].Split("|||");
-                if (row.Length <= costIdx) continue;
+                    Debug.Log($"     -> 파싱된 책이름: [{bookName}], 스킬이름: [{skillName}]");
 
-                string bookName = row[bookIdx];
-                string statNodeName = row[statNameIdx];
-
-                if (bookDict.TryGetValue(bookName, out SkillBookBase book))
-                {
-                    foreach (var node in book.skillTree)
+                    // 1-1. SkillBook 내의 Cost 갱신
+                    if (costIdx != -1 && row.Length > costIdx)
                     {
-                        if (node.nodeType == SkillBookBase.NodeType.StatSkill && node.GetNodeName() == statNodeName)
+                        string costStr = row[costIdx].Trim();
+                        if (bookDict.TryGetValue(bookName, out SkillBookBase book))
                         {
-                            if (int.TryParse(row[costIdx], out int cost)) node.cost = cost;
-
-                            List<SkillBookBase.StatModifier> newStats = new List<SkillBookBase.StatModifier>();
-
-                            for (int h = costIdx + 1; h < headers.Length; h++)
+                            bool matchedInBook = false;
+                            foreach (var node in book.skillTree)
                             {
-                                string headerName = headers[h];
-                                if (headerName.Contains("/Cost")) continue;
-
-                                if (Enum.TryParse<StatManager.StatType>(headerName, out var statType))
+                                if (node.nodeType == SkillBookBase.NodeType.ActiveSkill && node.activeSkill != null)
                                 {
-                                    if (float.TryParse(row[h], out float val) && val != 0f)
+                                    string sName = GetSafeSkillName(node.activeSkill).Trim();
+                                    if (sName == skillName)
                                     {
-                                        newStats.Add(new SkillBookBase.StatModifier { statType = statType, statValue = val });
+                                        matchedInBook = true;
+                                        if (int.TryParse(costStr, out int cost))
+                                        {
+                                            if (node.cost != cost)
+                                            {
+                                                Debug.Log($"       ✅ [Cost 변경 성공] 스킬북 [{bookName}] -> 스킬 [{skillName}] Cost: {node.cost} ==> {cost}");
+                                                node.cost = cost;
+                                                EditorUtility.SetDirty(book);
+                                            }
+                                            else
+                                            {
+                                                Debug.Log($"       ℹ️ [Cost 동일함] 변경 없음 ({cost})");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Debug.LogWarning($"       ⚠️ [Cost 파싱 실패] 값: [{costStr}]");
+                                        }
                                     }
                                 }
                             }
-
-                            node.statModifiers = newStats.ToArray();
-                            EditorUtility.SetDirty(book);
+                            if (!matchedInBook)
+                            {
+                                Debug.LogWarning($"       ⚠️ 스킬북 [{bookName}] 내부에서 스킬 [{skillName}] 노드를 찾지 못했습니다!");
+                            }
                         }
+                        else
+                        {
+                            Debug.LogWarning($"       ⚠️ 메모리에서 스킬북 [{bookName}] 에셋을 찾지 못했습니다!");
+                        }
+                    }
+
+                    // 1-2. SkillBase 자체의 MP Cost 및 Damage 갱신 
+                    if (skillDict.TryGetValue(skillName, out SkillBase skillData))
+                    {
+                        bool isSkillChanged = false;
+
+                        if (mpCostIdx != -1 && row.Length > mpCostIdx)
+                        {
+                            string mpStr = row[mpCostIdx].Trim();
+                            if (float.TryParse(mpStr, out float mp))
+                            {
+                                if (skillData.MP_cost != mp)
+                                {
+                                    Debug.Log($"       ✅ [MP 변경 성공] 스킬 에셋 [{skillName}] MP Cost: {skillData.MP_cost} ==> {mp}");
+                                    skillData.MP_cost = mp;
+                                    isSkillChanged = true;
+                                }
+                            }
+                        }
+
+                        if (dmgIdx != -1 && row.Length > dmgIdx)
+                        {
+                            string dmgStr = row[dmgIdx].Trim();
+                            if (!string.IsNullOrEmpty(dmgStr))
+                            {
+                                Debug.Log($"       🔍 [데미지 적용 시도] 스킬 [{skillName}]에 전달할 문자열: [{dmgStr}]");
+                                ApplyAllDamageMultipliers(skillData, dmgStr);
+                                isSkillChanged = true;
+                            }
+                        }
+
+                        if (isSkillChanged)
+                        {
+                            EditorUtility.SetDirty(skillData);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"       ⚠️ 총 38개 스킬 에셋 중 [{skillName}] 이름과 일치하는 SkillBase 에셋이 없습니다!");
                     }
                 }
             }
         }
 
+        Debug.Log("\n--- [3단계] 변경 사항 저장 중 ---");
         AssetDatabase.SaveAssets();
+        Debug.Log("--- [완료] 저장 완료 ---");
     }
     #endregion
 
     #region Helper Methods
+    private string GetSafeSkillName(SkillBase skill)
+    {
+        if (skill == null) return "Unknown";
+        try
+        {
+            if (skill.Localize_skillName != null && !skill.Localize_skillName.IsEmpty)
+            {
+                string locName = skill.skillName;
+                if (!string.IsNullOrEmpty(locName)) return locName;
+            }
+        }
+        catch { }
+        return skill.name;
+    }
+
+    private string GetSafePassiveName(PassiveSkillData passive)
+    {
+        if (passive == null) return "Unknown";
+        try
+        {
+            if (passive.Localize_passiveName != null && !passive.Localize_passiveName.IsEmpty)
+            {
+                string pName = passive.passiveName;
+                if (!string.IsNullOrEmpty(pName)) return pName;
+            }
+        }
+        catch { }
+        return passive.name;
+    }
+
     private string ConvertToJson(Dictionary<string, List<List<string>>> dataDict)
     {
         StringBuilder sb = new StringBuilder();
@@ -576,6 +655,71 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         if (infoList.Count > 0)
         {
             damageInfo = string.Join(" / ", infoList);
+        }
+    }
+
+    private void ApplyAllDamageMultipliers(SkillBase skill, string rawStr)
+    {
+        if (skill == null || string.IsNullOrEmpty(rawStr)) return;
+
+        string[] parts = rawStr.Split('/');
+        List<float> parsedValues = new List<float>();
+
+        foreach (string p in parts)
+        {
+            string cleanStr = p.Split('+')[0].Trim();
+
+            if (float.TryParse(cleanStr, out float val))
+            {
+                parsedValues.Add(val);
+            }
+        }
+
+        if (parsedValues.Count == 0) return;
+
+        int valueIndex = 0;
+        SerializedObject so = new SerializedObject(skill);
+        SerializedProperty hitList = so.FindProperty("hitDataList");
+
+        if (hitList != null && hitList.isArray)
+        {
+            for (int i = 0; i < hitList.arraySize; i++)
+            {
+                SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
+                SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
+                SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
+
+                if (dmgProp != null)
+                {
+                    bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
+                    if (!hasSound && Mathf.Abs(dmgProp.floatValue) <= 0.001f) continue;
+
+                    if (valueIndex < parsedValues.Count)
+                    {
+                        float oldDmg = dmgProp.floatValue;
+                        dmgProp.floatValue = parsedValues[valueIndex];
+                        Debug.Log($"       => [데미지 갱신 완료] 스킬: [{skill.name}] Hit {i}: {oldDmg} -> {dmgProp.floatValue}");
+                        valueIndex++;
+                    }
+                }
+            }
+            so.ApplyModifiedProperties();
+        }
+        else if (skill.damageMultipliers != null)
+        {
+            for (int i = 0; i < skill.damageMultipliers.Length; i++)
+            {
+                AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
+                if (snd == null && Mathf.Abs(skill.damageMultipliers[i]) <= 0.001f) continue;
+
+                if (valueIndex < parsedValues.Count)
+                {
+                    float oldDmg = skill.damageMultipliers[i];
+                    skill.damageMultipliers[i] = parsedValues[valueIndex];
+                    Debug.Log($"       => [데미지 갱신 완료] 스킬: [{skill.name}] Hit {i}: {oldDmg} -> {skill.damageMultipliers[i]}");
+                    valueIndex++;
+                }
+            }
         }
     }
     #endregion

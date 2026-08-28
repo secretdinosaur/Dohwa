@@ -146,6 +146,8 @@ public abstract class EnemyAIBase : MonoBehaviour
             if (!isCulled)
             {
                 isCulled = true;
+                core.isCulled = true;
+
                 StopActionRoutine();
                 core.CmdStopMovement?.Invoke();
                 core.ChangeState(EnemyState.Idle);
@@ -157,6 +159,7 @@ public abstract class EnemyAIBase : MonoBehaviour
         if (isCulled)
         {
             isCulled = false;
+            core.isCulled = false;
             SetVisualsEnabled(true);
         }
 
