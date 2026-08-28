@@ -41,6 +41,8 @@ public class GradeManager : MonoBehaviour
 
     private float originalCameraX;
     public bool IsPlayingUpgradeAnim;
+    public GameObject UpperBar;
+
     public float CurrentExp
     {
         get { return currentExp; }
@@ -146,15 +148,49 @@ public class GradeManager : MonoBehaviour
         StartFlowerPulse();
         gradePanel.DisableUI(0f);
         ExpGainLog = new float[6];
+
+        SetUIInteraction(true);
     }
 
-    IEnumerator buttonEnable()
+    // ==============================================================
+    // 💡 투명한 전체 화면 방어막(Blocker)을 생성하여 클릭을 원천 차단하는 로직
+    // (인벤토리나 다른 UI 코드와 절대 충돌하지 않음)
+    // ==============================================================
+    private GameObject globalUIBlocker;
+
+    private void SetUIInteraction(bool enable)
     {
-        yield return new WaitForSecondsRealtime(0.55f);
-        // 비활성 상태에서도 버튼을 안전하게 가져오도록 true 파라미터 추가
-        Button btn = flowerUIObject.GetComponentInChildren<Button>(true);
-        if (btn != null) btn.interactable = true;
+        bool isBlocked = !enable; // enable이 false면 차단(Block) 상태
+        if (isBlocked)
+        {
+            if (globalUIBlocker == null)
+            {
+                globalUIBlocker = new GameObject("Global_UI_InputBlocker");
+                Canvas canvas = globalUIBlocker.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = 32767; // 모든 UI(인벤토리, 상단바 등)보다 최상위에 덮음
+
+                globalUIBlocker.AddComponent<GraphicRaycaster>(); // 핵심: 여기서 레이캐스트(클릭)를 삼켜버림
+
+                Image img = globalUIBlocker.AddComponent<Image>();
+                img.color = new Color(0, 0, 0, 0); // 눈에 보이지 않도록 완전 투명
+            }
+            globalUIBlocker.SetActive(true); // 차단 활성화
+        }
+        else
+        {
+            if (globalUIBlocker != null)
+            {
+                globalUIBlocker.SetActive(false); // 차단 해제 (정상 조작 가능)
+            }
+        }
     }
+
+    private void OnDestroy()
+    {
+        if (globalUIBlocker != null) Destroy(globalUIBlocker);
+    }
+    // ==============================================================
 
     private void UpdatePetals(float ratio)
     {
@@ -189,12 +225,6 @@ public class GradeManager : MonoBehaviour
 
     public void OnFlowerUIOpened()
     {
-        // 비활성 상태에서도 버튼을 안전하게 가져오도록 true 파라미터 추가
-        Button btn = flowerUIObject.GetComponentInChildren<Button>(true);
-        if (btn != null) btn.interactable = false;
-
-        StartCoroutine(buttonEnable());
-
         if (isUpgradePending)
         {
             if (petalAnimationCoroutine != null) StopCoroutine(petalAnimationCoroutine);
@@ -204,12 +234,23 @@ public class GradeManager : MonoBehaviour
         {
             float expRatio = currentExp / ExpRequirementTable[CurrentGradeIndex];
             if (petalAnimationCoroutine != null) StopCoroutine(petalAnimationCoroutine);
-            petalAnimationCoroutine = StartCoroutine(AnimatePetalsFill(expRatio));
+            petalAnimationCoroutine = StartCoroutine(AnimatePetalsFillAndEnable(expRatio));
         }
+    }
+
+    private IEnumerator AnimatePetalsFillAndEnable(float targetRatio)
+    {
+        SetUIInteraction(false);
+
+        yield return StartCoroutine(AnimatePetalsFill(targetRatio));
+        SetUIInteraction(true);
+
     }
 
     private IEnumerator ManualOpenAnimationProcess()
     {
+        SetUIInteraction(false);
+
         StopFlowerPulse();
         flowerUIObject.SetActive(true);
         flowerUIObject.transform.localScale = Vector3.zero;
@@ -246,6 +287,7 @@ public class GradeManager : MonoBehaviour
         if (blurVolume != null) blurVolume.weight = 0f;
 
         gradePanel.EnableUI(0.2f);
+        SetUIInteraction(true);
     }
 
     private IEnumerator ClosePanelAnimationProcess()
@@ -335,10 +377,9 @@ public class GradeManager : MonoBehaviour
         if (SoundManager.Instance != null)
             SoundManager.Instance.PlayUISound(10);
         IsPlayingUpgradeAnim = true;
-        foreach (var item in UpperBar.GetComponentsInChildren<Button>())
-        {
-            item.interactable = false;
-        }
+
+        SetUIInteraction(false); // 💡 업그레이드 전체 연출 중 차단막 활성화
+
         yield return StartCoroutine(AnimatePetalsFill(1.0f));
 
         yield return new WaitForSecondsRealtime(0.2f);
@@ -390,12 +431,12 @@ public class GradeManager : MonoBehaviour
             }
         }
     }
-    public GameObject UpperBar;
+
     private IEnumerator UpgradeAnimationProcess()
     {
         isUpgradePending = false;
         GradeUpgradeAlertText.SetActive(false);
-        
+
         float duration = 2.0f;
         float time = 0f;
         StopFlowerPulse();
@@ -456,12 +497,10 @@ public class GradeManager : MonoBehaviour
 
         gradePanel.EnableUI(0.5f);
         IsPlayingUpgradeAnim = false;
-        foreach (var item in UpperBar.GetComponentsInChildren<Button>())
-        {
-            item.interactable = true;
-        }
-        yield return new WaitForSecondsRealtime(5f);
 
+        SetUIInteraction(true); // 💡 메인 연출이 끝났으므로 클릭 차단막 파괴(해제)
+
+        yield return new WaitForSecondsRealtime(5f);
     }
 
     private void ApplyGradeAbilities(int gradeIndex)
