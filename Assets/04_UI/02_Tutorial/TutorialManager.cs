@@ -16,6 +16,7 @@ public class TutorialManager : MonoBehaviour
         Fight,
         GameGoal,
         Move,
+        Connections
     }
 
     public static TutorialManager instance;

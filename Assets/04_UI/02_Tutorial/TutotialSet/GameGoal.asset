@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad54cd0e28bc2f647a6e54e7994f92e1, type: 3}
   m_Name: GameGoal
   m_EditorClassIdentifier: Assembly-CSharp::Tutorial
-  TutorialName: The Sealing Stone
+  TutorialName: GameGoal
   Localize_Title:
     m_TableReference:
       m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
@@ -23,7 +23,14 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   Pages:
-  - Image: {fileID: 218296816, guid: 699fbe3c07126db4396aed581c4a8468, type: 3}
+  - Localize_Image:
+      m_TableReference:
+        m_TableCollectionName: GUID:e48bcae8a7484114ca6cdb0e261de0d2
+      m_TableEntryReference:
+        m_KeyId: 9826758656
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
     Localize_Text:
       m_TableReference:
         m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
@@ -33,7 +40,14 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-  - Image: {fileID: 1435261272, guid: dfe635695a27dc84f905790620510308, type: 3}
+  - Localize_Image:
+      m_TableReference:
+        m_TableCollectionName: GUID:e48bcae8a7484114ca6cdb0e261de0d2
+      m_TableEntryReference:
+        m_KeyId: 52306669568
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
     Localize_Text:
       m_TableReference:
         m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
@@ -43,7 +57,14 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-  - Image: {fileID: -955195636, guid: e870f4334a3f2434ba35702fee334c4e, type: 3}
+  - Localize_Image:
+      m_TableReference:
+        m_TableCollectionName: GUID:e48bcae8a7484114ca6cdb0e261de0d2
+      m_TableEntryReference:
+        m_KeyId: 66332422144
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
     Localize_Text:
       m_TableReference:
         m_TableCollectionName: GUID:0dd7028881c51954a93f299e5f23c588
