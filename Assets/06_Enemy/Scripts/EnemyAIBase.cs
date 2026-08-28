@@ -56,6 +56,16 @@ public abstract class EnemyAIBase : MonoBehaviour
     protected Animator animator;
     HpBarCanvas hpbar;
 
+    // === 새로 추가된 필드: 공격 공백(Idle) 시 스킬 재검색 설정 ===
+    [Header("AI Behavior: Re-evaluate Skill")]
+    [Tooltip("마지막 공격(완료)으로부터 이 시간(초) 이상 지나면 스킬을 재검색합니다.")]
+    public float attackIdleReselectDelay = 3f;
+    [Tooltip("스킬 재검색 발생 후 반복 호출을 방지하기 위한 최소 간격(초)")]
+    public float reselectCooldown = 1f;
+
+    protected float lastCompletedAttackTime = -9999f;
+    protected float lastReselectTime = -9999f;
+
     protected virtual void Awake()
     {
         core = GetComponent<EnemyCore>();
@@ -70,6 +80,9 @@ public abstract class EnemyAIBase : MonoBehaviour
         core.OnDeath += HandleDeath;
         core.OnRevived += HandleRevive;
         core.OnStunEnd += HandleStunEnd;
+
+        // 공격 완료 이벤트 구독: 마지막 공격 완료 시각 기록
+        core.OnAttackCompleted += HandleOnAttackCompleted;
     }
 
     protected virtual void OnDestroy()
@@ -81,6 +94,8 @@ public abstract class EnemyAIBase : MonoBehaviour
             core.OnDeath -= HandleDeath;
             core.OnRevived -= HandleRevive;
             core.OnStunEnd -= HandleStunEnd;
+
+            core.OnAttackCompleted -= HandleOnAttackCompleted;
         }
     }
 
@@ -112,6 +127,12 @@ public abstract class EnemyAIBase : MonoBehaviour
         nextAttackTime = 0f;
 
         core.CmdWarpToOriginal?.Invoke();
+    }
+
+    // 공격 완료 이벤트 처리: 마지막 공격 완료 시각 기록
+    private void HandleOnAttackCompleted(float nextTime)
+    {
+        lastCompletedAttackTime = Time.time;
     }
 
     protected virtual void Update()
@@ -207,6 +228,29 @@ public abstract class EnemyAIBase : MonoBehaviour
             if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
             {
                 isMemorizingPlayer = false;
+            }
+        }
+
+        // === 새로 추가: 공격 공백 검사 및 스킬 재검색 ===
+        // 플레이어 인식 중이고 현재 공격 중이 아니며, 마지막 공격 완료로부터 지정 시간(attackIdleReselectDelay) 이상 경과하면 스킬을 재검색
+        if (Player.Instance != null && isMemorizingPlayer && !isAttacking)
+        {
+            float timeSinceLastAttack = Time.time - lastCompletedAttackTime;
+            if (timeSinceLastAttack >= attackIdleReselectDelay && Time.time - lastReselectTime >= reselectCooldown)
+            {
+                // 현재 거리 기반으로 새로운 스킬을 가져옴
+                float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
+                if (core != null && core.skillSelector != null)
+                {
+                    SkillBase newSkill = core.skillSelector.GetNextSkill(currentDist);
+                    if (newSkill != null && newSkill != selectedSkill)
+                    {
+                        selectedSkill = newSkill;
+                    }
+                }
+                lastReselectTime = Time.time;
+                // 기록: lastCompletedAttackTime을 갱신하면 동일 조건이 반복 실행되는 것을 방지
+                lastCompletedAttackTime = Time.time;
             }
         }
 

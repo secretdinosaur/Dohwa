@@ -668,7 +668,7 @@ public class PlayerAttack : MonoBehaviour
             yield return new WaitUntil(() => Player.Instance.PlayerMove.isGrounded);
         }
 
-        if (isArmed && !isSwordMoving && !isLockedOn)
+        if (isArmed && !isSwordMoving && !isLockedOn && Player.Instance.HP >= 0)
         {
             StartCoroutine(SheathSword());
         }
