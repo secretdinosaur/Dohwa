@@ -79,6 +79,19 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
+    //None Npc(for item)
+    public void StartShowDialogue(DialogueSet DialogueSet)
+    {
+        if (IsDialogueActive || _currentDialogueCoroutine != null) return;
+
+        // ★ 대화 시작 시 0.2초간 무조건 입력 무시 (상호작용 연타 방지)
+        lastInputTime = Time.unscaledTime;
+        inputCooldown = 0.2f;
+
+        _currentDialogueCoroutine = StartCoroutine(ShowDialogue(DialogueSet));
+    }
+
+
     public void StartShowDialogue(DialogueSet DialogueSet, NPC npc = null)
     {
         if (IsDialogueActive || _currentDialogueCoroutine != null) return;
