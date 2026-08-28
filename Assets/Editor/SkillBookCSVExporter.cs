@@ -5,6 +5,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Linq;
+using Unity.VisualScripting.FullSerializer;
+using UnityEditor.PackageManager;
+using UnityEditor.Localization;
 
 public class SkillBookGoogleSheetSyncWindow : EditorWindow
 {
@@ -27,22 +30,22 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
     private void OnGUI()
     {
         GUILayout.Space(10);
-        GUILayout.Label("📝 SkillBook <-> Google Sheet 동기화", EditorStyles.boldLabel);
+        GUILayout.Label("SkillBook <-> Google Sheet 동기화", EditorStyles.boldLabel);
         GUILayout.Space(10);
 
         webAppUrl = EditorGUILayout.TextField("Web App URL", webAppUrl);
         GUILayout.Space(10);
 
         EditorGUILayout.HelpBox(
-            "[⬆️ Push (내보내기)]\n현재 유니티에 있는 스킬 데이터를 구글 시트로 전송하여 덮어씌웁니다.\n\n" +
-            "[⬇️ Pull (가져오기)]\n구글 시트의 수정된 기획 수치(Cost, MP Cost, Damage, 스탯량)를 유니티로 가져옵니다.",
+            "[Push (내보내기)]\n현재 유니티에 있는 스킬 데이터를 구글 시트로 전송하여 덮어씌웁니다.\n\n" +
+            "[Pull (가져오기)]\n구글 시트의 수정된 기획 수치(Cost, MP Cost, Damage, 스탯량)를 유니티로 가져옵니다.",
             MessageType.Info);
 
         GUILayout.Space(20);
 
         EditorGUI.BeginDisabledGroup(isWorking || string.IsNullOrEmpty(webAppUrl));
 
-        if (GUILayout.Button("⬆️ Push (유니티 -> 구글 시트)", GUILayout.Height(40)))
+        if (GUILayout.Button("Push (유니티 -> 구글 시트)", GUILayout.Height(40)))
         {
             if (EditorUtility.DisplayDialog("Push 확인", "현재 유니티의 데이터를 구글 시트로 덮어씌웁니다.\n진행하시겠습니까?", "예", "아니오"))
             {
@@ -52,7 +55,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
         GUILayout.Space(10);
 
-        if (GUILayout.Button("⬇️ Pull (구글 시트 -> 유니티)", GUILayout.Height(40)))
+        if (GUILayout.Button("Pull (구글 시트 -> 유니티)", GUILayout.Height(40)))
         {
             if (EditorUtility.DisplayDialog("Pull 확인", "구글 시트의 기획 데이터를 유니티로 가져옵니다.\n진행하시겠습니까?", "예", "아니오"))
             {
@@ -283,14 +286,13 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                 HttpResponseMessage response = await client.PostAsync(webAppUrl, content);
 
                 if (response.IsSuccessStatusCode)
-                    Debug.Log("✅ 구글 시트 Push(내보내기) 완료!");
+                    Debug.Log("[완료] 구글 시트 Push(내보내기) 완료");
                 else
-                    Debug.LogError($"❌ 구글 시트 갱신 실패: {response.StatusCode}");
+                    Debug.LogError($"[실패] 구글 시트 갱신 실패: {response.StatusCode}");
             }
         }
         catch (Exception e)
         {
-            Debug.LogError($"에러 발생: {e.Message}");
         }
         finally
         {
@@ -324,7 +326,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
                 if (data == null || data.sheets == null)
                 {
-                    Debug.LogError("🚨 [오류] JSON 파싱 실패! 데이터가 비어있거나 형식이 맞지 않습니다.");
+                    Debug.LogError("[오류] JSON 파싱 실패. 데이터가 비어있거나 형식이 맞지 않습니다.");
                     return;
                 }
 
@@ -335,11 +337,10 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                 }
 
                 ApplyDataToAssets(data);
-                Debug.Log("<color=green>✅ [디버그 Pull 종료]</color>\n");
+                Debug.Log("<color=green>[디버그 Pull 종료]</color>\n");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[오류] Pull 중 예외 발생: {e.Message}\n{e.StackTrace}");
             }
             finally
             {
@@ -385,17 +386,14 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         var activeSheet = data.sheets.FirstOrDefault(s => string.Equals(s.sheetName?.Trim(), "Active", StringComparison.OrdinalIgnoreCase));
         List<string> activeRows = activeSheet?.rows;
 
-        // ==============================================================
-        // 1. Active 적용 및 상세 디버그
-        // ==============================================================
         Debug.Log("\n--- [2단계] Active 시트 데이터 정밀 검사 및 적용 ---");
         if (activeRows == null)
         {
-            Debug.LogError("❌ [치명적 오류] 'Active' 탭을 찾지 못했습니다!");
+            Debug.LogError("[치명적 오류] 'Active' 탭을 찾지 못했습니다.");
         }
         else if (activeRows.Count <= 1)
         {
-            Debug.LogWarning("⚠️ [경고] 'Active' 탭에 데이터 행이 없습니다 (헤더만 존재).");
+            Debug.LogWarning("[경고] 'Active' 탭에 데이터 행이 없습니다 (헤더만 존재).");
         }
         else
         {
@@ -413,7 +411,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
             if (bookIdx == -1 || skillIdx == -1)
             {
-                Debug.LogError("❌ [오류] 헤더에서 'Skill Book' 또는 'Skill Name'을 찾지 못했습니다!");
+                Debug.LogError("[오류] 헤더에서 'Skill Book' 또는 'Skill Name'을 찾지 못했습니다.");
             }
             else
             {
@@ -435,7 +433,6 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
                     Debug.Log($"     -> 파싱된 책이름: [{bookName}], 스킬이름: [{skillName}]");
 
-                    // 1-1. SkillBook 내의 Cost 갱신
                     if (costIdx != -1 && row.Length > costIdx)
                     {
                         string costStr = row[costIdx].Trim();
@@ -454,34 +451,33 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                         {
                                             if (node.cost != cost)
                                             {
-                                                Debug.Log($"       ✅ [Cost 변경 성공] 스킬북 [{bookName}] -> 스킬 [{skillName}] Cost: {node.cost} ==> {cost}");
+                                                Debug.Log($"       [Cost 변경 성공] 스킬북 [{bookName}] -> 스킬 [{skillName}] Cost: {node.cost} ==> {cost}");
                                                 node.cost = cost;
                                                 EditorUtility.SetDirty(book);
                                             }
                                             else
                                             {
-                                                Debug.Log($"       ℹ️ [Cost 동일함] 변경 없음 ({cost})");
+                                                Debug.Log($"       [Cost 동일함] 변경 없음 ({cost})");
                                             }
                                         }
                                         else
                                         {
-                                            Debug.LogWarning($"       ⚠️ [Cost 파싱 실패] 값: [{costStr}]");
+                                            Debug.LogWarning($"       [Cost 파싱 실패] 값: [{costStr}]");
                                         }
                                     }
                                 }
                             }
                             if (!matchedInBook)
                             {
-                                Debug.LogWarning($"       ⚠️ 스킬북 [{bookName}] 내부에서 스킬 [{skillName}] 노드를 찾지 못했습니다!");
+                                Debug.LogWarning($"       [주의] 스킬북 [{bookName}] 내부에서 스킬 [{skillName}] 노드를 찾지 못했습니다.");
                             }
                         }
                         else
                         {
-                            Debug.LogWarning($"       ⚠️ 메모리에서 스킬북 [{bookName}] 에셋을 찾지 못했습니다!");
+                            Debug.LogWarning($"       [주의] 메모리에서 스킬북 [{bookName}] 에셋을 찾지 못했습니다.");
                         }
                     }
 
-                    // 1-2. SkillBase 자체의 MP Cost 및 Damage 갱신 
                     if (skillDict.TryGetValue(skillName, out SkillBase skillData))
                     {
                         bool isSkillChanged = false;
@@ -493,7 +489,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                             {
                                 if (skillData.MP_cost != mp)
                                 {
-                                    Debug.Log($"       ✅ [MP 변경 성공] 스킬 에셋 [{skillName}] MP Cost: {skillData.MP_cost} ==> {mp}");
+                                    Debug.Log($"       [MP 변경 성공] 스킬 에셋 [{skillName}] MP Cost: {skillData.MP_cost} ==> {mp}");
                                     skillData.MP_cost = mp;
                                     isSkillChanged = true;
                                 }
@@ -505,7 +501,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                             string dmgStr = row[dmgIdx].Trim();
                             if (!string.IsNullOrEmpty(dmgStr))
                             {
-                                Debug.Log($"       🔍 [데미지 적용 시도] 스킬 [{skillName}]에 전달할 문자열: [{dmgStr}]");
+                                Debug.Log($"       [데미지 적용 시도] 스킬 [{skillName}]에 전달할 문자열: [{dmgStr}]");
                                 ApplyAllDamageMultipliers(skillData, dmgStr);
                                 isSkillChanged = true;
                             }
@@ -518,7 +514,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                     }
                     else
                     {
-                        Debug.LogWarning($"       ⚠️ 총 38개 스킬 에셋 중 [{skillName}] 이름과 일치하는 SkillBase 에셋이 없습니다!");
+                        Debug.LogWarning($"       [주의] 전체 스킬 에셋 중 [{skillName}] 이름과 일치하는 SkillBase 에셋이 없습니다.");
                     }
                 }
             }
@@ -534,30 +530,62 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
     private string GetSafeSkillName(SkillBase skill)
     {
         if (skill == null) return "Unknown";
+
         try
         {
             if (skill.Localize_skillName != null && !skill.Localize_skillName.IsEmpty)
             {
-                string locName = skill.skillName;
-                if (!string.IsNullOrEmpty(locName)) return locName;
+                var collection = LocalizationEditorSettings.GetStringTableCollection(skill.Localize_skillName.TableReference);
+                if (collection != null)
+                {
+                    var table = collection.GetTable("ko") as UnityEngine.Localization.Tables.StringTable;
+                    if (table != null)
+                    {
+                        var entry = table.GetEntry(skill.Localize_skillName.TableEntryReference.KeyId);
+                        if (entry != null && !string.IsNullOrEmpty(entry.LocalizedValue))
+                        {
+                            return entry.LocalizedValue;
+                        }
+                    }
+                }
             }
         }
-        catch { }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[{skill.name}] 번역 테이블 로드 실패, 기본 이름 사용. 사유: {e.Message}");
+        }
+
         return skill.name;
     }
 
     private string GetSafePassiveName(PassiveSkillData passive)
     {
         if (passive == null) return "Unknown";
+
         try
         {
             if (passive.Localize_passiveName != null && !passive.Localize_passiveName.IsEmpty)
             {
-                string pName = passive.passiveName;
-                if (!string.IsNullOrEmpty(pName)) return pName;
+                var collection = LocalizationEditorSettings.GetStringTableCollection(passive.Localize_passiveName.TableReference);
+                if (collection != null)
+                {
+                    var table = collection.GetTable("ko") as UnityEngine.Localization.Tables.StringTable;
+                    if (table != null)
+                    {
+                        var entry = table.GetEntry(passive.Localize_passiveName.TableEntryReference.KeyId);
+                        if (entry != null && !string.IsNullOrEmpty(entry.LocalizedValue))
+                        {
+                            return entry.LocalizedValue;
+                        }
+                    }
+                }
             }
         }
-        catch { }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[{passive.name}] 번역 테이블 로드 실패, 기본 이름 사용. 사유: {e.Message}");
+        }
+
         return passive.name;
     }
 
