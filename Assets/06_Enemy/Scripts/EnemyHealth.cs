@@ -133,6 +133,8 @@ public class EnemyHealth : MonoBehaviour
         {
             if (GradeManager.Instance != null)
                 GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
+            if (UnityEngine.Random.value < 0.10f)
+                StatManager.Instance.GetStatPoint(3);
             core.TriggerDeath();
         }
     }

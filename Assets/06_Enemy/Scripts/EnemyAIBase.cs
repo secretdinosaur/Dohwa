@@ -105,7 +105,12 @@ public abstract class EnemyAIBase : MonoBehaviour
     {
         enabled = true;
         isDetectedPlayer = false;
+        isMemorizingPlayer = false;
         isRunningForward = false;
+        isAttacking = false;
+        selectedSkill = null;
+        nextAttackTime = 0f;
+
         core.CmdWarpToOriginal?.Invoke();
     }
 

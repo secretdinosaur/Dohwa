@@ -325,7 +325,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.Play(UnityEngine.Random.Range(0, 2) == 0 ? "Dead_1" : "Dead_2");
         StopAllEffects();
         GetComponent<Collider>().enabled = false;
-
+        
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;
 
@@ -471,6 +471,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         if (!gameObject.activeSelf) gameObject.SetActive(true);
 
         isForceDetected = false;
+        isTakingDoT = false;
         SetPlayerDetection(false);
 
         ChangeState(EnemyState.Idle);

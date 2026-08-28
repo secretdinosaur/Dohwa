@@ -922,7 +922,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         if (RespawnCheckpoint) RespawnToCheckpoint();
         DungeonManager.Instance.ReviveAllEnemies();
-
+        MapDecalManager.Instance.ClearAllDecals();
         decalGenerator?.ClearDecals();
         hasTriggered66 = false;
         hasTriggered33 = false;
