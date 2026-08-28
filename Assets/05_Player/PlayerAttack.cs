@@ -404,7 +404,8 @@ public class PlayerAttack : MonoBehaviour
         PlayEffects(skillToUse.name);
         Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
 
-        Player.Instance.MP -= skillToUse.MP_cost;
+        // 💡 ConsumeMP 적용
+        Player.Instance.ConsumeMP(skillToUse.MP_cost);
         GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
         currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));

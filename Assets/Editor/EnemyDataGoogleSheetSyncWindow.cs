@@ -365,7 +365,7 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
         }
     }
 
-    // 💡 모든 히트(개별 데미지)를 슬래시로 묶어서 추출
+    // 💡 모든 히트(개별 데미지)를 슬래시로 묶어서 추출하되, 사운드가 없고 데미지가 0인 것은 제외
     private string ExtractAllDamageMultipliers(SkillBase skill)
     {
         if (skill == null) return "0.00";
@@ -374,23 +374,51 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
         if (skill is Skill_Melee melee && melee.hitDataList != null)
         {
             foreach (var hit in melee.hitDataList)
+            {
+                // 범위 체크용 더미 데이터 무시
+                if (hit.hitSound == null && hit.damageMultiplier == 0f) continue;
                 dmgList.Add(hit.damageMultiplier.ToString("F2"));
+            }
         }
-        else if (skill is Skill_Range range && range.hitDataList != null)
+        else
         {
-            foreach (var hit in range.hitDataList)
-                dmgList.Add(hit.damageMultiplier.ToString("F2"));
-        }
-        else if (skill.damageMultipliers != null)
-        {
-            foreach (float dmg in skill.damageMultipliers)
-                dmgList.Add(dmg.ToString("F2"));
+            // Range 등 다른 스킬들도 안전하게 지원
+            SerializedObject so = new SerializedObject(skill);
+            SerializedProperty hitList = so.FindProperty("hitDataList");
+            if (hitList != null && hitList.isArray)
+            {
+                for (int i = 0; i < hitList.arraySize; i++)
+                {
+                    SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
+                    SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
+                    SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
+
+                    if (dmgProp != null)
+                    {
+                        bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
+                        // 사운드도 없고 데미지도 0이면 범위체크용이므로 제외
+                        if (!hasSound && dmgProp.floatValue == 0f) continue;
+
+                        dmgList.Add(dmgProp.floatValue.ToString("F2"));
+                    }
+                }
+            }
+            else if (skill.damageMultipliers != null)
+            {
+                for (int i = 0; i < skill.damageMultipliers.Length; i++)
+                {
+                    AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
+                    if (snd == null && skill.damageMultipliers[i] == 0f) continue;
+
+                    dmgList.Add(skill.damageMultipliers[i].ToString("F2"));
+                }
+            }
         }
 
         return dmgList.Count > 0 ? string.Join(" / ", dmgList) : "0.00";
     }
 
-    // 💡 슬래시로 쪼개진 데미지 문자열을 다시 개별 히트들에 적용
+    // 💡 슬래시로 쪼개진 데미지 문자열을 다시 개별 히트들에 적용 (더미 데이터 건너뜀)
     private void ApplyAllDamageMultipliers(SkillBase skill, string rawStr)
     {
         if (skill == null) return;
@@ -405,20 +433,62 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
 
         if (parsedValues.Count == 0) return;
 
+        int valueIndex = 0;
+
         if (skill is Skill_Melee melee && melee.hitDataList != null)
         {
-            for (int i = 0; i < Mathf.Min(melee.hitDataList.Count, parsedValues.Count); i++)
-                melee.hitDataList[i].damageMultiplier = parsedValues[i];
+            for (int i = 0; i < melee.hitDataList.Count; i++)
+            {
+                // 더미 데이터에는 값을 할당하지 않고 건너뜀
+                if (melee.hitDataList[i].hitSound == null && melee.hitDataList[i].damageMultiplier == 0f) continue;
+
+                if (valueIndex < parsedValues.Count)
+                {
+                    melee.hitDataList[i].damageMultiplier = parsedValues[valueIndex];
+                    valueIndex++;
+                }
+            }
         }
-        else if (skill is Skill_Range range && range.hitDataList != null)
+        else
         {
-            for (int i = 0; i < Mathf.Min(range.hitDataList.Count, parsedValues.Count); i++)
-                range.hitDataList[i].damageMultiplier = parsedValues[i];
-        }
-        else if (skill.damageMultipliers != null)
-        {
-            for (int i = 0; i < Mathf.Min(skill.damageMultipliers.Length, parsedValues.Count); i++)
-                skill.damageMultipliers[i] = parsedValues[i];
+            SerializedObject so = new SerializedObject(skill);
+            SerializedProperty hitList = so.FindProperty("hitDataList");
+            if (hitList != null && hitList.isArray)
+            {
+                for (int i = 0; i < hitList.arraySize; i++)
+                {
+                    SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
+                    SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
+                    SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
+
+                    if (dmgProp != null)
+                    {
+                        bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
+                        if (!hasSound && dmgProp.floatValue == 0f) continue;
+
+                        if (valueIndex < parsedValues.Count)
+                        {
+                            dmgProp.floatValue = parsedValues[valueIndex];
+                            valueIndex++;
+                        }
+                    }
+                }
+                so.ApplyModifiedProperties();
+            }
+            else if (skill.damageMultipliers != null)
+            {
+                for (int i = 0; i < skill.damageMultipliers.Length; i++)
+                {
+                    AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
+                    if (snd == null && skill.damageMultipliers[i] == 0f) continue;
+
+                    if (valueIndex < parsedValues.Count)
+                    {
+                        skill.damageMultipliers[i] = parsedValues[valueIndex];
+                        valueIndex++;
+                    }
+                }
+            }
         }
     }
 

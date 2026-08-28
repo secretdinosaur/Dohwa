@@ -53,14 +53,15 @@ public class StatManager : MonoBehaviour
     public float MaxHp
     {
         get => maxHp;
-        set { maxHp = value; }
+            
+        set { maxHp = value; UIManager.Instance.HpText.text = ((int)MaxHp).ToString(); }
     }
 
     [SerializeField] private float maxMp = 100f;
     public float MaxMp
     {
         get => maxMp;
-        set { maxMp = value; }
+        set { maxMp = value; UIManager.Instance.MpText.text = ((int)MaxMp).ToString();  }
     }
 
     [SerializeField] private float armor = 0f;

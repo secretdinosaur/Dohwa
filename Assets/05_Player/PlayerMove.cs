@@ -349,7 +349,9 @@ public class PlayerMove : MonoBehaviour
             targetAnimValue = AnimValueWalk;
         }
 
-        if (_isSprinting && !_isWalking) Player.Instance.MP -= Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP);
+        // 💡 ConsumeMP 적용
+        if (_isSprinting && !_isWalking)
+            Player.Instance.ConsumeMP(Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP));
 
         if (Player.Instance.MP <= 0f)
         {
@@ -592,7 +594,6 @@ public class PlayerMove : MonoBehaviour
         isKnockedBack = false;
         isKnockedDown = false;
 
-        // 💡 추가됨: 강제 넉백 종료 시 카메라도 즉시 원상 복구
         if (CameraController.Instance != null)
         {
             CameraController.Instance.SetKnockdownCamera(false);
@@ -685,7 +686,6 @@ public class PlayerMove : MonoBehaviour
         if (knockdownType > 0 || becomeAirborne)
         {
             isKnockedDown = true;
-            // 💡 추가됨: 넉다운 되거나 에어본이 되면 카메라 전환
             if (CameraController.Instance != null)
             {
                 CameraController.Instance.SetKnockdownCamera(true);
@@ -777,7 +777,6 @@ public class PlayerMove : MonoBehaviour
         isKnockedBack = false;
         isKnockedDown = false;
 
-        // 💡 추가됨: 넉다운 상태가 끝나고 기상이 완료되면 원래 카메라로 복구
         if (CameraController.Instance != null)
         {
             CameraController.Instance.SetKnockdownCamera(false);
