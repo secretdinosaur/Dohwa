@@ -19,6 +19,7 @@ public class Armor : ScriptableObject
     public bool isDeletable;
     [Header("Stats")]
     public float defense = 10f;
+    public float hp = 10f;
     [Header("Equip Passive")]
     public PassiveSkillData equipPassive;
 
