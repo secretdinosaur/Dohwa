@@ -706,6 +706,7 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
@@ -735,7 +736,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78841b4a45c586542ab726d5138f8829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHP: 60
+  maxHP: 30
   maxMP: 50
   mpRecoveryPerSecond: 5
   stunDuration: 3

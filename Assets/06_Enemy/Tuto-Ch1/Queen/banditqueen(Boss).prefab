@@ -199450,7 +199450,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_Name
-      value: banditqueen
+      value: banditqueen(Boss)
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_Layer
@@ -203768,6 +203768,7 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
