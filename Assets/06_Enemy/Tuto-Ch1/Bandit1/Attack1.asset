@@ -50,7 +50,7 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 999
+  - 3
   HitSound:
   - {fileID: 8300000, guid: 519197e0b6bf5eb4593aa7ba6bf01a95, type: 3}
   HitEffects:
@@ -66,7 +66,7 @@ MonoBehaviour:
   range: 25
   hitDataList:
   - spawnOffset: {x: 0.2, y: 1.6, z: 0.5}
-    damageMultiplier: 999
+    damageMultiplier: 3
     knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 0}
     playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}

@@ -96,7 +96,6 @@ public class EnemyBossLogic : MonoBehaviour
         UIManager.Instance.BossStatus.gameObject.SetActive(true);
         UIManager.Instance.UpdateBossHpUI(1f);
         UIManager.Instance.UpdateBossMpUI(1f);
-        print(1);
 
         UIManager.Instance.BossName = BossName;
 
