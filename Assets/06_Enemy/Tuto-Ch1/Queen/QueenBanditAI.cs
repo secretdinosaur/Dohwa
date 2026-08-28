@@ -85,6 +85,9 @@ public class QueenBanditAI : EnemyAIBase
     private bool currentAttackFinished = false;
     private Coroutine activeDashCoroutine;
 
+    // 💡 전투 시작 코루틴을 제어하기 위한 변수 추가
+    private Coroutine fightSequenceRoutine;
+
     protected override void Awake()
     {
         base.Awake();
@@ -147,6 +150,13 @@ public class QueenBanditAI : EnemyAIBase
             activeDashCoroutine = null;
         }
 
+        // 💡 전투 시작 연출 중 스턴/사망 시 연출 강제 종료
+        if (fightSequenceRoutine != null)
+        {
+            StopCoroutine(fightSequenceRoutine);
+            fightSequenceRoutine = null;
+        }
+
         if (agent != null && !agent.enabled && !core.IsDead)
         {
             SnapToGround();
@@ -160,6 +170,13 @@ public class QueenBanditAI : EnemyAIBase
         {
             agent.enabled = true;
             core.CmdTrySnapToNavMesh?.Invoke();
+        }
+
+        // 💡 부활 시 전투 시작 코루틴 초기화
+        if (fightSequenceRoutine != null)
+        {
+            StopCoroutine(fightSequenceRoutine);
+            fightSequenceRoutine = null;
         }
 
         skillSelector.SetPhase(1);
@@ -184,7 +201,8 @@ public class QueenBanditAI : EnemyAIBase
 
     private void HandlePlayerDetected()
     {
-        StartCoroutine(StartFightSequence());
+        if (fightSequenceRoutine != null) StopCoroutine(fightSequenceRoutine);
+        fightSequenceRoutine = StartCoroutine(StartFightSequence());
     }
 
     private IEnumerator StartFightSequence()
@@ -203,6 +221,7 @@ public class QueenBanditAI : EnemyAIBase
         yield return new WaitForSeconds(startFightDelay);
 
         isStartingFight = false;
+        fightSequenceRoutine = null;
     }
 
     private void HandlePhaseTransition(int newPhase)
@@ -389,7 +408,9 @@ public class QueenBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    HandleCooldownWalk(skillSelector.GetOptimalDistance(null));
+                    // 💡 버그 수정: selectedSkill이 null일 때 GetOptimalDistance(null)을 호출하던 부분 제거. 
+                    // 대신 거리를 안전한 2.5f(기본 견제 거리)로 고정합니다.
+                    HandleCooldownWalk(2.5f);
                 }
                 return;
             }
@@ -693,7 +714,6 @@ public class QueenBanditAI : EnemyAIBase
         {
             nextTargetUpdateTime = Time.time + targetUpdateInterval;
 
-            // 예측 추적 로직 (목표 지점을 무조건 플레이어로 설정하여 어색한 멈춤 현상 제거)
             Vector3 targetPos = lastKnownPlayerPos;
             if (playerVelocity.sqrMagnitude > 1f)
             {
@@ -715,7 +735,7 @@ public class QueenBanditAI : EnemyAIBase
         }
 
         core.ChangeState(EnemyState.Chase);
-        core.SetMoveAnimations(0f, 1f, 1f); // 걷기 모션
+        core.SetMoveAnimations(0f, 1f, 1f);
         isRunningForward = false;
         core.CmdLookAt?.Invoke(lastKnownPlayerPos);
 
@@ -820,7 +840,6 @@ public class QueenBanditAI : EnemyAIBase
             elapsed += Time.deltaTime;
             if (Player.Instance != null)
             {
-                // 강제 거리 조절(offset) 로직을 제거하고 루트 모션에 움직임을 위임합니다.
                 core.CmdLookAt?.Invoke(Player.Instance.transform.position);
                 SnapToGround();
             }
@@ -915,7 +934,6 @@ public class QueenBanditAI : EnemyAIBase
         core.SetMoveAnimations(0f, 0f, 0f);
         SoundManager.Instance.PlaySound(BackStepSound);
 
-        // 애니메이션 루트 모션 기반 이동이므로, 벽 검사는 EnemyMovement의 OnAnimatorMove에 전적으로 맡깁니다.
         core.animator.CrossFade("Step_Back", 0.1f);
 
         float elapsed = 0f;

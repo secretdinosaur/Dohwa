@@ -151,14 +151,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         CmdSetIgnorePlayerCollision += HandleSetIgnorePlayerCollision;
     }
 
-    private void OnDestroy()
-    {
-        CmdForceDetectPlayer -= HandleForceDetect;
-        CmdSetIgnorePlayerCollision -= HandleSetIgnorePlayerCollision;
-        SetPlayerDetection(false);
-    }
-
-    private void OnEnable()
+    private void Start()
     {
         if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
         {
@@ -170,6 +163,14 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
             }
         }
     }
+
+    private void OnDestroy()
+    {
+        CmdForceDetectPlayer -= HandleForceDetect;
+        CmdSetIgnorePlayerCollision -= HandleSetIgnorePlayerCollision;
+        SetPlayerDetection(false);
+    }
+
     private void Update()
     {
         if (animator != null && animator.gameObject.activeInHierarchy)
@@ -491,6 +492,16 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     public virtual void Revive()
     {
         StopAllCoroutines();
+
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            if (DataManager.Instance.IsEventCleared(onetimeSaveKey))
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
+        }
         if (!gameObject.activeSelf) gameObject.SetActive(true);
 
         isForceDetected = false;

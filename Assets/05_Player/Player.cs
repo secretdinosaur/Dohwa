@@ -264,13 +264,15 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     {
         if (equippedArmor != null)
         {
-            StatManager.Instance.Armor -= equippedArmor.defense * 2;
+            StatManager.Instance.Armor -= equippedArmor.defense;
+            StatManager.Instance.MaxHp -= equippedArmor.hp;
             equippedArmor.equipPassive?.skillLogic.Remove();
         }
         equippedArmor = a;
         if (a != null)
         {
-            StatManager.Instance.Armor += a.defense;
+            StatManager.Instance.MaxHp += equippedArmor.hp * 2;
+            StatManager.Instance.Armor += a.defense * 2;
             a.equipPassive?.skillLogic.Apply();
         }
     }
@@ -278,6 +280,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void UnequipArmor()
     {
         if (equippedArmor == null) return;
+        StatManager.Instance.Armor -= equippedArmor.defense;
         StatManager.Instance.Armor -= equippedArmor.defense;
         equippedArmor.equipPassive?.skillLogic.Remove();
         equippedArmor = null;
