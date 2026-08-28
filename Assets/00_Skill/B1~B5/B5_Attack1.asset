@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 11400000, guid: 438d2100859e3da449556b5629de6adc, type: 2}
   commands: 01000000020000000300000000000000
-  MP_cost: 30
+  MP_cost: 40
   clip: {fileID: 7400000, guid: 87763b6cd46c1ed45a05b10b1d526c2d, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: 4174a7f127d60514b96e3b3a616ca1ce, type: 3}
@@ -50,10 +50,10 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 6
-  - 6
-  - 6
-  - 6
+  - 7
+  - 7
+  - 7
+  - 7
   HitSound:
   - {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
   - {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
@@ -75,7 +75,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1.5}
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 6
+    damageMultiplier: 7
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -104,7 +104,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1.5}
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 6
+    damageMultiplier: 7
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -133,7 +133,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1.5}
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 6
+    damageMultiplier: 7
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -162,7 +162,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1.5}
     boxSize: {x: 2, y: 0.5, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 6
+    damageMultiplier: 7
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
