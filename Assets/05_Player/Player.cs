@@ -82,7 +82,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             }
 
             if (hp <= 0 && DeathRoutine == null) DeathRoutine = StartCoroutine(PlayerDead());
-            UIManager.Instance.HpText.text = StatManager.Instance.MaxHp.ToString();
+            UIManager.Instance.HpText.text = ((int)StatManager.Instance.MaxHp).ToString();
         }
     }
 
@@ -94,7 +94,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             mp = Mathf.Clamp(value, 0, StatManager.Instance.MaxMp);
             UIManager.Instance.UpdateMpUI(mp / StatManager.Instance.MaxMp);
-            UIManager.Instance.MpText.text = StatManager.Instance.MaxMp.ToString();
+            UIManager.Instance.MpText.text = ((int)StatManager.Instance.MaxMp).ToString();
         }
     }
 

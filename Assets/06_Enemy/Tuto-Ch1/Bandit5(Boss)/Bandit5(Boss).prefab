@@ -6739,7 +6739,7 @@ GameObject:
   - component: {fileID: 4432431938055024236}
   - component: {fileID: 2195481694920036551}
   m_Layer: 7
-  m_Name: fat_bandit 2
+  m_Name: Bandit5(Boss)
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7383,6 +7383,20 @@ MonoBehaviour:
     comboSkills:
     - {fileID: 11400000, guid: 54bd18e4347e43d459c1391c0b965879, type: 2}
     isInstantCombo: 1
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 0
+  - skill: {fileID: 11400000, guid: ee4aef4311a6612438658f994a7689f4, type: 2}
+    minDistance: 0
+    maxDistance: 0
+    baseWeight: 0
+    weightIncreaseAmount: 0
+    nextAttackDelay: 0
+    cooldown: 15
+    minPhase: 99
+    maxPhase: 99
+    comboSkills: []
+    isInstantCombo: 0
     instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 0

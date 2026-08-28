@@ -18,7 +18,7 @@ public class InformationTabManager : MonoBehaviour
         }
 
         float contentTotalHeight = 0f;
-        float spacing = 25f; // 항목 간 간격
+        float spacing = 0f; // 항목 간 간격
 
         foreach (var skillBook in InventoryManager.Instance.MySkillBooks)
         {

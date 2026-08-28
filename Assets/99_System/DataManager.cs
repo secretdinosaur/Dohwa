@@ -34,6 +34,7 @@ public class DataManager : MonoBehaviour
 
     private void Awake()
     {
+
         if (Instance == null)
         {
             Instance = this;
@@ -852,22 +853,6 @@ public class DataManager : MonoBehaviour
         {
             SettingManager.Instance.SyncUIs(sfx, bgm, master, sens, locale, res, screen);
         }
-    }
-
-    private void OnEnable()
-    {
-        LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
-    }
-
-    private void OnDisable()
-    {
-        LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
-    }
-
-    private void OnLocaleChanged(Locale newLocale)
-    {
-        Debug.Log($"[Localization] 언어 변경됨: {newLocale.LocaleName}");
-        Debug.Log($"[Localization] 호출 스택:\n{System.Environment.StackTrace}");
     }
 
     public bool IsQuestAccepted(string eventKey)
