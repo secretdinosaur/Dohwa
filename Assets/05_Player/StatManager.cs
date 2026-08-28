@@ -278,8 +278,8 @@ public class StatManager : MonoBehaviour
             case StatType.ExternalArt:
                 ExternalArt += value;
                 ApplySingleStat(StatType.MaxHp, value * 1.2f);
-                ApplySingleStat(StatType.Defense, value * 0.3f);
-                ApplySingleStat(StatType.Attack, value * 0.5f);
+                ApplySingleStat(StatType.Defense, value * 0.6f);
+                ApplySingleStat(StatType.Attack, value * 0.3f);
                 ApplySingleStat(StatType.MaxMp, value * 0.1f);
                 break;
 
@@ -287,7 +287,7 @@ public class StatManager : MonoBehaviour
                 InnerArt += value;
                 ApplySingleStat(StatType.MaxHp, value * 0.2f);
                 ApplySingleStat(StatType.Defense, value * 0.1f);
-                ApplySingleStat(StatType.Attack, value * 0.5f);
+                ApplySingleStat(StatType.Attack, value * 0.6f);
                 ApplySingleStat(StatType.MaxMp, value * 0.8f);
                 break;
 
@@ -368,8 +368,8 @@ public class StatManager : MonoBehaviour
             case StatType.ExternalArt:
                 ExternalArt = value;
                 ApplySingleStat(StatType.MaxHp, ExternalArt * 1.2f);
-                ApplySingleStat(StatType.Defense, ExternalArt * 0.3f);
-                ApplySingleStat(StatType.Attack, ExternalArt * 0.5f);
+                ApplySingleStat(StatType.Defense, ExternalArt * 0.6f);
+                ApplySingleStat(StatType.Attack, ExternalArt * 0.3f);
                 ApplySingleStat(StatType.MaxMp, ExternalArt * 0.1f);
                 break;
 
@@ -377,7 +377,7 @@ public class StatManager : MonoBehaviour
                 InnerArt = value;
                 ApplySingleStat(StatType.MaxHp, InnerArt * 0.2f);
                 ApplySingleStat(StatType.Defense, InnerArt * 0.1f);
-                ApplySingleStat(StatType.Attack, InnerArt * 0.5f);
+                ApplySingleStat(StatType.Attack, InnerArt * 0.6f);
                 ApplySingleStat(StatType.MaxMp, InnerArt * 0.8f);
                 break;
 
