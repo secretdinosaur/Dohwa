@@ -16,6 +16,10 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     public GameObject[] EnemyWeapons;
     public GameObject[] FakeWeapons;
 
+    [Header("One-Time Enemy Settings")]
+    public bool isOnetimeEnemy = false;
+    public string onetimeSaveKey = "";
+
     [Header("Core Settings")]
     public SkillBase ViewSkill;
     [HideInInspector] public Animator animator;
@@ -99,6 +103,8 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     protected virtual void Awake()
     {
+        
+
         animator = GetComponent<Animator>();
         decalGenerator = GetComponent<DecalGenerator>();
         skillSelector = GetComponent<SkillSelector>();
@@ -152,6 +158,19 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         SetPlayerDetection(false);
     }
 
+    private void Start()
+    {
+        // 일회성 몬스터이며 이미 클리어된 상태라면 스스로 파괴
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            if (DataManager.Instance.IsEventCleared(onetimeSaveKey))
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
+        }
+    }
     private void Update()
     {
         if (animator != null && animator.gameObject.activeInHierarchy)
@@ -217,7 +236,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         {
             float rotY = transform.eulerAngles.y;
             float rotX = dirIndex * 30f;
-            // 타격자 기준이 아닌 피격자 기준이므로 180도 뒤집어 -90f로 오프셋 적용
             return Quaternion.Euler(rotX, rotY - 90f, 0f);
         }
 
@@ -313,6 +331,12 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     public void TriggerDeath()
     {
+        // 일회성 몬스터 처치 시 저장 데이터 갱신
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            DataManager.Instance.SetEventCleared(onetimeSaveKey);
+        }
+
         isForceDetected = false;
         SetPlayerDetection(false);
 
@@ -325,7 +349,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.Play(UnityEngine.Random.Range(0, 2) == 0 ? "Dead_1" : "Dead_2");
         StopAllEffects();
         GetComponent<Collider>().enabled = false;
-        
+
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;
 
@@ -471,7 +495,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         if (!gameObject.activeSelf) gameObject.SetActive(true);
 
         isForceDetected = false;
-        isTakingDoT = false;
+        isTakingDoT = false; // 부활 시 출혈 상태 초기화 버그 픽스
         SetPlayerDetection(false);
 
         ChangeState(EnemyState.Idle);
