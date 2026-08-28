@@ -96,7 +96,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         }
     }
 
-    // 💡 추가됨: 마나 소모 공통 메서드
     public void ConsumeMP(float amount)
     {
         MP -= amount * (1 - StatManager.Instance.MpConsumptionReduction);
@@ -317,7 +316,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
 
         float actualDamage = isTakingDoT ? damage : ApplyArmorReduction(damage);
-
         bool willDie = (HP - actualDamage) <= 0;
 
         if ((isParrying || isGuarding) && skillIsGuardable)
@@ -361,7 +359,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             float RemainingDamage = 0;
             float mpCost = StatManager.Instance.GuardSuccessCostMpMult * damage;
 
-            // 💡 ConsumeMP 적용
             if (MP > mpCost)
                 ConsumeMP(mpCost);
             else
@@ -398,13 +395,17 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         }
 
         bool hasKnockback = false;
+        Vector3 knockbackForce = Vector3.zero;
+
         if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
-            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+            knockbackForce = meleeSkill.hitDataList[hitIndex].knockbackForce;
+            hasKnockback = knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
         else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
-            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+            knockbackForce = rangeSkill.hitDataList[hitIndex].knockbackForce;
+            hasKnockback = knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
 
         bool isStunApplied = false;
@@ -427,17 +428,35 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             }
         }
 
-        if (!isStunApplied && !willDie && !hasKnockback && !isTakingDoT)
+        if (!isStunApplied && !willDie && !isTakingDoT)
         {
             CancelCurrentAction();
             ClearStun();
-            if (PlayerMove != null) PlayerMove.CancelKnockBack();
 
-            if (animator != null)
+            if (!hasKnockback)
             {
-                animator.ResetTrigger("Hitted1");
-                animator.ResetTrigger("Hitted2");
-                Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                if (PlayerMove != null) PlayerMove.CancelKnockBack();
+
+                if (animator != null)
+                {
+                    animator.ResetTrigger("Hitted1");
+                    animator.ResetTrigger("Hitted2");
+                    Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                }
+            }
+            else
+            {
+                // 넉백/에어본 로직 분기 추가
+                if (knockbackForce.y > 0)
+                {
+                    isAirborne = true;
+                    if (animator != null) Animator_SetTrigger("Airborne");
+                }
+                else
+                {
+                    if (PlayerMove != null) PlayerMove.isKnockedDown = true;
+                    if (animator != null) Animator_SetTrigger("KnockDown");
+                }
             }
         }
 
@@ -480,7 +499,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void ClearStun()
     {
         if (Time.frameCount == lastStunFrame) return;
-
         ForceClearStun();
     }
 
@@ -898,11 +916,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     IEnumerator PlayerDead()
     {
         CancelCurrentAction();
+        ForceClearStun(); // 상태 고착을 막고 죽음 애니메이션을 확실히 실행시키기 위한 초기화
+
+        if (animator != null)
+        {
+            animator.ResetTrigger("Hitted1");
+            animator.ResetTrigger("Hitted2");
+            animator.ResetTrigger("Stagger");
+            animator.ResetTrigger("Airborne");
+            animator.ResetTrigger("KnockDown");
+        }
 
         PreventMove = true;
         PreventAttack = true;
         if (PlayerAttack != null) PlayerAttack.DisableLockOn();
+
         Animator_SetTrigger("isDead");
+
         InkBrushEffectManager.Instance.PlayDeathEffect();
         SettingManager.Instance.SetSensitivityZero();
         SoundManager.Instance.PlaySound(DeathSound);
@@ -1015,7 +1045,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         yield return new WaitForSeconds(1.16f);
 
         InventoryItem item = Slot.item;
-        // 아이템 사용
         if (item.consumable != null)
             item.consumable.Use();
         else if (item.nonConsumable != null)

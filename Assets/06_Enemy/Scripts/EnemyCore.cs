@@ -158,9 +158,8 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         SetPlayerDetection(false);
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        // 일회성 몬스터이며 이미 클리어된 상태라면 스스로 파괴
         if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
         {
             if (DataManager.Instance.IsEventCleared(onetimeSaveKey))
