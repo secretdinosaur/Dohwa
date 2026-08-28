@@ -131,7 +131,7 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
 
                                     string sName = GetSafeSkillName(skill);
 
-                                    // 💡 개별 데미지 나열 문자열 생성 (예: "1.00 / 1.50")
+                                    // 💡 개별 데미지 나열 문자열 생성 (예: "15.00 / 15.00")
                                     string dmgStr = ExtractAllDamageMultipliers(skill);
 
                                     sheetData.Add(new List<string> { sName, dmgStr, skill.MP_cost.ToString("F1") });
@@ -365,60 +365,49 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
         }
     }
 
-    // 💡 모든 히트(개별 데미지)를 슬래시로 묶어서 추출하되, 사운드가 없고 데미지가 0인 것은 제외
+    // 💡 모든 히트(개별 데미지)를 직렬화(SerializedObject)로 정확히 파싱 (캐스팅 오류 원천 차단)
     private string ExtractAllDamageMultipliers(SkillBase skill)
     {
         if (skill == null) return "0.00";
         List<string> dmgList = new List<string>();
 
-        if (skill is Skill_Melee melee && melee.hitDataList != null)
+        SerializedObject so = new SerializedObject(skill);
+        SerializedProperty hitList = so.FindProperty("hitDataList");
+
+        if (hitList != null && hitList.isArray)
         {
-            foreach (var hit in melee.hitDataList)
+            for (int i = 0; i < hitList.arraySize; i++)
             {
-                // 범위 체크용 더미 데이터 무시
-                if (hit.hitSound == null && hit.damageMultiplier == 0f) continue;
-                dmgList.Add(hit.damageMultiplier.ToString("F2"));
+                SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
+                SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
+                SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
+
+                if (dmgProp != null)
+                {
+                    bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
+                    // 💡 소수점 오차로 인해 정확히 0f가 아닐 상황을 대비해 범위 검사 (0.001 이하)
+                    if (!hasSound && Mathf.Abs(dmgProp.floatValue) <= 0.001f) continue;
+
+                    dmgList.Add(dmgProp.floatValue.ToString("F2"));
+                }
             }
         }
-        else
+        else if (skill.damageMultipliers != null)
         {
-            // Range 등 다른 스킬들도 안전하게 지원
-            SerializedObject so = new SerializedObject(skill);
-            SerializedProperty hitList = so.FindProperty("hitDataList");
-            if (hitList != null && hitList.isArray)
+            for (int i = 0; i < skill.damageMultipliers.Length; i++)
             {
-                for (int i = 0; i < hitList.arraySize; i++)
-                {
-                    SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
-                    SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
-                    SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
+                AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
+                // 💡 여기도 마찬가지로 소수점 오차 검사
+                if (snd == null && Mathf.Abs(skill.damageMultipliers[i]) <= 0.001f) continue;
 
-                    if (dmgProp != null)
-                    {
-                        bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
-                        // 사운드도 없고 데미지도 0이면 범위체크용이므로 제외
-                        if (!hasSound && dmgProp.floatValue == 0f) continue;
-
-                        dmgList.Add(dmgProp.floatValue.ToString("F2"));
-                    }
-                }
-            }
-            else if (skill.damageMultipliers != null)
-            {
-                for (int i = 0; i < skill.damageMultipliers.Length; i++)
-                {
-                    AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
-                    if (snd == null && skill.damageMultipliers[i] == 0f) continue;
-
-                    dmgList.Add(skill.damageMultipliers[i].ToString("F2"));
-                }
+                dmgList.Add(skill.damageMultipliers[i].ToString("F2"));
             }
         }
 
         return dmgList.Count > 0 ? string.Join(" / ", dmgList) : "0.00";
     }
 
-    // 💡 슬래시로 쪼개진 데미지 문자열을 다시 개별 히트들에 적용 (더미 데이터 건너뜀)
+    // 💡 직렬화(SerializedObject)를 사용해 Pull 적용
     private void ApplyAllDamageMultipliers(SkillBase skill, string rawStr)
     {
         if (skill == null) return;
@@ -434,59 +423,43 @@ public class EnemyDataGoogleSheetSyncWindow : EditorWindow
         if (parsedValues.Count == 0) return;
 
         int valueIndex = 0;
+        SerializedObject so = new SerializedObject(skill);
+        SerializedProperty hitList = so.FindProperty("hitDataList");
 
-        if (skill is Skill_Melee melee && melee.hitDataList != null)
+        if (hitList != null && hitList.isArray)
         {
-            for (int i = 0; i < melee.hitDataList.Count; i++)
+            for (int i = 0; i < hitList.arraySize; i++)
             {
-                // 더미 데이터에는 값을 할당하지 않고 건너뜀
-                if (melee.hitDataList[i].hitSound == null && melee.hitDataList[i].damageMultiplier == 0f) continue;
+                SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
+                SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
+                SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
 
-                if (valueIndex < parsedValues.Count)
+                if (dmgProp != null)
                 {
-                    melee.hitDataList[i].damageMultiplier = parsedValues[valueIndex];
-                    valueIndex++;
-                }
-            }
-        }
-        else
-        {
-            SerializedObject so = new SerializedObject(skill);
-            SerializedProperty hitList = so.FindProperty("hitDataList");
-            if (hitList != null && hitList.isArray)
-            {
-                for (int i = 0; i < hitList.arraySize; i++)
-                {
-                    SerializedProperty hitProp = hitList.GetArrayElementAtIndex(i);
-                    SerializedProperty dmgProp = hitProp.FindPropertyRelative("damageMultiplier");
-                    SerializedProperty sndProp = hitProp.FindPropertyRelative("hitSound");
-
-                    if (dmgProp != null)
-                    {
-                        bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
-                        if (!hasSound && dmgProp.floatValue == 0f) continue;
-
-                        if (valueIndex < parsedValues.Count)
-                        {
-                            dmgProp.floatValue = parsedValues[valueIndex];
-                            valueIndex++;
-                        }
-                    }
-                }
-                so.ApplyModifiedProperties();
-            }
-            else if (skill.damageMultipliers != null)
-            {
-                for (int i = 0; i < skill.damageMultipliers.Length; i++)
-                {
-                    AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
-                    if (snd == null && skill.damageMultipliers[i] == 0f) continue;
+                    bool hasSound = (sndProp != null && sndProp.objectReferenceValue != null);
+                    // 💡 푸시할 때와 완벽히 동일한 조건으로 더미 스킵
+                    if (!hasSound && Mathf.Abs(dmgProp.floatValue) <= 0.001f) continue;
 
                     if (valueIndex < parsedValues.Count)
                     {
-                        skill.damageMultipliers[i] = parsedValues[valueIndex];
+                        dmgProp.floatValue = parsedValues[valueIndex];
                         valueIndex++;
                     }
+                }
+            }
+            so.ApplyModifiedProperties();
+        }
+        else if (skill.damageMultipliers != null)
+        {
+            for (int i = 0; i < skill.damageMultipliers.Length; i++)
+            {
+                AudioClip snd = (skill.HitSound != null && skill.HitSound.Length > i) ? skill.HitSound[i] : null;
+                if (snd == null && Mathf.Abs(skill.damageMultipliers[i]) <= 0.001f) continue;
+
+                if (valueIndex < parsedValues.Count)
+                {
+                    skill.damageMultipliers[i] = parsedValues[valueIndex];
+                    valueIndex++;
                 }
             }
         }
