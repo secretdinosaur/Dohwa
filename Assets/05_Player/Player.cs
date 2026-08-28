@@ -208,7 +208,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private IEnumerator InitialAttackPreventRoutine()
     {
         PreventAttack = true;
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
         PreventAttack = false;
     }
 

@@ -244318,7 +244318,7 @@ MonoBehaviour:
   innerArt: 0
   vitalStrikeRate: 0
   vitalStrikeDamage: 0
-  hpRecoveryAmount: 0
+  hpRecoveryAmount: 1
   mpRecoveryAmount: 10
   moveSpeed: 5
   poisonResistance: 0
@@ -290692,6 +290692,10 @@ PrefabInstance:
       propertyPath: checkpoint
       value: 
       objectReference: {fileID: 1000902091}
+    - target: {fileID: 8846057325310399860, guid: c011d7eebccc79247b57876584fef719, type: 3}
+      propertyPath: BossName.m_TableEntryReference.m_KeyId
+      value: 13549838150430720
+      objectReference: {fileID: 0}
     - target: {fileID: 8863225265001610297, guid: c011d7eebccc79247b57876584fef719, type: 3}
       propertyPath: m_LocalScale.y
       value: 1.0102174

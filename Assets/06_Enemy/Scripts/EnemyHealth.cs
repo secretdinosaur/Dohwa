@@ -63,7 +63,7 @@ public class EnemyHealth : MonoBehaviour
 
         if (hpBarCanvas != null)
         {
-            if (core.IsDead)
+            if (core.IsDead || currentHp <= 0)
             {
                 if (hpBarCanvas.gameObject.activeSelf)
                     hpBarCanvas.gameObject.SetActive(false);
