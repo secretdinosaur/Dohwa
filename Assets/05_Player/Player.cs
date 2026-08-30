@@ -112,7 +112,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp && !isAirborne && !PlayerMove.isKnockedBack;
     public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
-    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp;
+    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp && !isAirborne && !PlayerMove.isKnockedDown;
     public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
     public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isEating && !isWakingUp;
     public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
@@ -274,7 +274,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         equippedArmor = a;
         if (a != null)
         {
-            StatManager.Instance.MaxHp += equippedArmor.hp * 2;
+            StatManager.Instance.MaxHp += a.hp * 2;
             StatManager.Instance.Armor += a.defense * 2;
             a.equipPassive?.skillLogic.Apply();
         }
@@ -283,7 +283,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void UnequipArmor()
     {
         if (equippedArmor == null) return;
-        StatManager.Instance.Armor -= equippedArmor.defense;
+        StatManager.Instance.MaxHp -= equippedArmor.hp;
         StatManager.Instance.Armor -= equippedArmor.defense;
         equippedArmor.equipPassive?.skillLogic.Remove();
         equippedArmor = null;

@@ -192,12 +192,8 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         if (core.currentState == EnemyState.Attack) return;
 
+        // 💡 수정: forceDetected가 true이면 무조건 시야에 있는 것으로 강제 처리
         bool isCurrentlySeeing = core.isForceDetected || CheckForPlayer();
-
-        if (isCurrentlySeeing && core.isForceDetected && (isDetectedPlayer || isMemorizingPlayer))
-        {
-            core.isForceDetected = false;
-        }
 
         if (isCurrentlySeeing)
         {
@@ -226,20 +222,23 @@ public abstract class EnemyAIBase : MonoBehaviour
             isDetectedPlayer = false;
             core.SetPlayerDetection(false);
 
-            if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
+            // 💡 수정: core.isForceDetected가 true이거나 기억 유지 조건 충족 시 절대 메모리가 풀리지 않도록 처리
+            if (core.isForceDetected)
+            {
+                isMemorizingPlayer = true;
+            }
+            else if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
             {
                 isMemorizingPlayer = false;
             }
         }
 
-        // === 새로 추가: 공격 공백 검사 및 스킬 재검색 ===
-        // 플레이어 인식 중이고 현재 공격 중이 아니며, 마지막 공격 완료로부터 지정 시간(attackIdleReselectDelay) 이상 경과하면 스킬을 재검색
+        // 공격 공백 검사 및 스킬 재검색
         if (Player.Instance != null && isMemorizingPlayer && !isAttacking)
         {
             float timeSinceLastAttack = Time.time - lastCompletedAttackTime;
             if (timeSinceLastAttack >= attackIdleReselectDelay && Time.time - lastReselectTime >= reselectCooldown)
             {
-                // 현재 거리 기반으로 새로운 스킬을 가져옴
                 float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
                 if (core != null && core.skillSelector != null)
                 {
@@ -250,7 +249,6 @@ public abstract class EnemyAIBase : MonoBehaviour
                     }
                 }
                 lastReselectTime = Time.time;
-                // 기록: lastCompletedAttackTime을 갱신하면 동일 조건이 반복 실행되는 것을 방지
                 lastCompletedAttackTime = Time.time;
             }
         }
