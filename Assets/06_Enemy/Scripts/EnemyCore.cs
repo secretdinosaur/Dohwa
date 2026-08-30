@@ -103,8 +103,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     protected virtual void Awake()
     {
-        
-
         animator = GetComponent<Animator>();
         decalGenerator = GetComponent<DecalGenerator>();
         skillSelector = GetComponent<SkillSelector>();
@@ -331,7 +329,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     public void TriggerDeath()
     {
-        // 일회성 몬스터 처치 시 저장 데이터 갱신
         if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
         {
             DataManager.Instance.SetEventCleared(onetimeSaveKey);
@@ -442,6 +439,12 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.SetTrigger("Parried");
         OnParried?.Invoke();
         StopAllEffects();
+
+        // 💡 패링 당하는 즉시 발동 대기 중이던 콤보 플래그를 취소합니다.
+        if (skillSelector != null)
+        {
+            skillSelector.isInstantComboTriggered = false;
+        }
     }
 
     public void TriggerStun()
@@ -462,16 +465,34 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     {
         if (!IsDead)
         {
-            ChangeState(EnemyState.Idle);
-            wasParried = false;
-
+            // UI 강공격 마커는 끝났으므로 즉시 취소 처리
             if (EnemyLockOnImage.Instance != null &&
                 EnemyLockOnImage.Instance.target != null &&
                 EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
             {
                 EnemyLockOnImage.Instance.CancelStrongAttackEffect();
             }
+
+            // 💡 즉각적인 상태 전환(Idle)을 늦추어 1초 동안 멍때리게(여유를 가지게) 만듭니다.
+            StartCoroutine(StunEndDelayRoutine());
         }
+        else
+        {
+            OnStunEnd?.Invoke();
+        }
+    }
+
+    private IEnumerator StunEndDelayRoutine()
+    {
+        // 1초간 여유 대기 시간
+        yield return new WaitForSeconds(1.0f);
+
+        if (!IsDead)
+        {
+            ChangeState(EnemyState.Idle);
+            wasParried = false;
+        }
+
         OnStunEnd?.Invoke();
     }
 
@@ -505,7 +526,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         if (!gameObject.activeSelf) gameObject.SetActive(true);
 
         isForceDetected = false;
-        isTakingDoT = false; // 부활 시 출혈 상태 초기화 버그 픽스
+        isTakingDoT = false;
         SetPlayerDetection(false);
 
         ChangeState(EnemyState.Idle);

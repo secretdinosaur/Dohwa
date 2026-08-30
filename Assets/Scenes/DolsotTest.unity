@@ -27990,7 +27990,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.08423158, y: 0.25588572, z: 0.022386689, w: -0.96277016}
+  m_LocalRotation: {x: -0.04251185, y: 0.86965567, z: 0.0760846, w: 0.48590428}
   m_LocalPosition: {x: -0.08619163, y: -4.2551355, z: -1.8666325}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -49470,7 +49470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21b704123585d6e4ba685849fafa69b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillTreeGenerator
-  skillBook: {fileID: 11400000, guid: 3a126120217f58344a3a150d91230ebd, type: 2}
+  skillBook: {fileID: 11400000, guid: 7f9d29fd91eec5d4b895551aebbadc78, type: 2}
   nodePrefab: {fileID: 2951480918442581117, guid: 24d6a666eaa5f0448b5b290a2494f43a, type: 3}
   container: {fileID: 1585391607}
   horizontalSpacing: 35
@@ -49479,7 +49479,7 @@ MonoBehaviour:
   inkLineSprite: {fileID: 21300000, guid: c7be526cb2271ec4fa0ed8fce069e3e3, type: 3}
   lineThickness: 10
   nodeYOffset: 25
-  currentSkillBook: {fileID: 11400000, guid: 3a126120217f58344a3a150d91230ebd, type: 2}
+  currentSkillBook: {fileID: 11400000, guid: 7f9d29fd91eec5d4b895551aebbadc78, type: 2}
 --- !u!114 &1557675306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51924,9 +51924,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2051108587}
     - target: {fileID: 7620489288216040080, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: ViewSkill
+      value: 
+      objectReference: {fileID: 11400000, guid: 79bd4b90bb9b6a149aefe7e401c5028a, type: 2}
+    - target: {fileID: 7620489288216040080, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
       propertyPath: mainCamera
       value: 
       objectReference: {fileID: 330585545}
+    - target: {fileID: 7620489288216040080, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: acquiredSkills.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7620489288216040080, guid: 3f237cadb6277264cac903b3e9640d51, type: 3}
+      propertyPath: 'acquiredSkills.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 79bd4b90bb9b6a149aefe7e401c5028a, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -59016,63 +59028,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds: []
---- !u!1001 &1784028649
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -6.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -4.9999995
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 14.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: -0.00000053141287
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -0.0000031884765
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627781749649129144, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: -0.000000797119
-      objectReference: {fileID: 0}
-    - target: {fileID: 2905456378437358889, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
-      propertyPath: m_Name
-      value: bandit4
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 74fa607c5d9918845ab12a055c6c8f35, type: 3}
 --- !u!1 &1786988259
 GameObject:
   m_ObjectHideFlags: 0
@@ -71102,4 +71057,3 @@ SceneRoots:
   - {fileID: 1689166197}
   - {fileID: 1078021395}
   - {fileID: 1729468610}
-  - {fileID: 1784028649}

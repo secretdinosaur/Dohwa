@@ -31,6 +31,9 @@ public class PlayerAttack : MonoBehaviour
     public SkillBase ViewSkill;
     public SkillBase strongAttackSkill;
 
+    // 💡 강공격 타겟 저장을 위한 변수
+    private EnemyCore currentStrongAttackTarget;
+
     SkillEffect CurrentEffect;
     [HideInInspector] public float lastAttackTime = 0f;
     [HideInInspector] public float lastAttackEndTime = 0f;
@@ -232,6 +235,7 @@ public class PlayerAttack : MonoBehaviour
 
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
+
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
@@ -279,6 +283,10 @@ public class PlayerAttack : MonoBehaviour
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
         CancelCurrentSkill();
 
+        // 💡 강공격 타겟 설정 및 무적 부여
+        currentStrongAttackTarget = targetEnemy;
+        Player.Instance.isInvincible = true;
+
         Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
         direction.y = 0f;
         if (direction != Vector3.zero)
@@ -286,7 +294,6 @@ public class PlayerAttack : MonoBehaviour
             if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
             else transform.rotation = Quaternion.LookRotation(direction);
         }
-
 
         if (!isArmed)
         {
@@ -354,7 +361,6 @@ public class PlayerAttack : MonoBehaviour
 
         if (skillToUse.MP_cost > Player.Instance.MP)
         {
-            ClearCommandBuffer();
             UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
             yield break;
         }
@@ -404,7 +410,6 @@ public class PlayerAttack : MonoBehaviour
         PlayEffects(skillToUse.name);
         Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
 
-        // 💡 ConsumeMP 적용
         Player.Instance.ConsumeMP(skillToUse.MP_cost);
         GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
@@ -460,6 +465,14 @@ public class PlayerAttack : MonoBehaviour
     {
         isAttacking = false;
         canComboInput = false;
+
+        // 💡 강공격 종료 시 무적 상태 해제
+        if (skillToUse == strongAttackSkill)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
+
         lastActivatedSkill = null;
         StopEffects(skillToUse.name);
         CameraController.Instance.OnSkillEnd();
@@ -507,6 +520,13 @@ public class PlayerAttack : MonoBehaviour
             currentAttackRoutine = null;
         }
 
+        // 💡 캔슬 시 무적 상태 안전 해제
+        if (lastActivatedSkill == strongAttackSkill)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
+
         if (lastActivatedSkill != null)
         {
             StopEffects(lastActivatedSkill.name);
@@ -526,6 +546,13 @@ public class PlayerAttack : MonoBehaviour
             DrawRoutine = null;
         }
         isSwordMoving = false;
+
+        // 💡 발도 중 취소되었을 때를 대비한 무적 안전 해제
+        if (currentStrongAttackTarget != null)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
     }
 
     public void OnAttackHitEvent(int HitIndex)
@@ -534,6 +561,35 @@ public class PlayerAttack : MonoBehaviour
 
         processedHitIndices.Add(HitIndex);
         float baseDamage = StatManager.Instance.AttackPower / 100f;
+
+        // 💡 강공격인 경우 단일 대상 확정타 발동 (범위 무시)
+        if (lastActivatedSkill == strongAttackSkill && currentStrongAttackTarget != null)
+        {
+            if (!currentStrongAttackTarget.IsDead)
+            {
+                // 타격 이펙트(HitEffectData) 추출
+                HitEffectData hitEffectData = null;
+                if (lastActivatedSkill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > HitIndex)
+                {
+                    hitEffectData = meleeSkill.hitDataList[HitIndex].playerHitEffect;
+                }
+                else if (lastActivatedSkill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > HitIndex)
+                {
+                    hitEffectData = rangeSkill.hitDataList[HitIndex].playerHitEffect;
+                }
+
+                // null 대신 추출한 hitEffectData 정상 전달
+                currentStrongAttackTarget.TakeDamage(baseDamage, lastActivatedSkill, Player.Instance.transform, hitEffectData, HitIndex);
+
+                // 타격 사운드 수동 재생
+                if (lastActivatedSkill.HitSound != null && lastActivatedSkill.HitSound.Length > HitIndex && lastActivatedSkill.HitSound[HitIndex] != null)
+                {
+                    SoundManager.Instance.PlaySound(lastActivatedSkill.HitSound[HitIndex]);
+                }
+            }
+            return; // 단일 대상 처리를 위해 기본 범위 타격(ExecuteHitCheck) 생략
+        }
+
         lastActivatedSkill.ExecuteHitCheck(Player.Instance.transform, baseDamage, HitIndex);
     }
     #endregion

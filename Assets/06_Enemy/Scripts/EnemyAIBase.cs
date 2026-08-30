@@ -107,6 +107,7 @@ public abstract class EnemyAIBase : MonoBehaviour
     private void HandleInterrupt()
     {
         StopActionRoutine();
+        selectedSkill = null;
         core.CmdStopMovement?.Invoke();
     }
 
