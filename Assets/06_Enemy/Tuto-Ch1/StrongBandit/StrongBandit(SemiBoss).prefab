@@ -3524,6 +3524,8 @@ MonoBehaviour:
   - {fileID: 2729166572230384725}
   FakeWeapons:
   - {fileID: 5882079160754962980}
+  isOnetimeEnemy: 0
+  onetimeSaveKey: 
   ViewSkill: {fileID: 0}
   animator: {fileID: 0}
   wasParried: 0
@@ -3673,7 +3675,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a460de72b65cfa142a321e6a66fa1316, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StrongBanditHealth
-  maxHP: 700
+  maxHP: 350
   maxMP: 100
   mpRecoveryPerSecond: 5
   stunDuration: 4

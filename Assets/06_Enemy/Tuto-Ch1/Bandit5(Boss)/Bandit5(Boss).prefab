@@ -7179,6 +7179,8 @@ MonoBehaviour:
   - {fileID: 2548233254963907772}
   FakeWeapons:
   - {fileID: 4033718192354639248}
+  isOnetimeEnemy: 0
+  onetimeSaveKey: 
   ViewSkill: {fileID: 11400000, guid: 09391cd5851a6c54d95d62d9a18a6a04, type: 2}
   animator: {fileID: 0}
   wasParried: 0
@@ -7237,7 +7239,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f348013b481c8854e972ae5bb7664e4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBossHealth
-  maxHP: 500
+  maxHP: 400
   maxMP: 100
   mpRecoveryPerSecond: 5
   stunDuration: 8
