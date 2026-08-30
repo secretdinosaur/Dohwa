@@ -44,6 +44,9 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public bool isAirborne = false;
     public bool isWakingUp = false;
 
+    // 💡 강공격 시 적용될 무적 상태 플래그
+    public bool isInvincible = false;
+
     [HideInInspector] public bool isTakingDoT = false;
 
     public event Action OnParrySuccess;
@@ -299,7 +302,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     public void TakeDamage(float damage, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
-        if (!IsAlive) return;
+        // 💡 무적 상태일 때 데미지 판정 자체를 통과시킵니다.
+        if (!IsAlive || isInvincible) return;
 
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
         {
@@ -449,7 +453,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             }
             else
             {
-                // 넉백/에어본 로직 분기 추가
                 if (knockbackForce.y > 0)
                 {
                     isAirborne = true;
@@ -919,7 +922,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     IEnumerator PlayerDead()
     {
         CancelCurrentAction();
-        ForceClearStun(); // 상태 고착을 막고 죽음 애니메이션을 확실히 실행시키기 위한 초기화
+        ForceClearStun();
 
         if (animator != null)
         {
@@ -969,6 +972,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         isParrying = false;
         isAirborne = false;
         isWakingUp = false;
+        isInvincible = false; // 💡 부활 시 무적 상태 초기화
+
         if (PlayerMove != null)
         {
             PlayerMove.isKnockedBack = false;
