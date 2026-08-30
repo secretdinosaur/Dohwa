@@ -211,41 +211,41 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                             break;
 
                         case SkillBookBase.NodeType.StatSkill:
-                            if (node.statModifiers != null && node.statModifiers.Length > 0)
+                            string statNodeName = node.GetNodeName()?.Trim() ?? "Unknown";
+                            List<string> rowBase = new List<string> { bookDisplayName, statNodeName, cost > 0 ? cost.ToString() : "" };
+                            List<string> statValues = new List<string>();
+                            List<string> ratioValues = new List<string>();
+
+                            Dictionary<string, float> currentStats = new Dictionary<string, float>();
+                            if (node.statModifiers != null)
                             {
-                                Dictionary<string, float> currentStats = new Dictionary<string, float>();
                                 foreach (var stat in node.statModifiers)
                                 {
                                     string sName = stat.statType.ToString();
                                     if (!currentStats.ContainsKey(sName)) currentStats[sName] = 0f;
                                     currentStats[sName] += stat.statValue;
                                 }
-
-                                string statNodeName = node.GetNodeName();
-                                List<string> rowBase = new List<string> { bookDisplayName, statNodeName, cost > 0 ? cost.ToString() : "" };
-                                List<string> statValues = new List<string>();
-                                List<string> ratioValues = new List<string>();
-
-                                foreach (string sName in statNames)
-                                {
-                                    if (currentStats.TryGetValue(sName, out float val) && val != 0f)
-                                    {
-                                        statValues.Add(val.ToString());
-                                        ratioValues.Add(cost > 0 ? (val / cost).ToString("F2") : "");
-                                    }
-                                    else
-                                    {
-                                        statValues.Add("");
-                                        ratioValues.Add("");
-                                    }
-                                }
-
-                                List<string> finalRow = new List<string>();
-                                finalRow.AddRange(rowBase);
-                                finalRow.AddRange(statValues);
-                                finalRow.AddRange(ratioValues);
-                                statData.Add(finalRow);
                             }
+
+                            foreach (string sName in statNames)
+                            {
+                                if (currentStats.TryGetValue(sName, out float val) && val != 0f)
+                                {
+                                    statValues.Add(val.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                                    ratioValues.Add(cost > 0 ? (val / cost).ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "");
+                                }
+                                else
+                                {
+                                    statValues.Add("");
+                                    ratioValues.Add("");
+                                }
+                            }
+
+                            List<string> finalRow = new List<string>();
+                            finalRow.AddRange(rowBase);
+                            finalRow.AddRange(statValues);
+                            finalRow.AddRange(ratioValues);
+                            statData.Add(finalRow);
                             break;
                     }
                 }
@@ -403,6 +403,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                     string bookName = row[bookIdx].Trim();
                     string skillName = row[skillIdx].Trim();
 
+                    // 💡 Active 스킬 Cost 변경 로직 반영
                     if (costIdx != -1 && row.Length > costIdx)
                     {
                         string costStr = row[costIdx].Trim();
@@ -432,7 +433,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
 
                         if (mpCostIdx != -1 && row.Length > mpCostIdx)
                         {
-                            if (float.TryParse(row[mpCostIdx].Trim(), out float mp) && skillData.MP_cost != mp)
+                            if (float.TryParse(row[mpCostIdx].Trim(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float mp) && skillData.MP_cost != mp)
                             {
                                 Debug.Log($"       [MP 변경] 스킬 [{skillName}] MP: {skillData.MP_cost} ==> {mp}");
                                 skillData.MP_cost = mp;
@@ -471,6 +472,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                     string bookName = row[pBookIdx].Trim();
                     string passiveName = row[pNameIdx].Trim();
 
+                    // 💡 Passive 패시브 Cost 변경 로직 반영
                     if (pCostIdx != -1 && row.Length > pCostIdx && bookDict.TryGetValue(bookName, out SkillBookBase book))
                     {
                         if (int.TryParse(row[pCostIdx].Trim(), out int cost))
@@ -494,7 +496,10 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         }
 
         Debug.Log("\n--- [4단계] Stat 시트 데이터 적용 ---");
-        var statSheet = data.sheets.FirstOrDefault(s => string.Equals(s.sheetName?.Trim(), "Stat", StringComparison.OrdinalIgnoreCase));
+        var statSheet = data.sheets.FirstOrDefault(s =>
+            string.Equals(s.sheetName?.Trim(), "Stat", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(s.sheetName?.Trim(), "Stats", StringComparison.OrdinalIgnoreCase));
+
         if (statSheet != null && statSheet.rows != null && statSheet.rows.Count > 1)
         {
             string[] sHeaders = statSheet.rows[0].Split(new string[] { "|||" }, StringSplitOptions.None).Select(h => h.Trim()).ToArray();
@@ -517,8 +522,9 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                         for (int n = 0; n < book.skillTree.Length; n++)
                         {
                             var node = book.skillTree[n];
+                            string currentNodeName = node.GetNodeName()?.Trim() ?? "Unknown";
 
-                            if (node.nodeType == SkillBookBase.NodeType.StatSkill && node.GetNodeName().Trim() == statNodeName)
+                            if (node.nodeType == SkillBookBase.NodeType.StatSkill && currentNodeName == statNodeName)
                             {
                                 bool isDirty = false;
 
@@ -550,15 +556,15 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                     if (row.Length > col)
                                     {
                                         string cellValue = row[col].Trim();
+                                        bool isParsed = float.TryParse(cellValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float val);
 
-                                        // 값이 존재하고 0이 아닌 경우 (추가 또는 갱신)
-                                        if (float.TryParse(cellValue, out float val) && val != 0f)
+                                        if (isParsed && val != 0f)
                                         {
                                             if (Enum.TryParse(headerName, out StatManager.StatType parsedStatType))
                                             {
                                                 int existingIndex = currentModifiers.FindIndex(m => m.statType == parsedStatType);
 
-                                                if (existingIndex >= 0) // 기존에 있음 -> 수치 갱신
+                                                if (existingIndex >= 0)
                                                 {
                                                     if (currentModifiers[existingIndex].statValue != val)
                                                     {
@@ -570,7 +576,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                                         statListChanged = true;
                                                     }
                                                 }
-                                                else // 기존에 없음 -> 새로 추가
+                                                else
                                                 {
                                                     Debug.Log($"       [스탯량 추가] [{statNodeName}] {headerName}: 0 ==> {val}");
                                                     currentModifiers.Add(new SkillBookBase.StatModifier { statType = parsedStatType, statValue = val });
@@ -579,8 +585,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                                                 }
                                             }
                                         }
-                                        // 값이 없거나 0인 경우 (기존에 있다면 삭제)
-                                        else if (string.IsNullOrEmpty(cellValue) || val == 0f)
+                                        else if (string.IsNullOrEmpty(cellValue) || (isParsed && val == 0f))
                                         {
                                             if (Enum.TryParse(headerName, out StatManager.StatType parsedStatType))
                                             {
@@ -756,7 +761,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
             foreach (var hit in melee.hitDataList)
             {
                 float hitTotal = hit.damageMultiplier;
-                string hitStr = hit.damageMultiplier.ToString("F2");
+                string hitStr = hit.damageMultiplier.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
                 if (hit.useAreaSpawn && hit.areaTickInterval > 0f)
                 {
@@ -764,7 +769,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                     float areaDamage = ticks * hit.areaDamageMultiplier;
 
                     hitTotal += areaDamage;
-                    hitStr += $"+A({ticks}x{hit.areaDamageMultiplier:F2})";
+                    hitStr += $"+A({ticks}x{hit.areaDamageMultiplier.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)})";
                 }
 
                 if (hit.useDebuffEffect && hit.debuffType != DebuffType.None)
@@ -775,7 +780,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
                 if (hit.knockbackForce.magnitude > 0f)
                 {
                     if (hit.knockdownType != KnockdownType.None)
-                        hitStr += $"+{hit.knockdownType}({hit.knockdownDuration:F1}s)";
+                        hitStr += $"+{hit.knockdownType}({hit.knockdownDuration.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}s)";
                     else
                         hitStr += "+KB";
                 }
@@ -789,7 +794,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
             foreach (var hit in range.hitDataList)
             {
                 damageSum += hit.damageMultiplier;
-                infoList.Add(hit.damageMultiplier.ToString("F2"));
+                infoList.Add(hit.damageMultiplier.ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
             }
         }
         else if (skill.damageMultipliers != null)
@@ -797,7 +802,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
             foreach (float dmg in skill.damageMultipliers)
             {
                 damageSum += dmg;
-                infoList.Add(dmg.ToString("F2"));
+                infoList.Add(dmg.ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
             }
         }
 
@@ -818,7 +823,7 @@ public class SkillBookGoogleSheetSyncWindow : EditorWindow
         {
             string cleanStr = p.Split('+')[0].Trim();
 
-            if (float.TryParse(cleanStr, out float val))
+            if (float.TryParse(cleanStr, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float val))
             {
                 parsedValues.Add(val);
             }
