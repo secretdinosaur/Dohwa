@@ -478,7 +478,7 @@ public class DataManager : MonoBehaviour
     {
         if (UIManager.Instance == null || UIManager.Instance.Inventory == null || InventoryManager.Instance == null)
             return;
-
+        InventoryManager.Instance.ClearAllSlots();
         string path = Path.Combine(Application.persistentDataPath, "Inventory.data");
         if (!File.Exists(path))
         {

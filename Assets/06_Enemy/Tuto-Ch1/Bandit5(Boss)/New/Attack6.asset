@@ -52,7 +52,7 @@ MonoBehaviour:
   damageMultipliers:
   - 5
   - 5
-  - 20
+  - 40
   HitSound:
   - {fileID: 8300000, guid: 9b3d49a70a52e4743800aed51c307a4f, type: 3}
   - {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
@@ -130,7 +130,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 2, z: 2}
     boxSize: {x: 4, y: 2, z: 5}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 20
+    damageMultiplier: 40
     knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5
