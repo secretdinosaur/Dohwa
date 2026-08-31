@@ -85,7 +85,6 @@ public class QueenBanditAI : EnemyAIBase
     private bool currentAttackFinished = false;
     private Coroutine activeDashCoroutine;
 
-    // 💡 전투 시작 코루틴을 제어하기 위한 변수 추가
     private Coroutine fightSequenceRoutine;
 
     protected override void Awake()
@@ -144,13 +143,27 @@ public class QueenBanditAI : EnemyAIBase
         isAttacking = false;
 
         ClearAttackCallback();
+
         if (activeDashCoroutine != null)
         {
             StopCoroutine(activeDashCoroutine);
             activeDashCoroutine = null;
         }
 
-        // 💡 전투 시작 연출 중 스턴/사망 시 연출 강제 종료
+        if (actionCoroutine != null)
+        {
+            StopCoroutine(actionCoroutine);
+            actionCoroutine = null;
+        }
+
+        StopActionRoutine();
+
+        // 사망했을 때는 애니메이터를 강제로 취소(Idle 전환)시키지 않음
+        if (!core.IsDead)
+        {
+            core.CmdCancelAttack?.Invoke();
+        }
+
         if (fightSequenceRoutine != null)
         {
             StopCoroutine(fightSequenceRoutine);
@@ -172,7 +185,6 @@ public class QueenBanditAI : EnemyAIBase
             core.CmdTrySnapToNavMesh?.Invoke();
         }
 
-        // 💡 부활 시 전투 시작 코루틴 초기화
         if (fightSequenceRoutine != null)
         {
             StopCoroutine(fightSequenceRoutine);
@@ -254,7 +266,7 @@ public class QueenBanditAI : EnemyAIBase
         StopActionRoutine();
         core.CmdStopMovement?.Invoke();
         core.SetMoveAnimations(0f, 0f);
-        UIManager.Instance.BossStatus.SetActive(false);
+
         SoundManager.Instance.StopSpecialBGMWithFade();
         core.animator.Play("Phase1Dead");
 
@@ -281,8 +293,6 @@ public class QueenBanditAI : EnemyAIBase
             }
             yield return null;
         }
-
-        UIManager.Instance.BossStatus.SetActive(true);
 
         yield return new WaitForSeconds(5f);
 
@@ -408,8 +418,6 @@ public class QueenBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    // 💡 버그 수정: selectedSkill이 null일 때 GetOptimalDistance(null)을 호출하던 부분 제거. 
-                    // 대신 거리를 안전한 2.5f(기본 견제 거리)로 고정합니다.
                     HandleCooldownWalk(2.5f);
                 }
                 return;
@@ -422,33 +430,23 @@ public class QueenBanditAI : EnemyAIBase
 
             bool isWithinAttackBox = CheckPlayerInSkillBox(selectedSkill);
 
-            // 1. 타격 박스 안일 때
             if (isWithinAttackBox)
             {
                 if (canAttackGlobal && hasEnoughMP)
                 {
                     if (leftStepSkills.Contains(selectedSkill))
-                    {
                         actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Left", sideStepDuration));
-                    }
                     else if (rightStepSkills.Contains(selectedSkill))
-                    {
                         actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Right", sideStepDuration));
-                    }
                     else if (preBackStepSkills.Contains(selectedSkill))
-                    {
                         actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Back", attackBackStepDuration));
-                    }
                     else
-                    {
                         actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-                    }
 
                     lastActionWasBackStep = false;
                 }
                 else
                 {
-                    // 쿨타임 대기 중
                     if (distToLastPos < evadeRange && !lastActionWasBackStep && !skillSelector.HasPendingCombo && UnityEngine.Random.value <= evasionProbability)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
@@ -466,12 +464,10 @@ public class QueenBanditAI : EnemyAIBase
                     }
                 }
             }
-            // 2. 타격 박스 밖일 때 (유동적 거리/각도 조절 로직)
             else
             {
                 if (distToLastPos < evadeRange)
                 {
-                    // 거리는 너무 가까운데 각도가 빗나간 경우 -> 회피기동이나 뒤로 물러나면서 각도를 잼
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackStep)
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
@@ -485,7 +481,6 @@ public class QueenBanditAI : EnemyAIBase
                 }
                 else if (distToLastPos <= executeRange)
                 {
-                    // 거리는 적당한데(스킬 사거리 이내) 각도가 빗나간 경우 -> 제자리에서 미세 조절 (AdjustPositionRoutine)
                     if (canAttackGlobal && hasEnoughMP)
                     {
                         actionCoroutine = StartCoroutine(AdjustPositionRoutine(selectedSkill));
@@ -499,7 +494,6 @@ public class QueenBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    // 거리가 멀어서 안 맞는 경우 -> 타겟을 향해 달리기/걷기로 쫓아감
                     if (canAttackGlobal && hasEnoughMP)
                     {
                         if (distToLastPos <= executeRange * walkApproachFactor)
@@ -509,7 +503,6 @@ public class QueenBanditAI : EnemyAIBase
                     }
                     else
                     {
-                        // 공격 쿨타임 중일 때의 외곽 무빙
                         if (UnityEngine.Random.Range(0f, 100f) < idleStrafeChance && Time.time > nextWanderTime)
                         {
                             actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
@@ -566,7 +559,6 @@ public class QueenBanditAI : EnemyAIBase
         isStepping = true;
         float elapsed = 0f;
 
-        // 멈춰있던 기존 이동 명령 강제 취소 (충돌 방지)
         core.CmdStopMovement?.Invoke();
 
         float optimalDist = 2.5f;
@@ -590,7 +582,8 @@ public class QueenBanditAI : EnemyAIBase
 
         while (elapsed < 1.5f)
         {
-            if (core.IsDead || CheckPlayerInSkillBox(skill)) break;
+            if (core.IsDead) yield break; // 사망 시 즉시 컷
+            if (CheckPlayerInSkillBox(skill)) break;
 
             Vector3 myPos = transform.position;
             Vector3 playerPosPlane = new Vector3(lastKnownPlayerPos.x, myPos.y, lastKnownPlayerPos.z);
@@ -623,6 +616,9 @@ public class QueenBanditAI : EnemyAIBase
             SnapToGround();
             yield return null;
         }
+
+        if (core.IsDead) yield break;
+
         core.CmdStopMovement?.Invoke();
         isStepping = false;
         actionCoroutine = null;
@@ -649,7 +645,7 @@ public class QueenBanditAI : EnemyAIBase
 
         while (elapsed < duration)
         {
-            if (core.IsDead || isTransitioning) break;
+            if (core.IsDead || isTransitioning) yield break; // 사망 시 즉시 컷
 
             elapsed += Time.deltaTime;
 
@@ -691,9 +687,14 @@ public class QueenBanditAI : EnemyAIBase
             SnapToGround();
             yield return null;
         }
+
+        if (core.IsDead) yield break;
+
         core.CmdStopMovement?.Invoke();
         isStepping = false;
-        core.ChangeState(EnemyState.Idle);
+
+        if (!core.IsDead) core.ChangeState(EnemyState.Idle);
+
         actionCoroutine = null;
     }
 
@@ -775,6 +776,8 @@ public class QueenBanditAI : EnemyAIBase
 
     private void ChainNextAttackOrIdle()
     {
+        if (core.IsDead) return;
+
         if (skillSelector.HasPendingCombo)
         {
             float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
@@ -789,21 +792,13 @@ public class QueenBanditAI : EnemyAIBase
             }
 
             if (leftStepSkills.Contains(selectedSkill))
-            {
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Left", sideStepDuration));
-            }
             else if (rightStepSkills.Contains(selectedSkill))
-            {
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Right", sideStepDuration));
-            }
             else if (preBackStepSkills.Contains(selectedSkill))
-            {
                 actionCoroutine = StartCoroutine(StepAttackSequence(selectedSkill, "Step_Back", attackBackStepDuration));
-            }
             else
-            {
                 actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-            }
         }
         else
         {
@@ -816,7 +811,7 @@ public class QueenBanditAI : EnemyAIBase
 
     private IEnumerator StepAttackSequence(SkillBase skill, string stepAnimName, float stepDuration)
     {
-        if (skill == null)
+        if (skill == null || core.IsDead)
         {
             ChainNextAttackOrIdle();
             yield break;
@@ -825,6 +820,8 @@ public class QueenBanditAI : EnemyAIBase
         isAttacking = true;
         isStepping = true;
         yield return null;
+
+        if (core.IsDead) yield break;
 
         skillSelector.isInstantComboTriggered = false;
         core.CmdStopMovement?.Invoke();
@@ -837,6 +834,7 @@ public class QueenBanditAI : EnemyAIBase
         float elapsed = 0f;
         while (elapsed < stepDuration)
         {
+            if (core.IsDead) yield break; // 사망 시 즉시 컷
             elapsed += Time.deltaTime;
             if (Player.Instance != null)
             {
@@ -845,6 +843,8 @@ public class QueenBanditAI : EnemyAIBase
             }
             yield return null;
         }
+
+        if (core.IsDead) yield break;
 
         if (!skillSelector.isInstantComboTriggered) core.CmdTrySnapToNavMesh?.Invoke();
         isStepping = false;
@@ -885,7 +885,9 @@ public class QueenBanditAI : EnemyAIBase
         float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
         float timeout = Time.time + clipLength + 0.2f;
 
-        yield return new WaitUntil(() => currentAttackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
+        yield return new WaitUntil(() => currentAttackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout || core.IsDead);
+
+        if (core.IsDead) yield break;
 
         ClearAttackCallback();
 
@@ -939,22 +941,28 @@ public class QueenBanditAI : EnemyAIBase
         float elapsed = 0f;
         while (elapsed < evasionDuration)
         {
+            if (core.IsDead) yield break; // 사망 시 즉시 컷
+
             elapsed += Time.deltaTime;
             core.CmdLookAt?.Invoke(lastKnownPlayerPos);
             SnapToGround();
             yield return null;
         }
 
+        if (core.IsDead) yield break;
+
         core.CmdTrySnapToNavMesh?.Invoke();
         core.SetMoveAnimations(0f, 0f);
         isStepping = false;
-        core.ChangeState(EnemyState.Idle);
+
+        if (!core.IsDead) core.ChangeState(EnemyState.Idle);
+
         actionCoroutine = null;
     }
 
     private IEnumerator AttackSequence(SkillBase skill)
     {
-        if (skill == null)
+        if (skill == null || core.IsDead)
         {
             ChainNextAttackOrIdle();
             yield break;
@@ -962,6 +970,8 @@ public class QueenBanditAI : EnemyAIBase
 
         isAttacking = true;
         yield return null;
+
+        if (core.IsDead) yield break;
 
         skillSelector.isInstantComboTriggered = false;
         core.CmdStopMovement?.Invoke();
@@ -1001,7 +1011,9 @@ public class QueenBanditAI : EnemyAIBase
         float clipLength = (skill.clip != null) ? skill.clip.length : 2f;
         float timeout = Time.time + clipLength + 0.1f;
 
-        yield return new WaitUntil(() => currentAttackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout);
+        yield return new WaitUntil(() => currentAttackFinished || skillSelector.isInstantComboTriggered || Time.time > timeout || core.IsDead);
+
+        if (core.IsDead) yield break;
 
         ClearAttackCallback();
 
@@ -1047,6 +1059,7 @@ public class QueenBanditAI : EnemyAIBase
         float delayElapsed = 0f;
         while (delayElapsed < attack9DashDelay)
         {
+            if (core.IsDead) yield break; // 사망 시 즉시 컷
             delayElapsed += Time.deltaTime;
 
             if (Player.Instance != null)
@@ -1062,6 +1075,8 @@ public class QueenBanditAI : EnemyAIBase
             }
             yield return null;
         }
+
+        if (core.IsDead) yield break;
 
         Vector3 startPos = transform.position;
         Vector3 playerPos = Player.Instance.transform.position;

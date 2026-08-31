@@ -29,12 +29,25 @@ public class EnemyHealth : MonoBehaviour
         decalGenerator = GetComponent<DecalGenerator>();
         currentHp = maxHP;
         currentMp = maxMP;
+
+        // 💡 Awake 시점에 미리 체력바 UI에 초기 값을 밀어 넣어 줍니다.
+        if (hpBarCanvas != null)
+        {
+            hpBarCanvas.UpdateHP(currentHp, maxHP);
+            hpBarCanvas.UpdateMP(currentMp, maxMP);
+            hpBarCanvas.gameObject.SetActive(false);
+        }
     }
 
     private void OnEnable()
     {
         if (hpBarCanvas != null)
+        {
+            // 💡 켜질 때도 혹시 모를 상황을 대비해 값 동기화 후 끔
+            hpBarCanvas.UpdateHP(currentHp, maxHP);
+            hpBarCanvas.UpdateMP(currentMp, maxMP);
             hpBarCanvas.gameObject.SetActive(false);
+        }
 
         core.OnDamageTaken += HandleDamage;
         core.OnParryDamageTaken += HandleParryDamage;

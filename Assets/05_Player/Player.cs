@@ -145,11 +145,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     #endregion
 
     #region Constants
-    private const float ArmorReductionFactor = 0.06f;
+    public const float ArmorReductionFactor = 0.06f;
     private const float FootstepCooldown = 0.2f;
     private const float GuardAngleThreshold = 0.7f;
-    private const float WallCheckRadius = 0.3f;
-    private const float WallCheckSkinWidth = 0.2f;
+    public float WallCheckRadius = 0.3f;
+    public float WallCheckSkinWidth = 0.2f;
     private const float WallCheckHeightMin = 0.5f;
     private const float WallCheckHeightMax = 1.5f;
     #endregion
@@ -316,6 +316,12 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void TakeDamage(float damage, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
         if (!IsAlive || isInvincible) return;
+
+        // 💡 피격 당하는 순간 플레이어의 공격, 스킬, 사운드, 이펙트를 즉시 취소/정지
+        if (PlayerAttack != null)
+        {
+            PlayerAttack.CancelCurrentSkill();
+        }
 
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
         {
@@ -1209,29 +1215,56 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         Vector3 delta = animator.deltaPosition;
         if (delta.AlmostZero()) return;
+
         Vector3 horizontalDelta = new Vector3(delta.x, 0f, delta.z);
         float distance = horizontalDelta.magnitude;
 
         if (distance > 0.0001f)
         {
             Vector3 dir = horizontalDelta.normalized;
-            Vector3 point1 = transform.position + Vector3.up * WallCheckHeightMin;
-            Vector3 point2 = transform.position + Vector3.up * WallCheckHeightMax;
 
-            if (Physics.CapsuleCast(point1, point2, WallCheckRadius, dir, out RaycastHit hit, distance + WallCheckSkinWidth, wallLayer))
+            float pullBackDist = 1.0f;
+            float checkRadius = 0.8f;
+
+            Vector3 origin = transform.position - (dir * pullBackDist);
+            Vector3 point1 = origin + Vector3.up * 0.1f;
+            Vector3 point2 = origin + Vector3.up * 2.0f;
+
+            LayerMask obstacleLayer = wallLayer | LayerMask.GetMask("Ground");
+
+            if (Physics.CapsuleCast(point1, point2, checkRadius, dir, out RaycastHit hit, distance + pullBackDist + WallCheckSkinWidth, obstacleLayer))
             {
-                float safeDistance = Mathf.Max(0f, hit.distance - WallCheckSkinWidth);
-                Vector3 safeMove = dir * safeDistance;
-                Vector3 remainingMove = dir * (distance - safeDistance);
-                Vector3 slideMove = Vector3.ProjectOnPlane(remainingMove, hit.normal);
-                slideMove.y = 0f;
-
-                horizontalDelta = safeMove + slideMove;
+                float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
+                if (hitAngle > 45f)
+                {
+                    return;
+                }
             }
-            delta = new Vector3(horizontalDelta.x, delta.y, horizontalDelta.z);
         }
 
-        PlayerMove._rb.MovePosition(PlayerMove._rb.position + delta);
+        Vector3 finalDelta = new Vector3(horizontalDelta.x, delta.y, horizontalDelta.z);
+        Vector3 targetPosition = PlayerMove._rb.position + finalDelta;
+
+        Vector3 rayOrigin = transform.position + Vector3.up * 2.0f + horizontalDelta;
+
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 5.0f, LayerMask.GetMask("Ground")))
+        {
+            float slopeAngle = Vector3.Angle(Vector3.up, groundHit.normal);
+            if (slopeAngle <= 45f)
+            {
+                targetPosition.y = groundHit.point.y;
+            }
+            else
+            {
+                return;
+            }
+        }
+        else
+        {
+            targetPosition.y = PlayerMove._rb.position.y;
+        }
+
+        PlayerMove._rb.MovePosition(targetPosition);
         PlayerMove._rb.MoveRotation(PlayerMove._rb.rotation * animator.deltaRotation);
     }
 
