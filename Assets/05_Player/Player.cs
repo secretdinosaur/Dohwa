@@ -43,8 +43,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public bool isDeathPanelOn = false;
     public bool isAirborne = false;
     public bool isWakingUp = false;
-
-    // 💡 강공격 시 적용될 무적 상태 플래그
     public bool isInvincible = false;
 
     [HideInInspector] public bool isTakingDoT = false;
@@ -110,14 +108,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public bool isEating => animator.GetCurrentAnimatorStateInfo(1).IsTag("Eat");
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
-    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp && !isAirborne && !PlayerMove.isKnockedBack;
-    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
-    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp && !isAirborne && !PlayerMove.isKnockedDown;
-    public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
-    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isEating && !isWakingUp;
-    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
-    public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating && !isWakingUp;
-    public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isWakingUp;
+    private bool CanActBase => IsAlive && !isCinematic && !IsStunned && !isWakingUp;
+
+    public bool CanMove() => CanActBase && !PreventMove && !PlayerAttack.isAttacking && !isAirborne && !PlayerMove.isKnockedBack;
+
+    public bool CanAttack() => CanActBase && !PreventAttack && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanGuard() => CanActBase && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanLockOn() => CanActBase && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanDash() => CanMove() && !isGuarding && !isEating;
+
+    public bool CanJump() => CanMove() && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving;
+
+    public bool CanInteract() => CanActBase && !PlayerAttack.isAttacking && !isInteracting && !isEating;
+
+    public bool CanUseQuickSlot() => CanActBase && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isAirborne && !PlayerMove.isKnockedDown;
     #endregion
 
     #region Combat & Tuning Settings
@@ -166,6 +173,12 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private int currentSkillStateIndex = 1;
 
     private int lastStunFrame = -1;
+
+    private float savedInputX;
+    private float savedInputY;
+    private float savedMoveSpeed;
+    private float savedIsArmed;
+    private bool isGrabStateSaved = false;
     #endregion
 
     #region Unity Lifecycle
@@ -302,7 +315,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     public void TakeDamage(float damage, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
-        // 💡 무적 상태일 때 데미지 판정 자체를 통과시킵니다.
         if (!IsAlive || isInvincible) return;
 
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
@@ -508,6 +520,18 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         ForceClearStun();
     }
 
+    private void RestoreGrabState()
+    {
+        if (isGrabStateSaved)
+        {
+            Animator_SetFloat("inputX", savedInputX);
+            Animator_SetFloat("inputY", savedInputY);
+            Animator_SetFloat("MoveSpeed", savedMoveSpeed);
+            Animator_SetFloat("isArmed", savedIsArmed);
+            isGrabStateSaved = false;
+        }
+    }
+
     private void ForceClearStun()
     {
         if (currentStunRoutine != null)
@@ -515,6 +539,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             StopCoroutine(currentStunRoutine);
             currentStunRoutine = null;
         }
+
+        RestoreGrabState();
 
         currentStunType = StunType.Stagger;
         animator.SetBool("isGrabbed", false);
@@ -559,7 +585,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             case StunType.Stagger: Animator_SetTrigger("Stagger"); break;
             case StunType.Stun: Animator_SetTrigger("Stagger"); break;
-            case StunType.Grabbed: Animator_SetBool("isGrabbed", true); break;
+            case StunType.Grabbed:
+                if (!isGrabStateSaved)
+                {
+                    savedInputX = animator.GetFloat("inputX");
+                    savedInputY = animator.GetFloat("inputY");
+                    savedMoveSpeed = animator.GetFloat("MoveSpeed");
+                    savedIsArmed = animator.GetFloat("isArmed");
+                    isGrabStateSaved = true;
+                }
+                Animator_SetFloat("inputX", 0f);
+                Animator_SetFloat("inputY", 0f);
+                Animator_SetFloat("MoveSpeed", 0f);
+                Animator_SetFloat("isArmed", 0f);
+
+                Animator_Play("MoveTree");
+                Animator_SetBool("isGrabbed", true);
+                break;
         }
 
         float elapsed = 0f;
@@ -589,7 +631,10 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             case StunType.Stagger: Animator_SetTrigger("StaggerEnd"); break;
             case StunType.Stun: Animator_SetTrigger("StaggerEnd"); break;
-            case StunType.Grabbed: Animator_SetBool("isGrabbed", false); break;
+            case StunType.Grabbed:
+                Animator_SetBool("isGrabbed", false);
+                RestoreGrabState();
+                break;
         }
 
         currentStunRoutine = null;
@@ -668,8 +713,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             PlayerAttack.isAttacking = false;
             PlayerAttack.isSwordMoving = false;
+            PlayerAttack.CancelDrawSword();
             PlayerAttack.CancelCurrentSkill();
         }
+
+        isInvincible = false;
     }
 
     public IEnumerator HpRecoveryRoutine()
@@ -874,6 +922,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         if (isActive)
         {
+            CancelCurrentAction();
+
             if (PlayerMove != null && PlayerMove._rb != null)
             {
                 PlayerMove._rb.linearVelocity = Vector3.zero;
@@ -972,7 +1022,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         isParrying = false;
         isAirborne = false;
         isWakingUp = false;
-        isInvincible = false; // 💡 부활 시 무적 상태 초기화
+        isInvincible = false;
 
         if (PlayerMove != null)
         {

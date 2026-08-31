@@ -12,7 +12,8 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     public EnemyState currentState = EnemyState.Idle;
     [HideInInspector] public Transform cameraTarget;
     public Item dropItem;
-
+    public float statpointGainChance = 0.1f;
+    public int statpointGainAmount = 3;
     public GameObject[] EnemyWeapons;
     public GameObject[] FakeWeapons;
 
@@ -389,6 +390,10 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
             dropItem.Interact(false);
             DOVirtual.DelayedCall(3f, () => { if (dropItem != null) dropItem.ShowItemGainPanel(); }).SetTarget(gameObject);
         }
+
+        if (UnityEngine.Random.value < statpointGainChance)
+            StatManager.Instance.GetStatPoint(statpointGainAmount);
+
         OnDeath?.Invoke();
     }
 

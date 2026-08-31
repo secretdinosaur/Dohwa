@@ -114,7 +114,6 @@ public class DungeonManager : MonoBehaviour
 
     public void OnBossDefeated()
     {
-        StatManager.Instance.GetStatPoint(30);
         Player.Instance.impulseSource.GenerateImpulse(2f);
         Time.timeScale = 0.2f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;

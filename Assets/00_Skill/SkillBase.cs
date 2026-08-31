@@ -82,7 +82,7 @@ public abstract class SkillBase : ScriptableObject
     {
     }
 
-    protected float ProcessCriticalHit(ref bool isCriticalChecked, ref bool isCriticalHit, bool isCasterPlayer, GameObject targetObj, Vector3 hitPoint, Quaternion effectRotation, float baseDamage, float damageMultiplier, bool isGuarding, int hitIndex)
+    public float ProcessCriticalHit(ref bool isCriticalChecked, ref bool isCriticalHit, bool isCasterPlayer, GameObject targetObj, Vector3 hitPoint, Quaternion effectRotation, float baseDamage, float damageMultiplier, bool isGuarding, int hitIndex)
     {
         if (!isCriticalChecked)
         {

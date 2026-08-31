@@ -195262,15 +195262,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.72
+      value: 467.419
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5
+      value: 148.442
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.33
+      value: 573.57
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0c1d6cf07b6c1494998193782ad099a6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -203758,6 +203758,8 @@ MonoBehaviour:
   currentState: 0
   cameraTarget: {fileID: 0}
   dropItem: {fileID: 0}
+  statpointGainChance: 1
+  statpointGainAmount: 50
   EnemyWeapons: []
   FakeWeapons: []
   isOnetimeEnemy: 0
@@ -203879,7 +203881,7 @@ MonoBehaviour:
   rightTrail: {fileID: 8828948375968517084}
   leftTrail: {fileID: 8376040010599654510}
   FightWall: {fileID: 0}
-  startFightDelay: 2.5
+  startFightDelay: 4
   walkApproachFactor: 1.5
   chaseBuffer: 1
   closeWanderMin: 2
@@ -203896,7 +203898,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 60a9f407c8ba08b4387394fe514a800c, type: 2}
   preBackStepSkills:
   - {fileID: 11400000, guid: 54557036e957d1344bd075f75e4ca4b1, type: 2}
-  - {fileID: 11400000, guid: 30513680605406c498d643fe5c13bc04, type: 2}
   earthquakeSkills:
   - {fileID: 11400000, guid: b1c96a3a1fd8445439ed98685501452e, type: 2}
   - {fileID: 11400000, guid: e84bbc753658f1940b146caaf775e59c, type: 2}

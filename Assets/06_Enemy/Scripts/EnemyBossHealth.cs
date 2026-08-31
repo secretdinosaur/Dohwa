@@ -168,6 +168,11 @@ public class EnemyBossHealth : MonoBehaviour
 
         isTransitioningPhase = false;
         core.ChangeState(EnemyState.Idle);
+
+        if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
+        {
+            UIManager.Instance.BossStatus.gameObject.SetActive(true);
+        }
     }
 
     protected virtual void OnPhaseChanged(int newPhase)

@@ -80,7 +80,8 @@ public class SoundManager : MonoBehaviour
 
     public void PlayTeacherSound()
     {
-        PlaySound(teacherSound);
+        if(teacherSound != null)
+            PlaySound(teacherSound);
     }
 
     public void PlayCriticalSound()

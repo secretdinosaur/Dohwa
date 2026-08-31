@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static UnityEngine.Analytics.IAnalytic;
 
 public class PlayerAttack : MonoBehaviour
 {
@@ -248,6 +249,9 @@ public class PlayerAttack : MonoBehaviour
         EnemyCore targetEnemy = GetClosestStunnedEnemy();
         if (targetEnemy != null && strongAttackSkill != null)
         {
+            // 💡 이미 강공격이 실행 중이거나 공격 중인 상태라면 연타 입력 무시
+            if (isAttacking || currentAttackRoutine != null) return;
+
             ExecuteStrongAttack(targetEnemy);
             return;
         }
@@ -375,7 +379,15 @@ public class PlayerAttack : MonoBehaviour
     public void Attack(SkillBase skillToUse)
     {
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
+
+        if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
+
         if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
+
         Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
@@ -520,8 +532,7 @@ public class PlayerAttack : MonoBehaviour
             currentAttackRoutine = null;
         }
 
-        // 💡 캔슬 시 무적 상태 안전 해제
-        if (lastActivatedSkill == strongAttackSkill)
+        if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
         {
             Player.Instance.isInvincible = false;
             currentStrongAttackTarget = null;
@@ -578,8 +589,25 @@ public class PlayerAttack : MonoBehaviour
                     hitEffectData = rangeSkill.hitDataList[HitIndex].playerHitEffect;
                 }
 
-                // null 대신 추출한 hitEffectData 정상 전달
-                currentStrongAttackTarget.TakeDamage(baseDamage, lastActivatedSkill, Player.Instance.transform, hitEffectData, HitIndex);
+                // 적의 가드 여부 확인
+                bool isGuarding = currentStrongAttackTarget.isGuarding;
+
+                // 타격 위치 및 회전 계산
+                Vector3 hitPoint = currentStrongAttackTarget.transform.position;
+                Quaternion effectRot = Quaternion.identity;
+
+                bool isCriticalChecked = false;
+                bool isCriticalHit = false;
+                bool isCasterPlayer = true;
+
+                // 💡 일반 공격과 동일한 크리티컬 및 데미지 산출 함수 호출 (SkillBase 내부에 정의된 메서드 활용)
+                float finalDamage = lastActivatedSkill.ProcessCriticalHit(
+                    ref isCriticalChecked, ref isCriticalHit, isCasterPlayer,
+                    currentStrongAttackTarget.gameObject, hitPoint, effectRot,
+                    baseDamage, lastActivatedSkill.damageMultipliers[HitIndex], isGuarding, HitIndex);
+
+                // 산출된 최종 데미지(finalDamage)를 정상 전달
+                currentStrongAttackTarget.TakeDamage(finalDamage, lastActivatedSkill, Player.Instance.transform, hitEffectData, HitIndex);
 
                 // 타격 사운드 수동 재생
                 if (lastActivatedSkill.HitSound != null && lastActivatedSkill.HitSound.Length > HitIndex && lastActivatedSkill.HitSound[HitIndex] != null)
