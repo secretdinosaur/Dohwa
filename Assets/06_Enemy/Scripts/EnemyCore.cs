@@ -102,6 +102,9 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     private Coroutine bleedCoroutine;
 
+    // 추가됨: 자식들의 SkinnedMeshRenderer 오리지널 바운딩 박스 저장용
+    private Dictionary<SkinnedMeshRenderer, Bounds> originalBoundsMap = new Dictionary<SkinnedMeshRenderer, Bounds>();
+
     protected virtual void Awake()
     {
         animator = GetComponent<Animator>();
@@ -111,6 +114,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         CreateCameraTarget();
         InitializeEffects();
         CacheAndUnifyMaterials();
+        CacheOriginalBounds(); // 렌더러들의 초기 바운딩 박스 캐싱
 
         GetComponent<Rigidbody>().linearDamping = 10f;
         GetComponent<Rigidbody>().isKinematic = true;
@@ -328,12 +332,48 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         OnParryDamageTaken?.Invoke(mpDamage);
     }
 
+    private void CacheOriginalBounds()
+    {
+        SkinnedMeshRenderer[] smrs = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        foreach (var smr in smrs)
+        {
+            if (smr != null)
+            {
+                originalBoundsMap[smr] = smr.localBounds;
+            }
+        }
+    }
+
+    private void ExpandBoundsForDeath()
+    {
+        foreach (var smr in originalBoundsMap.Keys)
+        {
+            if (smr != null)
+            {
+                // 컬링을 방지하기 위해 바운딩 박스를 넉넉하게 확장합니다.
+                smr.localBounds = new Bounds(Vector3.zero, new Vector3(10f, 10f, 10f));
+            }
+        }
+    }
+
+    private void RestoreOriginalBounds()
+    {
+        foreach (var kvp in originalBoundsMap)
+        {
+            if (kvp.Key != null)
+            {
+                kvp.Key.localBounds = kvp.Value;
+            }
+        }
+    }
+
     public void TriggerDeath()
     {
         if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
         {
             DataManager.Instance.SetEventCleared(onetimeSaveKey);
         }
+        OnDeath?.Invoke();
 
         isForceDetected = false;
         SetPlayerDetection(false);
@@ -347,6 +387,9 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.Play(UnityEngine.Random.Range(0, 2) == 0 ? "Dead_1" : "Dead_2");
         StopAllEffects();
         GetComponent<Collider>().enabled = false;
+
+        // 추가됨: 사망 시 바운딩 박스 크기 확장
+        ExpandBoundsForDeath();
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;
@@ -394,7 +437,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         if (UnityEngine.Random.value < statpointGainChance)
             StatManager.Instance.GetStatPoint(statpointGainAmount);
 
-        OnDeath?.Invoke();
     }
 
     private IEnumerator AlignToGroundRotation()
@@ -445,7 +487,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         OnParried?.Invoke();
         StopAllEffects();
 
-        // 💡 패링 당하는 즉시 발동 대기 중이던 콤보 플래그를 취소합니다.
         if (skillSelector != null)
         {
             skillSelector.isInstantComboTriggered = false;
@@ -470,7 +511,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     {
         if (!IsDead)
         {
-            // UI 강공격 마커는 끝났으므로 즉시 취소 처리
             if (EnemyLockOnImage.Instance != null &&
                 EnemyLockOnImage.Instance.target != null &&
                 EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
@@ -478,7 +518,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
                 EnemyLockOnImage.Instance.CancelStrongAttackEffect();
             }
 
-            // 💡 즉각적인 상태 전환(Idle)을 늦추어 1초 동안 멍때리게(여유를 가지게) 만듭니다.
             StartCoroutine(StunEndDelayRoutine());
         }
         else
@@ -489,7 +528,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     private IEnumerator StunEndDelayRoutine()
     {
-        // 1초간 여유 대기 시간
         yield return new WaitForSeconds(1.0f);
 
         if (!IsDead)
@@ -538,6 +576,9 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         wasParried = false;
         isGuarding = false;
         GetComponent<Collider>().enabled = true;
+
+        // 추가됨: 부활 시 바운딩 박스 원상 복구
+        RestoreOriginalBounds();
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = true;
