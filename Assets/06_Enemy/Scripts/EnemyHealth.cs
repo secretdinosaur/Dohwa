@@ -8,7 +8,7 @@ public class EnemyHealth : MonoBehaviour
     public float maxMP = 100f;
     public float mpRecoveryPerSecond = 5f;
     public float stunDuration = 3f;
-
+    
     private float currentHp, currentMp;
     private EnemyCore core;
     private HpBarCanvas hpBarCanvas;
@@ -133,8 +133,7 @@ public class EnemyHealth : MonoBehaviour
         {
             if (GradeManager.Instance != null)
                 GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.KillEnemy);
-            if (UnityEngine.Random.value < 0.10f)
-                StatManager.Instance.GetStatPoint(3);
+            
             core.TriggerDeath();
         }
     }

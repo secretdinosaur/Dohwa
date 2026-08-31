@@ -680,6 +680,9 @@ public class DataSheetWindow : EditorWindow
                     sheetData.Add(new List<string> { "MaxHP", maxHp.ToString("F1"), "" });
                     sheetData.Add(new List<string> { "MaxMP", maxMp.ToString("F1"), "" });
                     sheetData.Add(new List<string> { "MPRecovery", mpRec.ToString("F1"), "" });
+                    // 💡 StatPoint 확률과 획득량 추가
+                    sheetData.Add(new List<string> { "StatPointChance", core.statpointGainChance.ToString("F2", System.Globalization.CultureInfo.InvariantCulture), "" });
+                    sheetData.Add(new List<string> { "StatPointAmount", core.statpointGainAmount.ToString(), "" });
                     sheetData.Add(new List<string> { "", "", "" });
 
                     sheetData.Add(new List<string> { "Skill Name", "Damage", "MP Cost" });
@@ -839,6 +842,10 @@ public class DataSheetWindow : EditorWindow
                 Component healthComp = prefab.GetComponentsInChildren<Component>(true).FirstOrDefault(c => c != null && c.GetType().Name.Contains("Health"));
                 SerializedObject soHealth = healthComp != null ? new SerializedObject(healthComp) : null;
 
+                // 💡 EnemyCore 프로퍼티 수정을 위해 SerializedObject 추가
+                EnemyCore coreComp = prefab.GetComponentInChildren<EnemyCore>(true);
+                SerializedObject soCore = coreComp != null ? new SerializedObject(coreComp) : null;
+
                 Component skillSelector = prefab.GetComponentInChildren<SkillSelector>(true);
                 SerializedObject soSelector = skillSelector != null ? new SerializedObject(skillSelector) : null;
                 SerializedProperty profiles = soSelector?.FindProperty("SkillProfiles") ?? soSelector?.FindProperty("skillProfiles");
@@ -862,35 +869,64 @@ public class DataSheetWindow : EditorWindow
                             continue;
                         }
 
-                        if (!isParsingSkills && soHealth != null)
+                        if (!isParsingSkills)
                         {
                             float val = ParseFloatSafe(valStr);
 
-                            if (key == "MaxHP")
+                            if (soHealth != null)
                             {
-                                if (Mathf.Abs(GetFloat(soHealth, "maxHP", "MaxHp") - val) > 0.001f)
+                                if (key == "MaxHP")
                                 {
-                                    SetFloat(soHealth, val, "maxHP", "MaxHp");
-                                    Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MaxHP => {val}");
-                                    isPrefabDirty = true;
+                                    if (Mathf.Abs(GetFloat(soHealth, "maxHP", "MaxHp") - val) > 0.001f)
+                                    {
+                                        SetFloat(soHealth, val, "maxHP", "MaxHp");
+                                        Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MaxHP => {val}");
+                                        isPrefabDirty = true;
+                                    }
+                                }
+                                else if (key == "MaxMP")
+                                {
+                                    if (Mathf.Abs(GetFloat(soHealth, "maxMP", "MaxMp") - val) > 0.001f)
+                                    {
+                                        SetFloat(soHealth, val, "maxMP", "MaxMp");
+                                        Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MaxMP => {val}");
+                                        isPrefabDirty = true;
+                                    }
+                                }
+                                else if (key == "MPRecovery")
+                                {
+                                    if (Mathf.Abs(GetFloat(soHealth, "MpRecoveryPerSecond") - val) > 0.001f)
+                                    {
+                                        SetFloat(soHealth, val, "MpRecoveryPerSecond");
+                                        Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MPRecovery => {val}");
+                                        isPrefabDirty = true;
+                                    }
                                 }
                             }
-                            else if (key == "MaxMP")
+
+                            // 💡 StatPoint 동기화 로직 추가
+                            if (soCore != null)
                             {
-                                if (Mathf.Abs(GetFloat(soHealth, "maxMP", "MaxMp") - val) > 0.001f)
+                                if (key == "StatPointChance")
                                 {
-                                    SetFloat(soHealth, val, "maxMP", "MaxMp");
-                                    Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MaxMP => {val}");
-                                    isPrefabDirty = true;
+                                    SerializedProperty prop = soCore.FindProperty("statpointGainChance");
+                                    if (prop != null && Mathf.Abs(prop.floatValue - val) > 0.001f)
+                                    {
+                                        prop.floatValue = val;
+                                        Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] StatPointChance => {val}");
+                                        isPrefabDirty = true;
+                                    }
                                 }
-                            }
-                            else if (key == "MPRecovery")
-                            {
-                                if (Mathf.Abs(GetFloat(soHealth, "MpRecoveryPerSecond") - val) > 0.001f)
+                                else if (key == "StatPointAmount")
                                 {
-                                    SetFloat(soHealth, val, "MpRecoveryPerSecond");
-                                    Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] MPRecovery => {val}");
-                                    isPrefabDirty = true;
+                                    int intVal = Mathf.RoundToInt(val);
+                                    SerializedProperty prop = soCore.FindProperty("statpointGainAmount");
+                                    if (prop != null && prop.intValue != intVal)
+                                    {
+                                        prop.intValue = intVal;
+                                        Debug.Log($"<color=cyan>[적 스탯 적용]</color> [{prefab.name}] StatPointAmount => {intVal}");
+                                        isPrefabDirty = true;
+                                    }
                                 }
                             }
                         }
@@ -949,6 +985,7 @@ public class DataSheetWindow : EditorWindow
                 if (isPrefabDirty)
                 {
                     if (soHealth != null) soHealth.ApplyModifiedProperties();
+                    if (soCore != null) soCore.ApplyModifiedProperties(); // 💡 EnemyCore 프로퍼티 변경사항 적용
                     EditorUtility.SetDirty(prefab);
                     updateCount++;
                 }
