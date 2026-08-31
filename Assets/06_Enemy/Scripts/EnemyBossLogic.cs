@@ -109,6 +109,19 @@ public class EnemyBossLogic : MonoBehaviour
         fightStarted = false;
         UIManager.Instance.BossName = null;
         UIManager.Instance.BossStatus.gameObject.SetActive(false);
+
+        string bossSaveKey = "BossCleared_" + gameObject.name;
+        fightStarted = false;
+        if (DataManager.Instance != null && DataManager.Instance.IsEventCleared(bossSaveKey))
+        {
+            if (FightWall != null)
+            {
+                FightWall.SetActive(false);
+            }
+            EnableCheckPoint();
+            Destroy(gameObject);
+            return;
+        }
     }
 
     private void EnableCheckPoint()

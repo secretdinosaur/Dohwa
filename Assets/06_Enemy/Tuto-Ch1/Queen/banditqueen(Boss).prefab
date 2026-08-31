@@ -204163,6 +204163,21 @@ MonoBehaviour:
     instantComboTriggerIndex: 2
     lastUsedTime: 0
     currentWeight: 8
+  - skill: {fileID: 11400000, guid: 098603e56b1da3c40aa93bc0905023b1, type: 2}
+    minDistance: 0
+    maxDistance: 0
+    baseWeight: 0
+    weightIncreaseAmount: 0
+    nextAttackDelay: 0
+    cooldown: 0
+    minPhase: 0
+    maxPhase: 0
+    comboSkills:
+    - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
+    lastUsedTime: 0
+    currentWeight: 8
   - skill: {fileID: 11400000, guid: 453ded69928385a46b5f69950e64ec42, type: 2}
     minDistance: 0
     maxDistance: 5
@@ -204232,6 +204247,21 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
     isInstantCombo: 1
     instantComboTriggerIndex: 1
+    lastUsedTime: 0
+    currentWeight: 8
+  - skill: {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
+    minDistance: 0
+    maxDistance: 0
+    baseWeight: 0
+    weightIncreaseAmount: 0
+    nextAttackDelay: 0
+    cooldown: 0
+    minPhase: 0
+    maxPhase: 0
+    comboSkills:
+    - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
+    isInstantCombo: 0
+    instantComboTriggerIndex: 0
     lastUsedTime: 0
     currentWeight: 8
   isNextSkillCombo: 0

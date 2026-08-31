@@ -1346,4 +1346,43 @@ public class InventoryManager : MonoBehaviour
             return true;
         return false;
     }
+
+    public void ClearAllSlots()
+    {
+        List<InventorySlot> AllSlots = new List<InventorySlot>();
+        if (WeaponSlots != null) AllSlots.AddRange(WeaponSlots);
+        if (ArmorSlots != null) AllSlots.AddRange(ArmorSlots);
+        if (SkillBookSlots != null) AllSlots.AddRange(SkillBookSlots);
+        if (ItemSlots != null) AllSlots.AddRange(ItemSlots);
+
+        foreach (var slot in AllSlots)
+        {
+            if (slot != null && slot.item != null)
+                slot.item.Clear();
+        }
+
+        if (EquippedWeaponSlot != null && EquippedWeaponSlot.item != null)
+        {
+            EquippedWeaponSlot.item.Clear();
+            if (Player.Instance != null) Player.Instance.UnequipWeapon();
+        }
+
+        if (EquippedArmorSlot != null && EquippedArmorSlot.item != null)
+        {
+            EquippedArmorSlot.item.Clear();
+            if (Player.Instance != null) Player.Instance.UnequipArmor();
+        }
+
+        // 장착 정보 패널 초기화 갱신
+        SetInfoPanel(0);
+        SetInfoPanel(1);
+
+        if (UIManager.Instance != null && UIManager.Instance.GameQuickSlots != null)
+        {
+            foreach (var qs in UIManager.Instance.GameQuickSlots)
+            {
+                if (qs != null && qs.item != null) qs.item.Clear();
+            }
+        }
+    }
 }

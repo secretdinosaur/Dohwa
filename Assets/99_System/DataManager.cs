@@ -478,7 +478,7 @@ public class DataManager : MonoBehaviour
     {
         if (UIManager.Instance == null || UIManager.Instance.Inventory == null || InventoryManager.Instance == null)
             return;
-
+        InventoryManager.Instance.ClearAllSlots();
         string path = Path.Combine(Application.persistentDataPath, "Inventory.data");
         if (!File.Exists(path))
         {
@@ -879,14 +879,14 @@ public class DataManager : MonoBehaviour
 
     private HashSet<string> obtainedOneTimeItems = new HashSet<string>();
 
-    public bool IsItemObtained(int itemIndex)
+    public bool IsItemObtained(string itemId)
     {
-        return PlayerPrefs.GetInt("OneTimeItem_" + itemIndex, 0) == 1;
+        return PlayerPrefs.GetInt("OneTimeItem_" + itemId, 0) == 1;
     }
 
-    public void MarkItemAsObtained(int itemIndex)
+    public void MarkItemAsObtained(string itemId)
     {
-        PlayerPrefs.SetInt("OneTimeItem_" + itemIndex, 1);
+        PlayerPrefs.SetInt("OneTimeItem_" + itemId, 1);
         PlayerPrefs.Save();
     }
     public bool IsCutscenePlayed(string cutsceneId)
@@ -898,6 +898,23 @@ public class DataManager : MonoBehaviour
     {
         PlayerPrefs.SetInt($"CutscenePlayed_{cutsceneId}", 1);
         PlayerPrefs.Save();
+    }
+
+    // 실제 게임 세이브 파일이 존재하는지 확인하는 메서드 추가
+    public bool HasSaveData()
+    {
+        // Settings.data는 환경설정이므로 제외하고 실제 게임 데이터 파일만 검사합니다.
+        string[] gameDataFiles = { "Stats.data", "SkillBook.data", "Inventory.data" };
+
+        foreach (string fileName in gameDataFiles)
+        {
+            string path = Path.Combine(Application.persistentDataPath, fileName);
+            if (File.Exists(path))
+            {
+                return true; // 하나라도 존재하면 세이브가 있는 것으로 간주
+            }
+        }
+        return false;
     }
 }
 class SaveItemData
