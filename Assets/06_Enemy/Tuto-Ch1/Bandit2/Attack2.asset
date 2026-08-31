@@ -50,8 +50,8 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 10
-  - 10
+  - 15
+  - 15
   HitSound:
   - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
   - {fileID: 8300000, guid: 1ecc963289c13264bb8a672a905ba2e3, type: 3}
@@ -69,7 +69,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 1.5, y: 1, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -98,7 +98,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 2.5, y: 1, z: 1.5}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 15
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5

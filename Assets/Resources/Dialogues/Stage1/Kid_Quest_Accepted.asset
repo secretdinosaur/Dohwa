@@ -60,7 +60,7 @@ MonoBehaviour:
           NonConsumable: {fileID: 11400000, guid: 34e6d48e79d494048bd959bc152cf0f8, type: 2}
           SkillBook: {fileID: 0}
         requireItemCount: 1
-        isDeleteItem: 0
+        isDeleteItem: 1
       KillTargetKey: 
       RequiredKillCount: 1
       RequiredGradeIndex: 0
@@ -71,7 +71,7 @@ MonoBehaviour:
       ItemId: 
       ItemCount: 1
       isDeleteItem: 0
-      Point: 5
+      Point: 30
   - Text:
       m_TableReference:
         m_TableCollectionName: GUID:61a814adaef47034caf20ca9112a92aa
