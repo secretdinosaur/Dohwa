@@ -176,7 +176,7 @@ public class StatManager : MonoBehaviour
         set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = ((int)(mpConsumptionReduction * 100f)).ToString() + "%"; }
     }
 
-    public float ParryMpRecovery = 20f;
+    public float ParryMpRecovery = 30f;
     public float GuardSuccessCostMpMult = 1f;
 
     #endregion
