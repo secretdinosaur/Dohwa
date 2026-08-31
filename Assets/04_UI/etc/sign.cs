@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Events;
+using Unity.VisualScripting;
 public class sign : InteractableObj
 {
     public override int Type => 1;
@@ -16,7 +17,16 @@ public class sign : InteractableObj
     {
         base.Interact();
 
-        string finalizedText = TextTagParser.Parse(showText.GetLocalizedString());
-        show = StartCoroutine(UIManager.Instance.ShowSign(finalizedText, ExecutionFunctionSet));
+        
+        if (showText == null || string.IsNullOrEmpty(showText.TableReference.TableCollectionName) ||
+    string.IsNullOrEmpty(showText.TableEntryReference.Key))
+        {
+            ExecutionFunctionSet.Invoke();
+        }
+        else
+        {
+            string finalizedText = TextTagParser.Parse(showText.GetLocalizedString());
+            show = StartCoroutine(UIManager.Instance.ShowSign(finalizedText, ExecutionFunctionSet));
+        }
     }
 }

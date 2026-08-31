@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 0000000001000000
-  MP_cost: 25
+  MP_cost: 20
   clip: {fileID: 7400000, guid: b291bde6ca9d6874382cde9025148695, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: 721dc53fd3ec15e41853efe54df2bef3, type: 3}
@@ -50,8 +50,8 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 15
-  - 15
+  - 3
+  - 10
   HitSound:
   - {fileID: 8300000, guid: 612196f01c47a5149940217a5b657e4d, type: 3}
   - {fileID: 8300000, guid: 10f75003a99bcd945a3742175273a584, type: 3}
@@ -69,7 +69,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1.5}
     boxSize: {x: 1.5, y: 0.5, z: 3}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 3
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -98,7 +98,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.6, z: 1}
     boxSize: {x: 1.5, y: 0.5, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5

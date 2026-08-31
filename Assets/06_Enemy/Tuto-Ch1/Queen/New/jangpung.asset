@@ -50,10 +50,10 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
+  - 10
   - 15
   - 15
-  - 15
-  - 15
+  - 40
   HitSound:
   - {fileID: 8300000, guid: bc28f7f4ef3eaef48bce48f6e2999d48, type: 3}
   HitEffects:
@@ -72,7 +72,7 @@ MonoBehaviour:
   range: 200
   hitDataList:
   - spawnOffset: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 0}
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
@@ -117,7 +117,7 @@ MonoBehaviour:
       isRealtimeFollow: 0
       stunDuration: 0
   - spawnOffset: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 40
     knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 0}
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
