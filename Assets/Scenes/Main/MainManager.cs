@@ -127,7 +127,7 @@ public class MainManager : MonoBehaviour
     public GameObject NewGamePanel;
     public void OnClickNewGameButton()
     {
-        if (PlayerPrefs.HasKey("Exp"))
+        if (DataManager.Instance != null && DataManager.Instance.HasSaveData())
         {
             NewGamePanel.SetActive(true);
         }

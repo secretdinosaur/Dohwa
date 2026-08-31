@@ -342,7 +342,6 @@ public class DialogueManager : MonoBehaviour
         _isTyping = false;
     }
 
-    [SerializeField]
     public Coroutine _currentDialogueCoroutine;
 
     public void OnChoice(int index, NPC npc = null)
@@ -352,9 +351,9 @@ public class DialogueManager : MonoBehaviour
             CurrentDialogueSet.GetImmadiately();
             if (CurrentDialogueSet.needExecutionFunction && npc != null)
             {
-                if (npc.ExecutionFunctionSet != null && npc.ExecutionFunctionSet.Count > CurrentDialogueSet.ExecutionFunctionIndex)
+                if (npc.ExecutionFunctionSet != null && npc.ExecutionFunctionSet.Count > index)
                 {
-                    npc.ExecutionFunctionSet[CurrentDialogueSet.ExecutionFunctionIndex]?.Invoke();
+                    npc.ExecutionFunctionSet[index]?.Invoke();
                 }
             }
 
@@ -395,7 +394,6 @@ public class DialogueManager : MonoBehaviour
 
             if (nextDialogue != null)
             {
-                // 선택지를 누른 후에도 약간의 쿨다운 적용
                 lastInputTime = Time.unscaledTime;
                 inputCooldown = 0.1f;
                 _currentDialogueCoroutine = StartCoroutine(ShowDialogue(nextDialogue, npc));

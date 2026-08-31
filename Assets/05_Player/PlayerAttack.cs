@@ -280,35 +280,6 @@ public class PlayerAttack : MonoBehaviour
         }
         return closestEnemy;
     }
-
-    private void ExecuteStrongAttack(EnemyCore targetEnemy)
-    {
-        ClearCommandBuffer();
-        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
-        CancelCurrentSkill();
-
-        // 💡 강공격 타겟 설정 및 무적 부여
-        currentStrongAttackTarget = targetEnemy;
-        Player.Instance.isInvincible = true;
-
-        Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
-        direction.y = 0f;
-        if (direction != Vector3.zero)
-        {
-            if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
-            else transform.rotation = Quaternion.LookRotation(direction);
-        }
-
-        if (!isArmed)
-        {
-            if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
-        }
-        else
-        {
-            Attack(strongAttackSkill);
-        }
-    }
-
     private IEnumerator DrawSwordImmediateAndAttack(SkillBase skillToUse)
     {
         yield return StartCoroutine(DrawSword());
@@ -573,12 +544,15 @@ public class PlayerAttack : MonoBehaviour
         processedHitIndices.Add(HitIndex);
         float baseDamage = StatManager.Instance.AttackPower / 100f;
 
-        // 💡 강공격인 경우 단일 대상 확정타 발동 (범위 무시)
-        if (lastActivatedSkill == strongAttackSkill && currentStrongAttackTarget != null)
+        if (lastActivatedSkill == strongAttackSkill)
         {
-            if (!currentStrongAttackTarget.IsDead)
+            if (currentStrongAttackTarget == null || currentStrongAttackTarget.gameObject == null)
             {
-                // 타격 이펙트(HitEffectData) 추출
+                currentStrongAttackTarget = GetClosestStunnedEnemy();
+            }
+
+            if (currentStrongAttackTarget != null && !currentStrongAttackTarget.IsDead)
+            {
                 HitEffectData hitEffectData = null;
                 if (lastActivatedSkill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > HitIndex)
                 {
@@ -589,10 +563,7 @@ public class PlayerAttack : MonoBehaviour
                     hitEffectData = rangeSkill.hitDataList[HitIndex].playerHitEffect;
                 }
 
-                // 적의 가드 여부 확인
                 bool isGuarding = currentStrongAttackTarget.isGuarding;
-
-                // 타격 위치 및 회전 계산
                 Vector3 hitPoint = currentStrongAttackTarget.transform.position;
                 Quaternion effectRot = Quaternion.identity;
 
@@ -600,25 +571,111 @@ public class PlayerAttack : MonoBehaviour
                 bool isCriticalHit = false;
                 bool isCasterPlayer = true;
 
-                // 💡 일반 공격과 동일한 크리티컬 및 데미지 산출 함수 호출 (SkillBase 내부에 정의된 메서드 활용)
                 float finalDamage = lastActivatedSkill.ProcessCriticalHit(
                     ref isCriticalChecked, ref isCriticalHit, isCasterPlayer,
                     currentStrongAttackTarget.gameObject, hitPoint, effectRot,
                     baseDamage, lastActivatedSkill.damageMultipliers[HitIndex], isGuarding, HitIndex);
 
-                // 산출된 최종 데미지(finalDamage)를 정상 전달
                 currentStrongAttackTarget.TakeDamage(finalDamage, lastActivatedSkill, Player.Instance.transform, hitEffectData, HitIndex);
 
-                // 타격 사운드 수동 재생
                 if (lastActivatedSkill.HitSound != null && lastActivatedSkill.HitSound.Length > HitIndex && lastActivatedSkill.HitSound[HitIndex] != null)
                 {
                     SoundManager.Instance.PlaySound(lastActivatedSkill.HitSound[HitIndex]);
                 }
             }
-            return; // 단일 대상 처리를 위해 기본 범위 타격(ExecuteHitCheck) 생략
+            return;
         }
 
         lastActivatedSkill.ExecuteHitCheck(Player.Instance.transform, baseDamage, HitIndex);
+    }
+
+    [SerializeField] private Vector3 strongAttackOffset = new Vector3(0f, 0f, 1.5f);
+
+    private void ExecuteStrongAttack(EnemyCore targetEnemy)
+    {
+        ClearCommandBuffer();
+        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
+        CancelCurrentSkill();
+
+        currentStrongAttackTarget = targetEnemy;
+        Player.Instance.isInvincible = true;
+
+        // 💡 1. 타겟 기준 설정된 Offset 위치 계산 (타겟의 로컬 좌표계를 기준으로 변환)
+        Vector3 targetIdealPos = targetEnemy.transform.TransformPoint(strongAttackOffset);
+
+        // 💡 2. 이동할 위치가 벽이나 뚫릴 수 있는 지형인지 검사 후 안전한 위치로 보정
+        Vector3 safePosition = GetSafeStrongAttackPosition(targetEnemy.transform.position, targetIdealPos);
+
+        // 💡 3. 계산된 안전한 위치로 플레이어 이동 (Rigidbody를 통한 즉시 이동 또는 스냅)
+        if (Player.Instance.PlayerMove != null && Player.Instance.PlayerMove._rb != null)
+        {
+            Player.Instance.PlayerMove._rb.MovePosition(safePosition);
+        }
+        else
+        {
+            transform.position = safePosition;
+        }
+
+        // 💡 4. 타겟을 바라보도록 회전
+        Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
+        direction.y = 0f;
+        if (direction != Vector3.zero)
+        {
+            if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
+            else transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+        if (!isArmed)
+        {
+            if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
+        }
+        else
+        {
+            Attack(strongAttackSkill);
+        }
+    }
+
+    private Vector3 GetSafeStrongAttackPosition(Vector3 enemyPos, Vector3 idealPos)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 dirToIdeal = idealPos - startPos;
+        float totalDist = dirToIdeal.magnitude;
+
+        LayerMask obstacleLayer = LayerMask.GetMask("Wall") | LayerMask.GetMask("Ground");
+
+        // 플레이어 현재 위치에서 이상적인 위치까지 장애물(벽/급경사)이 있는지 캡슐캐스트로 검사
+        if (Physics.CapsuleCast(startPos + Vector3.up * 0.5f, startPos + Vector3.up * 1.5f, 0.4f, dirToIdeal.normalized, out RaycastHit hit, totalDist, obstacleLayer))
+        {
+            float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
+            // 벽이나 45도 이상의 급경사에 부딪힌다면, 충돌 지점 바로 앞까지만 이동하도록 보정
+            if (hitAngle > 45f)
+            {
+                Vector3 safeMove = startPos + dirToIdeal.normalized * Mathf.Max(0f, hit.distance - 0.5f);
+                return GetValidNavMeshPosition(safeMove, enemyPos);
+            }
+        }
+
+        // 장애물이 없더라도 이상적인 위치가 NavMesh 위이거나 유효한 바닥인지 검사
+        return GetValidNavMeshPosition(idealPos, enemyPos);
+    }
+
+    private Vector3 GetValidNavMeshPosition(Vector3 targetPos, Vector3 enemyPos)
+    {
+        // NavMesh를 이용해 해당 위치 주변에서 가장 갈 수 있는 안전한 지형을 찾음
+        if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            return navHit.position;
+        }
+
+        // NavMesh를 찾지 못했다면 적어도 적 바로 앞의 바닥 높이를 Raycast로 쏴서 Y축을 맞춤
+        Vector3 rayOrigin = targetPos + Vector3.up * 2.0f;
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 5.0f, LayerMask.GetMask("Ground")))
+        {
+            return groundHit.point;
+        }
+
+        // 모든 방법이 실패하면 안전하게 현재 플레이어 위치 반환 (제자리 공격)
+        return transform.position;
     }
     #endregion
 
