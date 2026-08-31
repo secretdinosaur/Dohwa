@@ -53,6 +53,7 @@ public class PlayerAttack : MonoBehaviour
     private Coroutine currentAttackRoutine;
 
     private List<SkillBase.Command> commandBuffer = new List<SkillBase.Command>();
+    public List<SkillBase.Command> GetCommanBuffer() { return commandBuffer; }
     private HashSet<int> processedHitIndices = new HashSet<int>();
     private Dictionary<string, GameObject> _skillEffects = new Dictionary<string, GameObject>();
     private SkillBase lastActivatedSkill = null;
@@ -202,10 +203,17 @@ public class PlayerAttack : MonoBehaviour
             {
                 bestLength = cmdLength;
                 bestMatch = targetSkill.skillName;
+
+                if (targetSkill.MP_cost > Player.Instance.MP)
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(109, 109, 109, 255);
+                else
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(255, 255, 255, 255);
+
             }
         }
 
         if (bestMatch != null) result.Add(bestMatch);
+
         return result;
     }
 

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class Player : MonoBehaviour, IDamageable, IBleedable
 {
@@ -94,6 +96,45 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             mp = Mathf.Clamp(value, 0, StatManager.Instance.MaxMp);
             UIManager.Instance.UpdateMpUI(mp / StatManager.Instance.MaxMp);
+
+            List<SkillBase.Command> commandBuffer = PlayerAttack.GetCommanBuffer();
+            SkillBase matched = null;
+            int matchedLen = 0;
+
+            for (int i = 0; i < PlayerAttack.acquiredSkills.Count; i++)
+            {
+                var skill = PlayerAttack.acquiredSkills[i];
+                if (skill == null) continue;
+
+                while (skill != null && skill.UpgradedSkill != null && skill.isUpgraded) skill = skill.UpgradedSkill;
+
+                if (skill.isSpecialSkill || skill.commands == null || skill.commands.Length == 0) continue;
+
+                int m = skill.commands.Length;
+                if (commandBuffer.Count < m) continue;
+
+                bool match = true;
+                for (int j = 0; j < m; j++)
+                {
+                    if (commandBuffer[commandBuffer.Count - m + j] != skill.commands[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match && m > matchedLen)
+                {
+                    matched = skill;
+                    matchedLen = m;
+                }
+            }
+            if(matched != null)
+            {
+                if (matched.MP_cost > mp)
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(109, 109, 109, 255);
+                else
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(255, 255, 255, 255);
+            }
         }
     }
 
