@@ -1878,7 +1878,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHP: 50
-  maxMP: 70
+  maxMP: 60
   mpRecoveryPerSecond: 5
   stunDuration: 3
 --- !u!114 &5605676412277359969
@@ -2074,7 +2074,7 @@ MonoBehaviour:
   detectionRange: 20
   detectionRangeWithoutWatch: 15
   detectionMemoryDuration: 10
-  chaseRange: 50
+  chaseRange: 35
   wanderSearchRadius: 10
   fieldOfView: 90
   chaseSpeedMultiplier: 2.5
@@ -2087,16 +2087,17 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 25
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 15
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   attackIdleReselectDelay: 3
   reselectCooldown: 1
-  moveBeforeAttackChance: 25
-  parriedBackWalkChance: 60
-  normalBackWalkChance: 20
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 15
   jumpAttackSkill: {fileID: 11400000, guid: 8f32bbca3af9c914ea990568aa4319da, type: 2}
   jumpCurve:
     serializedVersion: 2
