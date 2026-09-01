@@ -53,6 +53,7 @@ public class PlayerAttack : MonoBehaviour
     private Coroutine currentAttackRoutine;
 
     private List<SkillBase.Command> commandBuffer = new List<SkillBase.Command>();
+    public List<SkillBase.Command> GetCommanBuffer() { return commandBuffer; }
     private HashSet<int> processedHitIndices = new HashSet<int>();
     private Dictionary<string, GameObject> _skillEffects = new Dictionary<string, GameObject>();
     private SkillBase lastActivatedSkill = null;
@@ -220,6 +221,7 @@ public class PlayerAttack : MonoBehaviour
         }
 
         if (bestMatch != null) result.Add(bestMatch);
+
         return result;
     }
 
