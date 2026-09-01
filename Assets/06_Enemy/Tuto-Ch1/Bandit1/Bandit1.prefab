@@ -522,14 +522,14 @@ GameObject:
   m_Component:
   - component: {fileID: 6253053695832922900}
   - component: {fileID: 7499954530033971062}
+  - component: {fileID: 8767551514219508506}
+  - component: {fileID: 8291602025742916525}
   - component: {fileID: 8544434489069305880}
   - component: {fileID: 9133710655686991811}
   - component: {fileID: 70223396767578505}
   - component: {fileID: 2173773334750737897}
   - component: {fileID: 1687570088676715772}
   - component: {fileID: 4404073377930421456}
-  - component: {fileID: 8767551514219508506}
-  - component: {fileID: 8291602025742916525}
   - component: {fileID: 2528738235100227358}
   - component: {fileID: 2788485394123659225}
   - component: {fileID: 4516922031236019093}
@@ -592,6 +592,83 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8767551514219508506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636621807723443368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c4aa3b5ec8003c48889b8ab16a12855, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyCore
+  currentState: 0
+  cameraTarget: {fileID: 0}
+  dropItem: {fileID: 0}
+  statpointGainChance: 0.15
+  statpointGainAmount: 3
+  EnemyWeapons:
+  - {fileID: 5183631292048600688}
+  FakeWeapons:
+  - {fileID: 6593009482366461888}
+  isOnetimeEnemy: 0
+  onetimeSaveKey: 
+  ViewSkill: {fileID: 0}
+  animator: {fileID: 0}
+  wasParried: 0
+  BaseMovementSpeed: 1
+  isGuarding: 0
+  isDetectingPlayer: 0
+  isForceDetected: 0
+  isIgnoringPlayer: 0
+  isTakingDoT: 0
+  isCulled: 0
+  skillSelector: {fileID: 0}
+  HittedSkill: {fileID: 0}
+  HitIndex: 0
+--- !u!114 &8291602025742916525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636621807723443368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c285649bff9094d919a6fb730d9a14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RangeEnemyAI
+  disableLogicDistance: 100
+  detectionRange: 35
+  detectionRangeWithoutWatch: 20
+  detectionMemoryDuration: 10
+  chaseRange: 45
+  wanderSearchRadius: 10
+  fieldOfView: 90
+  chaseSpeedMultiplier: 3.5
+  backWalkSpeedMultiplier: 0.5
+  backWalkDist: 3
+  backWalkMaxDuration: 3
+  strafeSpeedMultiplier: 0.5
+  strafeMinDuration: 1
+  strafeMaxDuration: 2
+  skillRangeMultiplier: 0.9
+  targetUpdateInterval: 0.2
+  firstDetectionDelay: 1
+  moveBeforeAttackChance: 50
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 15
+  backWalkTriggerFactor: 0.5
+  evasionCounterAttackChance: 60
+  maxPredictionTime: 0.7
+  isDetectedPlayer: 0
+  isMemorizingPlayer: 0
+  attackIdleReselectDelay: 3
+  reselectCooldown: 1
+  LookAtPlayerBeforeAttackTime: 2.65
 --- !u!54 &8544434489069305880
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1009,79 +1086,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &8767551514219508506
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1636621807723443368}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c4aa3b5ec8003c48889b8ab16a12855, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyCore
-  currentState: 0
-  cameraTarget: {fileID: 0}
-  dropItem: {fileID: 0}
-  statpointGainChance: 0.15
-  statpointGainAmount: 3
-  EnemyWeapons:
-  - {fileID: 5183631292048600688}
-  FakeWeapons:
-  - {fileID: 6593009482366461888}
-  isOnetimeEnemy: 0
-  onetimeSaveKey: 
-  ViewSkill: {fileID: 0}
-  animator: {fileID: 0}
-  wasParried: 0
-  BaseMovementSpeed: 1
-  isGuarding: 0
-  isDetectingPlayer: 0
-  isForceDetected: 0
-  isIgnoringPlayer: 0
-  isTakingDoT: 0
-  isCulled: 0
-  skillSelector: {fileID: 0}
-  HittedSkill: {fileID: 0}
-  HitIndex: 0
---- !u!114 &8291602025742916525
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1636621807723443368}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18c285649bff9094d919a6fb730d9a14, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RangeEnemyAI
-  disableLogicDistance: 100
-  detectionRange: 35
-  detectionRangeWithoutWatch: 20
-  detectionMemoryDuration: 10
-  chaseRange: 45
-  wanderSearchRadius: 10
-  fieldOfView: 90
-  chaseSpeedMultiplier: 3.5
-  backWalkSpeedMultiplier: 0.5
-  backWalkDist: 3
-  backWalkMaxDuration: 3
-  strafeSpeedMultiplier: 0.5
-  strafeMinDuration: 1
-  strafeMaxDuration: 2
-  skillRangeMultiplier: 0.9
-  targetUpdateInterval: 0.2
-  firstDetectionDelay: 1
-  maxPredictionTime: 0.7
-  isDetectedPlayer: 0
-  isMemorizingPlayer: 0
-  attackIdleReselectDelay: 3
-  reselectCooldown: 1
-  backWalkTriggerFactor: 0.5
-  LookAtPlayerBeforeAttackTime: 2.65
-  strafeOnCloseChance: 15
 --- !u!114 &2528738235100227358
 MonoBehaviour:
   m_ObjectHideFlags: 0
