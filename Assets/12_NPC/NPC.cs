@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Localization.Plugins.XLIFF.V20;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -23,6 +24,8 @@ public class NPC : InteractableObj
     {
         // DialogueManager가 이미 실행 중이면 중복 상호작용 완전 차단
         if (DialogueManager.Instance.IsDialogueActive) return;
+
+        TutorialManager.instance.CheckTutorial(TutorialManager.TutorialType.Connections);
 
         base.Interact();
 
