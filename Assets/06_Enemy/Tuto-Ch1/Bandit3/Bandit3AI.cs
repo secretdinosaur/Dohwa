@@ -99,7 +99,7 @@ public class Bandit3AI : EnemyAIBase
     {
         if (!core.skillSelector.isNextSkillCombo && !lastActionWasStep && UnityEngine.Random.value < 0.4f)
         {
-            yield return StartCoroutine(ExecuteStepRoutine(2.5f, 0.4f, 0.25f));
+            yield return ExecuteStepRoutine(2.5f, 0.4f, 0.25f);
             lastActionWasStep = true;
 
             if (Player.Instance == null || core.IsDead) yield break;
@@ -122,7 +122,7 @@ public class Bandit3AI : EnemyAIBase
             lastActionWasStep = false;
         }
 
-        yield return StartCoroutine(base.PerformAttackSequence(skill));
+        yield return base.PerformAttackSequence(skill);
     }
 
     private IEnumerator ExecuteStepRoutine(float distance = 2f, float duration = 0.3f, float hopHeight = 0.2f)

@@ -73,9 +73,11 @@ public class RangeEnemyAI : EnemyAIBase
     // 💡 2번, 3번 개선점: 원거리 특유의 타겟 록온(조준) 로직만 오버라이드 (코루틴 캔슬 누수 완벽 차단)
     protected override IEnumerator PerformAttackSequence(SkillBase skill)
     {
+        // (이건 코루틴을 병렬로 돌리며 감시해야 하므로 StartCoroutine 유지!)
         Coroutine aimCoroutine = StartCoroutine(AimAtPlayerRoutine(LookAtPlayerBeforeAttackTime));
 
-        yield return StartCoroutine(base.PerformAttackSequence(skill));
+        // 💡 StartCoroutine 제거
+        yield return base.PerformAttackSequence(skill);
 
         if (aimCoroutine != null) StopCoroutine(aimCoroutine);
     }
