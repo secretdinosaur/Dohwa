@@ -50,7 +50,6 @@ public class SoundManager : MonoBehaviour
         foreach (Button btn in allButtons)
         {
             if (NotUseDefaultSoundButton.Contains(btn)) continue;
-            print(btn.name);
             btn.onClick.AddListener(() => SoundManager.Instance.PlayUISound(4));
         }
     }

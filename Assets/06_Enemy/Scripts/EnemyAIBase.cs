@@ -609,13 +609,13 @@ public abstract class EnemyAIBase : MonoBehaviour
     // =========================================================================
     protected IEnumerator ExecuteSkillAndChain(SkillBase skill)
     {
-        yield return StartCoroutine(RouteAndExecuteSkill(skill));
+        yield return RouteAndExecuteSkill(skill);
         ChainNextAttackOrIdle();
     }
 
     protected virtual IEnumerator RouteAndExecuteSkill(SkillBase skill)
     {
-        yield return StartCoroutine(PerformAttackSequence(skill));
+        yield return PerformAttackSequence(skill);
     }
 
     protected virtual IEnumerator PerformAttackSequence(SkillBase skill)
@@ -665,7 +665,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         if (UnityEngine.Random.Range(0f, 100f) < chance && (core.skillSelector == null || !core.skillSelector.HasPendingCombo))
         {
-            yield return StartCoroutine(ExecuteEvasionAfterAttack());
+            yield return ExecuteEvasionAfterAttack();
         }
     }
 
@@ -676,7 +676,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
     protected virtual IEnumerator ExecuteEvasionAfterAttack()
     {
-        yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+        yield return BackWalkRoutine(backWalkDist);
         lastActionWasEvasion = true;
     }
 

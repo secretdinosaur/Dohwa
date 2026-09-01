@@ -32,7 +32,6 @@ public class PlayerAttack : MonoBehaviour
     public SkillBase ViewSkill;
     public SkillBase strongAttackSkill;
 
-    // 💡 강공격 타겟 저장을 위한 변수
     private EnemyCore currentStrongAttackTarget;
 
     SkillEffect CurrentEffect;
@@ -84,13 +83,13 @@ public class PlayerAttack : MonoBehaviour
     private const float LockOnBreakMultiplier = 1.5f;
     #endregion
 
-    #region Unity Lifecycle
     private void Awake()
     {
         isAttacking = false;
         scabbard = GetComponentInChildren<Scabbard>();
         InitializeEffects();
     }
+
     private void Update()
     {
         if (isLockedOn)
@@ -114,7 +113,6 @@ public class PlayerAttack : MonoBehaviour
             slashSkill.DrawSkillGizmos(transform);
         }
     }
-    #endregion
 
     #region Command System
     public void OnCommandW(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.W); }
@@ -203,9 +201,6 @@ public class PlayerAttack : MonoBehaviour
             if (match && cmdLength > bestLength)
             {
                 bestLength = cmdLength;
-
-                // 💡 마나가 부족한 경우 UI에 흐리게 표시하기 위한 처리를 위해 
-                // 텍스트에 HTML 태그(Alpha)를 씌우거나 별도 상태를 관리할 수 있습니다.
                 bool hasEnoughMp = Player.Instance != null && Player.Instance.MP >= targetSkill.MP_cost;
 
                 if (hasEnoughMp)
@@ -214,7 +209,6 @@ public class PlayerAttack : MonoBehaviour
                 }
                 else
                 {
-                    // 마나가 부족하면 투명도가 들어간 HTML 텍스트 태그 적용 (예: 50% 알파값)
                     bestMatch = $"<color=#808080B3>{targetSkill.skillName}</color>";
                 }
             }
@@ -253,51 +247,83 @@ public class PlayerAttack : MonoBehaviour
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
 
+    // =========================================================
+    // 💡 디버그 1: OnAttack 진입부 및 강공격 체크
+    // =========================================================
     public void OnAttack(InputAction.CallbackContext context)
     {
-        if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
-        if (Player.Instance == null || !Player.Instance.CanAttack()) return;
+        if (!context.started) return;
+        Debug.Log("<color=cyan>[OnAttack] 공격 입력 인식됨</color>");
 
-        if (isSwordMoving || DrawRoutine != null) return;
-        if (isAttacking && !canComboInput) return;
-        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) return;
+        if (DialogueManager.Instance.IsDialogueActive) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 대화 중</color>"); return; }
+        if (Player.Instance == null || !Player.Instance.CanAttack()) { Debug.LogWarning("<color=red>[OnAttack 캔슬] CanAttack 조건 불만족 (스턴, 구르기 등)</color>"); return; }
+        if (isSwordMoving || DrawRoutine != null) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 발도/납도 진행 중</color>"); return; }
+
+        if (strongAttackSkill == null) Debug.LogError("<color=red>[OnAttack 에러] inspector에 strongAttackSkill(강공격 스킬)이 등록되어 있지 않습니다!</color>");
 
         EnemyCore targetEnemy = GetClosestStunnedEnemy();
         if (targetEnemy != null && strongAttackSkill != null)
         {
-            // 💡 이미 강공격이 실행 중이거나 공격 중인 상태라면 연타 입력 무시
-            if (isAttacking || currentAttackRoutine != null) return;
+            Debug.Log($"<color=yellow>[OnAttack] 스턴된 적 [{targetEnemy.name}] 발견! 강공격 진입 시도</color>");
+
+            if (isAttacking && lastActivatedSkill == strongAttackSkill)
+            {
+                Debug.LogWarning("<color=red>[OnAttack 캔슬] 이미 강공격이 실행 중입니다.</color>");
+                return;
+            }
 
             ExecuteStrongAttack(targetEnemy);
             return;
         }
+        else
+        {
+            Debug.Log("<color=grey>[OnAttack] 스턴된 적이 없으므로 일반 공격 루틴으로 넘어갑니다.</color>");
+        }
+
+        if (isAttacking && !canComboInput) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 일반 공격 중 콤보 타이밍이 아닙니다.</color>"); return; }
+        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 공격 연타 제한(Threshold)에 걸림</color>"); return; }
 
         StartCoroutine(AttackRoutine());
     }
 
+    // =========================================================
+    // 💡 디버그 2: 스턴된 적 스캔부
+    // =========================================================
     private EnemyCore GetClosestStunnedEnemy(float searchRadius = 5f)
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayer);
+        Debug.Log($"<color=white>[GetClosestStunnedEnemy] 반경 {searchRadius} 내 enemyLayer 검색결과: {hits.Length} 개체</color>");
+
         EnemyCore closestEnemy = null;
         float minDistance = float.MaxValue;
 
         foreach (Collider hit in hits)
         {
             EnemyCore enemy = hit.GetComponent<EnemyCore>();
-            if (enemy != null && enemy.currentState == EnemyState.Stun && !enemy.IsDead)
+            if (enemy != null)
             {
                 float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                if (dist < minDistance)
+                Debug.Log($"   -> 적 발견: [{enemy.name}] | 상태: {enemy.currentState} | 거리: {dist}");
+
+                if (enemy.currentState == EnemyState.Stun && !enemy.IsDead)
                 {
-                    minDistance = dist;
-                    closestEnemy = enemy;
+                    Debug.Log($"   <color=green>=> [{enemy.name}] 스턴 상태 확인됨! 강공격 타겟 후보 등록</color>");
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        closestEnemy = enemy;
+                    }
                 }
             }
         }
+
+        if (closestEnemy != null) Debug.Log($"<color=yellow>[GetClosestStunnedEnemy] 최종 강공격 타겟 확정: {closestEnemy.name}</color>");
         return closestEnemy;
     }
+
     private IEnumerator DrawSwordImmediateAndAttack(SkillBase skillToUse)
     {
+        Debug.Log("<color=cyan>[DrawSwordImmediateAndAttack] 비무장 상태라 무기를 뽑고 공격합니다.</color>");
         yield return StartCoroutine(DrawSword());
         Attack(skillToUse);
     }
@@ -363,14 +389,23 @@ public class PlayerAttack : MonoBehaviour
     }
 
     private SoundObject currentSkillSound;
+
+    // =========================================================
+    // 💡 디버그 3: 실제 스킬 실행부 (Attack)
+    // =========================================================
     public void Attack(SkillBase skillToUse)
     {
+        Debug.Log($"<color=magenta>[Attack] 전달받은 스킬 실행: {skillToUse?.skillName}</color>");
+
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
 
-        if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
+        if (skillToUse != strongAttackSkill)
         {
-            Player.Instance.isInvincible = false;
-            currentStrongAttackTarget = null;
+            if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
+            {
+                Player.Instance.isInvincible = false;
+                currentStrongAttackTarget = null;
+            }
         }
 
         if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
@@ -403,23 +438,27 @@ public class PlayerAttack : MonoBehaviour
         currentAttackID++;
         processedHitIndices.Clear();
         CameraController.Instance.OnSkillStarted();
-        CurrentEffect = skillToUse.Activate(Player.Instance.transform);
-        currentSkillSound = SoundManager.Instance.PlaySound(skillToUse.sound);
 
-        PlayEffects(skillToUse.name);
-        Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
+        if (skillToUse != null)
+        {
+            CurrentEffect = skillToUse.Activate(Player.Instance.transform);
+            currentSkillSound = SoundManager.Instance.PlaySound(skillToUse.sound);
 
-        Player.Instance.ConsumeMP(skillToUse.MP_cost);
-        GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
+            PlayEffects(skillToUse.name);
+            Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
+            Player.Instance.ConsumeMP(skillToUse.MP_cost);
+            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
-        currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
+            Debug.Log($"<color=magenta>[Attack] 애니메이터에 스킬({skillToUse.name}) 전달 완료. AttackLifecycleRoutine 시작.</color>");
+            currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
+        }
     }
 
     private IEnumerator AttackLifecycleRoutine(SkillBase skillToUse)
     {
         Player.Instance.Animator_SetFloat("motiontimeforskill", 0f);
 
-        float clipLength = skillToUse.clip.length;
+        float clipLength = skillToUse.clip != null ? skillToUse.clip.length : 2f;
         float cancelTime = clipLength;
 
         if (skillToUse.clip != null)
@@ -465,7 +504,6 @@ public class PlayerAttack : MonoBehaviour
         isAttacking = false;
         canComboInput = false;
 
-        // 💡 강공격 종료 시 무적 상태 해제
         if (skillToUse == strongAttackSkill)
         {
             Player.Instance.isInvincible = false;
@@ -485,6 +523,7 @@ public class PlayerAttack : MonoBehaviour
         }
         lastAttackEndTime = Time.time;
         currentAttackRoutine = null;
+        Debug.Log("<color=grey>[EndAttack] 공격 종료 로직 완료</color>");
     }
 
     private IEnumerator FaceTargetDuringAttack()
@@ -545,7 +584,6 @@ public class PlayerAttack : MonoBehaviour
         }
         isSwordMoving = false;
 
-        // 💡 발도 중 취소되었을 때를 대비한 무적 안전 해제
         if (currentStrongAttackTarget != null)
         {
             Player.Instance.isInvincible = false;
@@ -607,8 +645,13 @@ public class PlayerAttack : MonoBehaviour
 
     [SerializeField] private Vector3 strongAttackOffset = new Vector3(0f, 0f, 1.5f);
 
+    // =========================================================
+    // 💡 디버그 4: ExecuteStrongAttack 진입
+    // =========================================================
     private void ExecuteStrongAttack(EnemyCore targetEnemy)
     {
+        Debug.Log("<color=green>[ExecuteStrongAttack] 처형/강공격 연산 시작!</color>");
+
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
         CancelCurrentSkill();
@@ -616,13 +659,11 @@ public class PlayerAttack : MonoBehaviour
         currentStrongAttackTarget = targetEnemy;
         Player.Instance.isInvincible = true;
 
-        // 💡 1. 타겟 기준 설정된 Offset 위치 계산 (타겟의 로컬 좌표계를 기준으로 변환)
         Vector3 targetIdealPos = targetEnemy.transform.TransformPoint(strongAttackOffset);
-
-        // 💡 2. 이동할 위치가 벽이나 뚫릴 수 있는 지형인지 검사 후 안전한 위치로 보정
         Vector3 safePosition = GetSafeStrongAttackPosition(targetEnemy.transform.position, targetIdealPos);
 
-        // 💡 3. 계산된 안전한 위치로 플레이어 이동 (Rigidbody를 통한 즉시 이동 또는 스냅)
+        Debug.Log($"<color=green>   -> 플레이어 이동 좌표 계산됨: {safePosition}</color>");
+
         if (Player.Instance.PlayerMove != null && Player.Instance.PlayerMove._rb != null)
         {
             Player.Instance.PlayerMove._rb.MovePosition(safePosition);
@@ -632,7 +673,6 @@ public class PlayerAttack : MonoBehaviour
             transform.position = safePosition;
         }
 
-        // 💡 4. 타겟을 바라보도록 회전
         Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
         direction.y = 0f;
         if (direction != Vector3.zero)
@@ -643,10 +683,12 @@ public class PlayerAttack : MonoBehaviour
 
         if (!isArmed)
         {
+            Debug.Log("<color=green>   -> 검을 꺼낸 뒤 강공격을 연계합니다.</color>");
             if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
         }
         else
         {
+            Debug.Log("<color=green>   -> 즉시 강공격을 발동합니다.</color>");
             Attack(strongAttackSkill);
         }
     }
@@ -659,11 +701,9 @@ public class PlayerAttack : MonoBehaviour
 
         LayerMask obstacleLayer = LayerMask.GetMask("Wall") | LayerMask.GetMask("Ground");
 
-        // 플레이어 현재 위치에서 이상적인 위치까지 장애물(벽/급경사)이 있는지 캡슐캐스트로 검사
         if (Physics.CapsuleCast(startPos + Vector3.up * 0.5f, startPos + Vector3.up * 1.5f, 0.4f, dirToIdeal.normalized, out RaycastHit hit, totalDist, obstacleLayer))
         {
             float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
-            // 벽이나 45도 이상의 급경사에 부딪힌다면, 충돌 지점 바로 앞까지만 이동하도록 보정
             if (hitAngle > 45f)
             {
                 Vector3 safeMove = startPos + dirToIdeal.normalized * Mathf.Max(0f, hit.distance - 0.5f);
@@ -671,26 +711,22 @@ public class PlayerAttack : MonoBehaviour
             }
         }
 
-        // 장애물이 없더라도 이상적인 위치가 NavMesh 위이거나 유효한 바닥인지 검사
         return GetValidNavMeshPosition(idealPos, enemyPos);
     }
 
     private Vector3 GetValidNavMeshPosition(Vector3 targetPos, Vector3 enemyPos)
     {
-        // NavMesh를 이용해 해당 위치 주변에서 가장 갈 수 있는 안전한 지형을 찾음
         if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
         {
             return navHit.position;
         }
 
-        // NavMesh를 찾지 못했다면 적어도 적 바로 앞의 바닥 높이를 Raycast로 쏴서 Y축을 맞춤
         Vector3 rayOrigin = targetPos + Vector3.up * 2.0f;
         if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 5.0f, LayerMask.GetMask("Ground")))
         {
             return groundHit.point;
         }
 
-        // 모든 방법이 실패하면 안전하게 현재 플레이어 위치 반환 (제자리 공격)
         return transform.position;
     }
     #endregion
@@ -868,6 +904,7 @@ public class PlayerAttack : MonoBehaviour
         yield return new WaitForSeconds(sheathPostDelay);
         isSwordMoving = false;
     }
+
     public void ForceUnarmed()
     {
         CancelDrawSword();

@@ -97,8 +97,8 @@ public class Bandit4AI : EnemyAIBase
 
     protected override IEnumerator RouteAndExecuteSkill(SkillBase skill)
     {
-        if (skill == jumpAttackSkill) yield return StartCoroutine(JumpAttackSequence(skill));
-        else yield return StartCoroutine(base.RouteAndExecuteSkill(skill));
+        if (skill == jumpAttackSkill) yield return JumpAttackSequence(skill);
+        else yield return base.RouteAndExecuteSkill(skill);
     }
 
     private IEnumerator JumpAttackSequence(SkillBase skill)

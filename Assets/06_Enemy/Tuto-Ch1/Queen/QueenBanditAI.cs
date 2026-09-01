@@ -501,10 +501,10 @@ public class QueenBanditAI : EnemyAIBase
 
     protected override IEnumerator RouteAndExecuteSkill(SkillBase skill)
     {
-        if (leftStepSkills.Contains(skill)) yield return StartCoroutine(StepAttackSequence(skill, "Step_Left", sideStepDuration));
-        else if (rightStepSkills.Contains(skill)) yield return StartCoroutine(StepAttackSequence(skill, "Step_Right", sideStepDuration));
-        else if (preBackStepSkills.Contains(skill)) yield return StartCoroutine(StepAttackSequence(skill, "Step_Back", attackBackStepDuration));
-        else yield return StartCoroutine(PerformAttackSequence(skill));
+        if (leftStepSkills.Contains(skill)) yield return StepAttackSequence(skill, "Step_Left", sideStepDuration);
+        else if (rightStepSkills.Contains(skill)) yield return StepAttackSequence(skill, "Step_Right", sideStepDuration);
+        else if (preBackStepSkills.Contains(skill)) yield return StepAttackSequence(skill, "Step_Back", attackBackStepDuration);
+        else yield return PerformAttackSequence(skill);
     }
 
     private IEnumerator StepAttackSequence(SkillBase skill, string stepAnimName, float stepDuration)
@@ -543,8 +543,7 @@ public class QueenBanditAI : EnemyAIBase
         if (!skillSelector.isInstantComboTriggered) core.CmdTrySnapToNavMesh?.Invoke();
         isStepping = false;
 
-        // 💡 라우팅 구조 덕분에 부모의 안전한 공격 시퀀스를 그대로 연결하여 실행
-        yield return StartCoroutine(PerformAttackSequence(skill));
+        yield return PerformAttackSequence(skill);
     }
 
     protected override IEnumerator PerformAttackSequence(SkillBase skill)
@@ -570,7 +569,7 @@ public class QueenBanditAI : EnemyAIBase
         }
 
         // 부모의 공격 시퀀스 호출 (try-finally 보장)
-        yield return StartCoroutine(base.PerformAttackSequence(skill));
+        yield return base.PerformAttackSequence(skill);
 
         if (activeDashCoroutine != null)
         {
@@ -602,7 +601,7 @@ public class QueenBanditAI : EnemyAIBase
 
     protected override IEnumerator ExecuteEvasionAfterAttack()
     {
-        yield return StartCoroutine(EvasiveBackStepSequence());
+        yield return EvasiveBackStepSequence();
         lastActionWasEvasion = true;
     }
 
