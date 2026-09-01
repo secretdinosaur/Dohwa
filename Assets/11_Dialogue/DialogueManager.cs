@@ -95,7 +95,6 @@ public class DialogueManager : MonoBehaviour
     public void StartShowDialogue(DialogueSet DialogueSet, NPC npc = null)
     {
         if (IsDialogueActive || _currentDialogueCoroutine != null) return;
-
         // ★ 대화 시작 시 0.2초간 무조건 입력 무시 (상호작용 연타 방지)
         lastInputTime = Time.unscaledTime;
         inputCooldown = 0.2f;
@@ -135,11 +134,13 @@ public class DialogueManager : MonoBehaviour
 
     public IEnumerator ShowDialogue(DialogueSet DialogueSet, NPC npc = null)
     {
+        if (TutorialManager.instance.TutorialPanel.activeSelf)
+            yield return new WaitUntil(() => !TutorialManager.instance.TutorialPanel.activeSelf);
+        UIManager.Instance.InteractPanel.SetActive(false);
         Player.Instance.isInteracting = true;
         UIManager.Instance.PreventCameraMoveAndClick(true);
         CurrentDialogueSet = DialogueSet;
         IsDialogueActive = true;
-
         DialoguePanel.SetActive(true);
         if (CurrentDialogueSet.name.Contains("Teacher")) SoundManager.Instance.PlayTeacherSound();
 
