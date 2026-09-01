@@ -203,14 +203,8 @@ public class FatBanditAI : EnemyAIBase
 
     protected override IEnumerator RouteAndExecuteSkill(SkillBase skill)
     {
-        if (skill == runAttackSkill)
-        {
-            yield return StartCoroutine(RunAttackSequence(skill));
-        }
-        else
-        {
-            yield return StartCoroutine(base.RouteAndExecuteSkill(skill));
-        }
+        if (skill == runAttackSkill) yield return RunAttackSequence(skill);
+        else yield return base.RouteAndExecuteSkill(skill);
     }
 
     private IEnumerator RunAttackSequence(SkillBase skill)
@@ -218,13 +212,10 @@ public class FatBanditAI : EnemyAIBase
         try
         {
             if (runAttackCollider != null) runAttackCollider.enabled = true;
-
-            // 💡 부모의 안전한 공격 시퀀스를 그대로 활용! (WaitUntil, OnAttackCompleted 등 중복 코드 완벽 제거)
-            yield return StartCoroutine(base.PerformAttackSequence(skill));
+            yield return base.PerformAttackSequence(skill);
         }
         finally
         {
-            // 공격이 정상 종료되든, 스턴으로 취소되든 무조건 콜라이더는 꺼지도록 보장됨
             if (runAttackCollider != null) runAttackCollider.enabled = false;
         }
     }
