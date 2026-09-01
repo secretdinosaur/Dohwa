@@ -196,7 +196,8 @@ public class TutorialManager : MonoBehaviour
             UIManager.Instance.PreventCameraMoveAndClick(true);
             Time.timeScale = 0;
         }
-        else if (UIManager.Instance != null && UIManager.Instance.GainPanel.activeSelf)
+        else if (UIManager.Instance != null && UIManager.Instance.GainPanel.activeSelf ||
+            DialogueManager.Instance.DialoguePanel.activeSelf)
         {
             UIManager.Instance.PreventCameraMoveAndClick(true);
             Time.timeScale = 1;
