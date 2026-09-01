@@ -35,6 +35,7 @@ public class StrongBanditAI : EnemyAIBase
     public float jumpHeight = 3f;
     public float jumpDuration = 0.8f;
     public float jumpLandingOffset = 1.5f;
+    public AnimationCurve rotationCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
 
     private float lastGuardTime = -9999f;
     private bool isStartingFight = false;
@@ -163,8 +164,8 @@ public class StrongBanditAI : EnemyAIBase
             StopActionRoutine();
 
             bool canGuard = guardSkill != null
-                          && Time.time >= lastGuardTime + guardCooldown
-                          && Time.time >= nextAllowedGuardTime;
+                    && Time.time >= lastGuardTime + guardCooldown
+                    && Time.time >= nextAllowedGuardTime;
 
             bool hasMpForGuard = canGuard && (core.QueryHasEnoughMP?.Invoke(guardSkill.MP_cost) ?? false);
 
@@ -269,13 +270,12 @@ public class StrongBanditAI : EnemyAIBase
         if (counterSkill == null) return;
 
         core.isGuarding = false;
-
         if (actionCoroutine != null) StopCoroutine(actionCoroutine);
         Player.Instance.PlayerAttack.CancelCurrentSkill();
         ClearAttackHandler();
         core.CmdCancelAttack?.Invoke();
         core.skillSelector.isInstantComboTriggered = false;
-
+        core.CmdConsumeMP?.Invoke(-9999999);
         actionCoroutine = StartCoroutine(CounterSequence(counterSkill));
     }
 
@@ -361,6 +361,13 @@ public class StrongBanditAI : EnemyAIBase
         Vector3 targetPos = playerPos - (dirToPlayer * jumpLandingOffset);
         targetPos.y = startPos.y;
 
+        Quaternion startRot = transform.rotation;
+        Quaternion targetRot = startRot;
+        if (dirToPlayer != Vector3.zero)
+        {
+            targetRot = Quaternion.LookRotation(dirToPlayer);
+        }
+
         float elapsed = 0f;
         float moveDuration = jumpDuration * (0.7916f - 0.3f);
 
@@ -369,17 +376,22 @@ public class StrongBanditAI : EnemyAIBase
             if (core.skillSelector.isInstantComboTriggered || core.currentState == EnemyState.Stun || core.IsDead) break;
 
             float t = elapsed / moveDuration;
+
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
             currentPos.y += jumpCurve.Evaluate(t) * jumpHeight;
             transform.position = currentPos;
-            elapsed += Time.deltaTime;
 
+            float rotAngle = rotationCurve.Evaluate(t) * 360f;
+            transform.rotation = startRot * Quaternion.Euler(0f, rotAngle, 0f);
+
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
         if (!core.skillSelector.isInstantComboTriggered && !core.IsDead && core.currentState != EnemyState.Stun)
         {
             transform.position = targetPos;
+            transform.rotation = targetRot;
         }
 
         if (enemyCollider != null) enemyCollider.enabled = true;
