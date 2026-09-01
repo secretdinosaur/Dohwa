@@ -3591,8 +3591,8 @@ MonoBehaviour:
     maxDistance: 2
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
-    cooldown: 3
+    nextAttackDelay: 0
+    cooldown: 2
     minPhase: 1
     maxPhase: 1
     comboSkills: []
@@ -3606,7 +3606,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 3
+    cooldown: 2
     minPhase: 1
     maxPhase: 1
     comboSkills:
@@ -3622,8 +3622,8 @@ MonoBehaviour:
     maxDistance: 5
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
-    cooldown: 3
+    nextAttackDelay: 0
+    cooldown: 2
     minPhase: 1
     maxPhase: 1
     comboSkills:
@@ -3637,8 +3637,8 @@ MonoBehaviour:
     maxDistance: 4
     baseWeight: 1
     weightIncreaseAmount: 1
-    nextAttackDelay: 1
-    cooldown: 3
+    nextAttackDelay: 0
+    cooldown: 2
     minPhase: 1
     maxPhase: 1
     comboSkills:
@@ -3736,8 +3736,8 @@ MonoBehaviour:
   FightWall: {fileID: 0}
   startFightPreDelay: 0
   startFightAnimDuration: 4
-  moveBeforeAttackChance: 50
-  backWalkTriggerFactor: 0.7
+  moveBeforeAttackChance: 15
+  backWalkTriggerFactor: 0.5
   strafeOnCloseChance: 30
   parriedBackWalkChance: 60
   normalBackWalkChance: 20
@@ -3804,6 +3804,39 @@ MonoBehaviour:
   jumpHeight: 2
   jumpDuration: 1.5
   jumpLandingOffset: 1
+  rotationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.89895123
+      value: 1.0754187
+      inSlope: 0.6534672
+      outSlope: 0.6534672
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &6141236220954738026
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -389,7 +389,7 @@ MonoBehaviour:
   detectionRange: 20
   detectionRangeWithoutWatch: 10
   detectionMemoryDuration: 10
-  chaseRange: 50
+  chaseRange: 35
   wanderSearchRadius: 15
   fieldOfView: 75
   chaseSpeedMultiplier: 2.25
@@ -402,16 +402,17 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 15
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 15
+  strafeOnCloseChance: 30
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
   attackIdleReselectDelay: 3
   reselectCooldown: 1
-  moveBeforeAttackChance: 50
-  parriedBackWalkChance: 60
-  normalBackWalkChance: 15
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 50
 --- !u!114 &488358157802232839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -425,7 +426,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHP: 60
-  maxMP: 70
+  maxMP: 60
   mpRecoveryPerSecond: 5
   stunDuration: 3
 --- !u!114 &2706620447711206371

@@ -203822,7 +203822,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBossHealth
   maxHP: 700
-  maxMP: 100
+  maxMP: 200
   mpRecoveryPerSecond: 5
   stunDuration: 9.5
   maxPhase: 2
@@ -203859,6 +203859,12 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 15
+  parriedBackWalkChance: 20
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 15
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
@@ -203887,9 +203893,6 @@ MonoBehaviour:
   closeWanderMin: 2
   closeWanderMax: 4
   stateChangeDelay: 2
-  parriedBackStepChance: 60
-  normalBackStepChance: 10
-  strafeOnCloseChance: 30
   idleStrafeChance: 15
   leftStepSkills:
   - {fileID: 11400000, guid: 577b992340be42145aed15892df01710, type: 2}
@@ -203916,7 +203919,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.0018920898
       inSlope: 2.838566
       outSlope: 2.838566
       tangentMode: 0
@@ -203924,13 +203927,13 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0.060000006
     - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
+      time: 1.0033264
+      value: 1.0323486
+      inSlope: 0.44922873
+      outSlope: 0.44922873
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.2026523
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -204258,8 +204261,7 @@ MonoBehaviour:
     cooldown: 0
     minPhase: 0
     maxPhase: 0
-    comboSkills:
-    - {fileID: 11400000, guid: 96529201d194a9540902e356018a6bd0, type: 2}
+    comboSkills: []
     isInstantCombo: 0
     instantComboTriggerIndex: 0
     lastUsedTime: 0

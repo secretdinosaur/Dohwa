@@ -17944,6 +17944,7 @@ GameObject:
   - component: {fileID: 1519057995}
   - component: {fileID: 1519057994}
   - component: {fileID: 1519057993}
+  - component: {fileID: 1519057996}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -18060,7 +18061,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a91a63d7f999984b91a9ca718b00473, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoundManager
-  UIsounds: []
+  UIsounds:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: f8e9d688bbede51439952a7d2fc1a819, type: 3}
+  - {fileID: 8300000, guid: f8e9d688bbede51439952a7d2fc1a819, type: 3}
   MovementSounds: []
   bgmClips:
   - {fileID: 8300000, guid: 2d9159e90e8c25c4882ccbcb6e59f93d, type: 3}
@@ -18086,6 +18092,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 666439878}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1519057996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1519057992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 733f4e1ff483611408f4a8d4fc9202ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pools::Redcode.Pools.PoolManager
+  _pools:
+  - _name: soundobj
+    _component: {fileID: 8091876477744699536, guid: 5ed626f4e6901dd43bda407c04073b6a, type: 3}
+    _count: 0
+    _container: {fileID: 0}
+    _nonLazy: 0
 --- !u!1 &1520929833
 GameObject:
   m_ObjectHideFlags: 0

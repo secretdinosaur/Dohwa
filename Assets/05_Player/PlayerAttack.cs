@@ -91,7 +91,6 @@ public class PlayerAttack : MonoBehaviour
         scabbard = GetComponentInChildren<Scabbard>();
         InitializeEffects();
     }
-
     private void Update()
     {
         if (isLockedOn)
@@ -104,6 +103,8 @@ public class PlayerAttack : MonoBehaviour
                 DisableLockOn();
             }
         }
+        if (commandBuffer.Count > 0)
+            UpdateCommandUI();
     }
 
     private void OnDrawGizmos()
@@ -202,13 +203,20 @@ public class PlayerAttack : MonoBehaviour
             if (match && cmdLength > bestLength)
             {
                 bestLength = cmdLength;
-                bestMatch = targetSkill.skillName;
 
-                if (targetSkill.MP_cost > Player.Instance.MP)
-                    UIManager.Instance.AvailableCommandsText.color = new Color32(109, 109, 109, 255);
+                // 💡 마나가 부족한 경우 UI에 흐리게 표시하기 위한 처리를 위해 
+                // 텍스트에 HTML 태그(Alpha)를 씌우거나 별도 상태를 관리할 수 있습니다.
+                bool hasEnoughMp = Player.Instance != null && Player.Instance.MP >= targetSkill.MP_cost;
+
+                if (hasEnoughMp)
+                {
+                    bestMatch = targetSkill.skillName;
+                }
                 else
-                    UIManager.Instance.AvailableCommandsText.color = new Color32(255, 255, 255, 255);
-
+                {
+                    // 마나가 부족하면 투명도가 들어간 HTML 텍스트 태그 적용 (예: 50% 알파값)
+                    bestMatch = $"<color=#808080B3>{targetSkill.skillName}</color>";
+                }
             }
         }
 

@@ -13632,32 +13632,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49dd8fdab591faf418f1259037a2b9ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemDropManager
-  OneTimeItems:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!1 &410411346
 GameObject:
   m_ObjectHideFlags: 0
@@ -19992,6 +19966,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 616474546}
   m_CullTransparentMesh: 1
+--- !u!1001 &619909967
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.497595
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -5.000003
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 10.789595
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226412289062993797, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6126396680298569999, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
+      propertyPath: m_Name
+      value: StrongBandit(SemiBoss)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: aa82059ddbdc79d4fa3aa57e63beb298, type: 3}
 --- !u!1 &621634135
 GameObject:
   m_ObjectHideFlags: 0
@@ -27990,7 +28021,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921745083}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.019974466, y: 0.9696797, z: 0.08483598, w: 0.22830921}
+  m_LocalRotation: {x: 0.07229679, y: 0.5563546, z: 0.04867541, w: -0.8263616}
   m_LocalPosition: {x: -0.08619163, y: -4.2551355, z: -1.8666325}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -71061,3 +71092,4 @@ SceneRoots:
   - {fileID: 1689166197}
   - {fileID: 1078021395}
   - {fileID: 1729468610}
+  - {fileID: 619909967}

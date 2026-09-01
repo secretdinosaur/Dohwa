@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b5ebcdbdb5dc684b998a47d2a54d33a, type: 3}
   m_Name: B4
   m_EditorClassIdentifier: Assembly-CSharp::SkillBookBase
-  SkillTreePrefab: {fileID: 7180794429146838639, guid: 0ebb2b7d0e99b6347a20a0e247a4709b, type: 3}
+  SkillTreePrefab: {fileID: 5986807656462715458, guid: fc5756160577fdd499ae76ed9c58cf53, type: 3}
   Localize_skillBookName:
     m_TableReference:
       m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -73,15 +73,13 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 
     isStartingNode: 0
   - nodeType: 0
-    activeSkill: {fileID: 11400000, guid: 425a57e32141602419ba460307eae4b6, type: 2}
+    activeSkill: {fileID: 11400000, guid: 2d25f3e70d7bc7e499dd3c8b4f9c0909, type: 2}
     passiveSkill: {fileID: 0}
-    statModifiers:
-    - statType: 1
-      statValue: 5
+    statModifiers: []
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: 
@@ -104,7 +102,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 00000000
     isStartingNode: 0
   - nodeType: 2
@@ -137,13 +135,15 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 01000000
     isStartingNode: 0
   - nodeType: 0
-    activeSkill: {fileID: 11400000, guid: 2d25f3e70d7bc7e499dd3c8b4f9c0909, type: 2}
+    activeSkill: {fileID: 11400000, guid: 425a57e32141602419ba460307eae4b6, type: 2}
     passiveSkill: {fileID: 0}
-    statModifiers: []
+    statModifiers:
+    - statType: 1
+      statValue: 5
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: 
@@ -162,11 +162,11 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 5
+    cost: 10
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 02000000
     isStartingNode: 0
   - nodeType: 2
@@ -199,7 +199,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 00000000
     isStartingNode: 0
   - nodeType: 1
@@ -228,7 +228,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 04000000
     isStartingNode: 0
   - nodeType: 0
@@ -253,11 +253,11 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 5
+    cost: 10
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 1
+    unlocked: 0
     prerequisiteIndices: 05000000
     isStartingNode: 0
   references:

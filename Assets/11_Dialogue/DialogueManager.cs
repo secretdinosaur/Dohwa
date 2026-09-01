@@ -224,7 +224,7 @@ public class DialogueManager : MonoBehaviour
                 buttons[i].gameObject.SetActive(true);
                 buttons[i].GetComponentInChildren<TextMeshProUGUI>().text = DialogueSet.choiceOptions[i].Text.GetLocalizedString();
                 buttons[i].onClick.RemoveAllListeners();
-
+                buttons[i].onClick.AddListener(() => SoundManager.Instance.PlayUISound(4));
                 if (DialogueSet.choiceOptions[ClickIndex].isQuest)
                     if (!DialogueSet.choiceOptions[ClickIndex].IsQuestClear())
                         buttons[i].GetComponentInChildren<TextMeshProUGUI>().color = new Color32(133, 133, 133, 255);

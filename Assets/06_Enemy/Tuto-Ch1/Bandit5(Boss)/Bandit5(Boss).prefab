@@ -7269,7 +7269,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 10
+    cooldown: 7
     minPhase: 1
     maxPhase: 99
     comboSkills: []
@@ -7283,7 +7283,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 10
+    cooldown: 7
     minPhase: 1
     maxPhase: 99
     comboSkills: []
@@ -7311,7 +7311,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 10
+    cooldown: 7
     minPhase: 1
     maxPhase: 99
     comboSkills:
@@ -7326,7 +7326,7 @@ MonoBehaviour:
     baseWeight: 1
     weightIncreaseAmount: 1
     nextAttackDelay: 0
-    cooldown: 10
+    cooldown: 7
     minPhase: 1
     maxPhase: 99
     comboSkills: []
@@ -7462,7 +7462,7 @@ MonoBehaviour:
   backWalkMaxDuration: 2
   strafeSpeedMultiplier: 0.5
   strafeMinDuration: 1
-  strafeMaxDuration: 3
+  strafeMaxDuration: 2
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
@@ -7543,7 +7543,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBossCombat
   Power: 1
-  attackCooldownRange: {x: 1, y: 3}
+  attackCooldownRange: {x: 0, y: 1.5}
 --- !u!114 &2195481694920036551
 MonoBehaviour:
   m_ObjectHideFlags: 0

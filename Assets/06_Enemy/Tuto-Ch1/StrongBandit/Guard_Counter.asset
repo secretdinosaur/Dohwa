@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 0000000000000000
   MP_cost: 0
-  clip: {fileID: 7400000, guid: cdab74e7559a54746883ff58e6a4cefd, type: 2}
+  clip: {fileID: 7400000, guid: a9de2f0a267b7b84abe9b263dda49579, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: ba525393bef371e4497b8875f73f4e3f, type: 3}
   effect: {fileID: 0}
@@ -76,7 +76,7 @@ MonoBehaviour:
     hitSound: {fileID: 8300000, guid: c266ac5ee0a5c1445ae6e59177dbedbe, type: 3}
     effectDirection: 13
     playerHitEffect: {fileID: 11400000, guid: 496d74c383cbdc847831da7ffefdaabc, type: 2}
-    useGuardSettings: 0
+    useGuardSettings: 1
     useStunSettings: 1
     guardData:
       guardable: 0
