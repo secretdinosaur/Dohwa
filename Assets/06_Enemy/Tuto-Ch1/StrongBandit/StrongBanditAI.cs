@@ -80,7 +80,7 @@ public class StrongBanditAI : EnemyAIBase
         core.isGuarding = false;
         wasStunned = true;
 
-        if (enemyCollider != null) enemyCollider.enabled = true;
+        if (enemyCollider != null && !core.IsDead) enemyCollider.enabled = true;
 
         if (agent != null && !agent.enabled && !core.IsDead)
         {
@@ -242,10 +242,13 @@ public class StrongBanditAI : EnemyAIBase
 
     public void TriggerCounter()
     {
+        // 💡 [핵심 버그 수정] 어떤 상황이든 일단 방어 판정이 발생하면 가드 상태를 무조건 해제!
+        // 이게 아래쪽 return보다 밑에 있어서 출혈 중이거나 스킬이 없을 때 무한 무적 버그가 발생했음.
+        core.isGuarding = false;
+
         if (core != null && core.isTakingDoT) return;
         if (counterSkill == null) return;
 
-        core.isGuarding = false;
         if (actionCoroutine != null) StopCoroutine(actionCoroutine);
         Player.Instance.PlayerAttack.CancelCurrentSkill();
         ClearAttackHandler();
@@ -359,13 +362,23 @@ public class StrongBanditAI : EnemyAIBase
                 transform.rotation = targetRot;
             }
 
-            if (enemyCollider != null) enemyCollider.enabled = true;
-
             yield return new WaitUntil(() => attackFinished || core.skillSelector.isInstantComboTriggered || core.wasParried || core.currentState != EnemyState.Attack || core.IsDead);
         }
         finally
         {
             ClearAttackHandler();
+
+            if (!core.IsDead)
+            {
+                if (enemyCollider != null) enemyCollider.enabled = true;
+
+                if (agent != null)
+                {
+                    SnapToGround();
+                    agent.enabled = true;
+                    core.CmdTrySnapToNavMesh?.Invoke();
+                }
+            }
         }
 
         if (core.skillSelector.isInstantComboTriggered)
@@ -374,19 +387,12 @@ public class StrongBanditAI : EnemyAIBase
             core.CmdCancelAttack?.Invoke();
         }
 
-        if (agent != null && !core.IsDead)
-        {
-            SnapToGround();
-            agent.enabled = true;
-            core.CmdTrySnapToNavMesh?.Invoke();
-        }
-
         float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
         core.wasParried = false;
 
         if (UnityEngine.Random.Range(0f, 100f) < chance && !core.skillSelector.HasPendingCombo)
         {
-            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
+            yield return BackWalkRoutine(backWalkDist);
             lastActionWasEvasion = true;
         }
 

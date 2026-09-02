@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Linq;
-using UnityEngine.UIElements;
 
 [RequireComponent(typeof(SkillSelector))]
 public class QueenBanditAI : EnemyAIBase
@@ -80,6 +79,7 @@ public class QueenBanditAI : EnemyAIBase
     protected override void Awake()
     {
         base.Awake();
+
         skillSelector = GetComponent<SkillSelector>();
         agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         core.OnStunned += HandleInterruptSpecial;
@@ -353,7 +353,13 @@ public class QueenBanditAI : EnemyAIBase
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || isStepping || isTransitioning || isStartingFight || core.IsDead)
+        // 💡 [핵심 버그 수정] 코루틴이 진행 중일 때(CooldownWalk, BackWalk) 무조건 입력을 차단하여 
+        // 1초에 코루틴이 수십 개씩 중복 생성되는 현상을 완벽하게 방지합니다.
+        if (isAttacking || isStepping || isTransitioning || isStartingFight || core.IsDead ||
+            core.currentState == EnemyState.BackWalk ||
+            core.currentState == EnemyState.CooldownWalk ||
+            core.currentState == EnemyState.Attack ||
+            actionCoroutine != null)
         {
             return;
         }
@@ -568,7 +574,6 @@ public class QueenBanditAI : EnemyAIBase
             activeDashCoroutine = StartCoroutine(Attack9DashRoutine());
         }
 
-        // 부모의 공격 시퀀스 호출 (try-finally 보장)
         yield return base.PerformAttackSequence(skill);
 
         if (activeDashCoroutine != null)
@@ -634,6 +639,8 @@ public class QueenBanditAI : EnemyAIBase
         isStepping = false;
 
         if (!core.IsDead) core.ChangeState(EnemyState.Idle);
+
+        // 💡 [핵심 버그 픽스] 코루틴이 끝났음을 AI에게 알려주어 다음 패턴을 정상적으로 고르게 만듭니다.
         actionCoroutine = null;
     }
 

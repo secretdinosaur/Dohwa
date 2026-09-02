@@ -41,8 +41,15 @@ public abstract class EnemyAIBase : MonoBehaviour
     [Tooltip("위치 다시 잡기 발동 시, 뒤로 안 가고 옆(Strafe)으로 걸을 확률 (0~100)")]
     [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
     public float backWalkTriggerFactor = 0.7f;
-    [Tooltip("게걸음(Strafe)이나 뒷걸음(BackWalk) 도중 피격 시 즉각 반격할 확률")]
+
+    [Header("Hit Reaction")]
+    [Tooltip("게걸음(Strafe)/뒷걸음(BackWalk) 도중 피격 시 즉각 반격할 확률")]
     [Range(0f, 100f)] public float evasionCounterAttackChance = 60f;
+    [Tooltip("스턴 종료 후 즉시 반격할 확률")]
+    [Range(0f, 100f)] public float hitCounterAttackChance = 60f;
+    [Tooltip("스턴 종료 후 즉시 회피할 확률 (반격 안 할 때)")]
+    [Range(0f, 100f)] public float hitBackWalkChance = 40f;
+
     [Header("Predictive Chase (강강술래 방지)")]
     public float maxPredictionTime = 0.7f;
     protected Vector3 prevPlayerPos;
@@ -52,8 +59,8 @@ public abstract class EnemyAIBase : MonoBehaviour
     public bool isDetectedPlayer = false;
     public bool isMemorizingPlayer = false;
     protected bool isRunningForward = false;
+    protected bool isBoss = false; // 💡 컴포넌트 체크를 통해 자동으로 할당됨
 
-    // 💡 모든 자식이 공통으로 쓰는 회피/스텝 플래그
     protected bool lastActionWasEvasion = false;
     protected Action<float> currentAttackCompleteHandler;
 
@@ -83,6 +90,8 @@ public abstract class EnemyAIBase : MonoBehaviour
     protected virtual void Awake()
     {
         core = GetComponent<EnemyCore>();
+        isBoss = GetComponent<EnemyBossLogic>() != null; // 💡 Awake 시점에 보스 여부 판단 캐싱
+
         wallLayer = LayerMask.GetMask("Default", "Ground", "Wall");
 
         childRenderers = GetComponentsInChildren<Renderer>();
@@ -122,9 +131,36 @@ public abstract class EnemyAIBase : MonoBehaviour
         }
     }
 
-    void HandleStunEnd()
+    protected virtual void HandleStunEnd()
     {
         isAttacking = false;
+
+        // 💡 isBoss 플래그 확인으로 간소화
+        if (!core.IsDead && Player.Instance != null && Player.Instance.IsAlive && !isBoss)
+        {
+            float distToPlayer = Vector3.Distance(transform.position, Player.Instance.transform.position);
+
+            if (UnityEngine.Random.Range(0f, 100f) < hitCounterAttackChance)
+            {
+                if (core.skillSelector != null)
+                {
+                    SkillBase counterSkill = core.skillSelector.GetNextSkill(distToPlayer);
+                    if (counterSkill != null && (core.QueryHasEnoughMP?.Invoke(counterSkill.MP_cost) ?? false))
+                    {
+                        StopActionRoutine();
+                        nextAttackTime = Time.time;
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(counterSkill));
+                        return;
+                    }
+                }
+            }
+
+            if (UnityEngine.Random.Range(0f, 100f) < hitBackWalkChance)
+            {
+                StopActionRoutine();
+                actionCoroutine = StartCoroutine(ExecuteEvasionAfterAttack());
+            }
+        }
     }
 
     private void HandleInterrupt()
@@ -275,13 +311,13 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         HandleBehaviorLogic(Vector3.Distance(transform.position, Player.Instance.transform.position));
     }
+
     public virtual void HandleTakeDamage(float damage)
     {
-        // 죽었거나, 이미 스턴에 걸렸거나, 이미 공격 중이면 무시
-        if (core.IsDead || core.currentState == EnemyState.Stun || isAttacking) return;
+        // 💡 isBoss 플래그 단일 확인으로 간소화
+        if (core.IsDead || core.currentState == EnemyState.Stun || isAttacking || isBoss) return;
         if (Player.Instance == null || !Player.Instance.IsAlive) return;
 
-        // 현재 상태가 '게걸음(CooldownWalk)' 이거나 '뒷걸음(BackWalk)' 일 때만 반응
         if (core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.BackWalk)
         {
             if (UnityEngine.Random.Range(0f, 100f) < evasionCounterAttackChance)
@@ -294,11 +330,9 @@ public abstract class EnemyAIBase : MonoBehaviour
 
                     if (counterSkill != null && (core.QueryHasEnoughMP?.Invoke(counterSkill.MP_cost) ?? false))
                     {
-                        // 1. 진행 중이던 회피/걷기 코루틴 즉시 캔슬
                         StopActionRoutine();
                         core.CmdStopMovement?.Invoke();
 
-                        // 2. 공격 쿨타임을 무시하고 즉시 공격 시퀀스 돌입
                         nextAttackTime = Time.time;
                         actionCoroutine = StartCoroutine(ExecuteSkillAndChain(counterSkill));
                     }
@@ -306,6 +340,7 @@ public abstract class EnemyAIBase : MonoBehaviour
             }
         }
     }
+
     private void SetVisualsEnabled(bool state)
     {
         if (animator != null) animator.enabled = state;
@@ -604,9 +639,6 @@ public abstract class EnemyAIBase : MonoBehaviour
         core.ChangeState(EnemyState.Idle);
     }
 
-    // =========================================================================
-    // 💡 2번, 3번 개선점: 완벽한 통합 Attack Sequence & Skill Routing
-    // =========================================================================
     protected IEnumerator ExecuteSkillAndChain(SkillBase skill)
     {
         yield return RouteAndExecuteSkill(skill);
@@ -641,7 +673,7 @@ public abstract class EnemyAIBase : MonoBehaviour
             yield return new WaitUntil(() =>
                 attackFinished ||
                 core.wasParried ||
-                core.currentState != EnemyState.Attack || // Stun, Cancel, Dead 커버
+                core.currentState != EnemyState.Attack ||
                 (core.skillSelector != null && core.skillSelector.isInstantComboTriggered)
             );
         }

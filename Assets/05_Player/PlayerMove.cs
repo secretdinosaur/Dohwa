@@ -58,7 +58,7 @@ public class PlayerMove : MonoBehaviour
     private bool _isDashing = false;
     private float sprintLockoutTimer = 0f;
     private RaycastHit slopeHit;
-    private float rotationSpeed = 10f;
+    private float rotationSpeed = 20f;
 
     private bool _isSprintBtnHeld = false;
     private float _sprintPressTime = 0f;
@@ -207,7 +207,8 @@ public class PlayerMove : MonoBehaviour
             {
                 if (!_isDashCooldown && isGrounded &&
                     Player.Instance.IsAlive && !Player.Instance.isCinematic &&
-                    !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp)
+                    !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp &&
+                    !Player.Instance.isInvincible)
                 {
                     Player.Instance.CancelCurrentAction();
                     StartCoroutine(DashRoutine());
