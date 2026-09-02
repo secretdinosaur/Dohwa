@@ -350,13 +350,6 @@ public class DialogueManager : MonoBehaviour
         if (CurrentDialogueSet.isChoiceNode)
         {
             CurrentDialogueSet.GetImmadiately();
-            if (CurrentDialogueSet.needExecutionFunction && npc != null)
-            {
-                if (npc.ExecutionFunctionSet != null && npc.ExecutionFunctionSet.Count > index)
-                {
-                    npc.ExecutionFunctionSet[index]?.Invoke();
-                }
-            }
 
             DialogueSet nextDialogue;
             if (!CurrentDialogueSet.choiceOptions[index].isQuest)

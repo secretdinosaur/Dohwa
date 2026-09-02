@@ -358,15 +358,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     {
         if (!IsAlive || isInvincible) return;
 
-        // 💡 피격 당하는 순간 플레이어의 공격, 스킬, 사운드, 이펙트를 즉시 취소/정지
-        if (PlayerAttack != null)
+        bool currentIsUnstoppable = false;
+        bool currentIsSuperUnstoppable = false; // 💡 추가됨
+        float currentDamageReduction = 0f;
+
+        if (PlayerAttack != null && PlayerAttack.isAttacking && PlayerAttack.lastActivatedSkill != null)
         {
-            PlayerAttack.CancelCurrentSkill();
+            currentIsUnstoppable = PlayerAttack.lastActivatedSkill.isUnstoppable;
+            currentIsSuperUnstoppable = PlayerAttack.lastActivatedSkill.isSuperUnstoppable;
+            currentDamageReduction = PlayerAttack.lastActivatedSkill.damageReductionDuringCast;
         }
 
-        if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
+        // 💡 슈퍼 아머나 하이퍼 아머 상태가 아닐 때만 캔슬
+        if (!isTakingDoT && !currentIsUnstoppable && !currentIsSuperUnstoppable)
         {
-            DialogueManager.Instance.StopShowDialogue();
+            if (PlayerAttack != null) PlayerAttack.CancelCurrentSkill();
+            if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
+                DialogueManager.Instance.StopShowDialogue();
         }
 
         GuardableData gData = skill.GetGuardData(hitIndex);
@@ -382,6 +390,10 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
 
         float actualDamage = isTakingDoT ? damage : ApplyArmorReduction(damage);
+
+        // 방해불가/슈퍼방해불가 데미지 감소 적용
+        actualDamage *= (1f - currentDamageReduction);
+
         bool willDie = (HP - actualDamage) <= 0;
 
         if ((isParrying || isGuarding) && skillIsGuardable)
@@ -480,47 +492,64 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                if (!hasKnockback && PlayerMove != null)
-                    PlayerMove.CancelKnockBack();
-
-                Transform grabTarget = null;
-                if (stunData.stunType == StunType.Grabbed)
+                // 💡 [SuperUnstoppable 1] 슈퍼 방해불가 상태면 하드 CC(스턴, 잡기)를 무시함
+                if (!currentIsSuperUnstoppable)
                 {
-                    grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    if (!hasKnockback && PlayerMove != null)
+                        PlayerMove.CancelKnockBack();
+
+                    Transform grabTarget = null;
+                    if (stunData.stunType == StunType.Grabbed)
+                    {
+                        grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    }
+
+                    ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
+                    ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
+                    isStunApplied = true;
                 }
-                ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
-                ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
-                isStunApplied = true;
             }
         }
 
+        // 3. 일반 피격 및 넉백 분기 처리
         if (!isStunApplied && !willDie && !isTakingDoT)
         {
-            CancelCurrentAction();
-            ClearStun();
-
-            if (!hasKnockback)
+            if (hasKnockback)
             {
-                if (PlayerMove != null) PlayerMove.CancelKnockBack();
-
-                if (animator != null)
+                // 💡 [SuperUnstoppable 2] 슈퍼 방해불가 상태면 넉백, 에어본도 무시함
+                if (!currentIsSuperUnstoppable)
                 {
-                    animator.ResetTrigger("Hitted1");
-                    animator.ResetTrigger("Hitted2");
-                    Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                    CancelCurrentAction();
+                    ClearStun();
+
+                    if (knockbackForce.y > 0)
+                    {
+                        isAirborne = true;
+                        if (animator != null) Animator_SetTrigger("Airborne");
+                    }
+                    else
+                    {
+                        if (PlayerMove != null) PlayerMove.isKnockedDown = true;
+                        if (animator != null) Animator_SetTrigger("KnockDown");
+                    }
                 }
             }
             else
             {
-                if (knockbackForce.y > 0)
+                // 일반 경직 피격일 때
+                if (!currentIsUnstoppable && !currentIsSuperUnstoppable)
                 {
-                    isAirborne = true;
-                    if (animator != null) Animator_SetTrigger("Airborne");
-                }
-                else
-                {
-                    if (PlayerMove != null) PlayerMove.isKnockedDown = true;
-                    if (animator != null) Animator_SetTrigger("KnockDown");
+                    CancelCurrentAction();
+                    ClearStun();
+
+                    if (PlayerMove != null) PlayerMove.CancelKnockBack();
+
+                    if (animator != null)
+                    {
+                        animator.ResetTrigger("Hitted1");
+                        animator.ResetTrigger("Hitted2");
+                        Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                    }
                 }
             }
         }
@@ -1276,7 +1305,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             if (Physics.CapsuleCast(point1, point2, checkRadius, dir, out RaycastHit hit, distance + pullBackDist + WallCheckSkinWidth, obstacleLayer))
             {
                 float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
-                if (hitAngle > 45f)
+                if (hitAngle > 65)
                 {
                     return;
                 }

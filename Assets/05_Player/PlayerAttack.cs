@@ -55,7 +55,7 @@ public class PlayerAttack : MonoBehaviour
     public List<SkillBase.Command> GetCommanBuffer() { return commandBuffer; }
     private HashSet<int> processedHitIndices = new HashSet<int>();
     private Dictionary<string, GameObject> _skillEffects = new Dictionary<string, GameObject>();
-    private SkillBase lastActivatedSkill = null;
+    public SkillBase lastActivatedSkill = null;
     #endregion
 
     #region Combat & Tuning Settings
@@ -253,35 +253,26 @@ public class PlayerAttack : MonoBehaviour
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-        Debug.Log("<color=cyan>[OnAttack] 공격 입력 인식됨</color>");
 
-        if (DialogueManager.Instance.IsDialogueActive) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 대화 중</color>"); return; }
-        if (Player.Instance == null || !Player.Instance.CanAttack()) { Debug.LogWarning("<color=red>[OnAttack 캔슬] CanAttack 조건 불만족 (스턴, 구르기 등)</color>"); return; }
-        if (isSwordMoving || DrawRoutine != null) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 발도/납도 진행 중</color>"); return; }
-
-        if (strongAttackSkill == null) Debug.LogError("<color=red>[OnAttack 에러] inspector에 strongAttackSkill(강공격 스킬)이 등록되어 있지 않습니다!</color>");
+        if (DialogueManager.Instance.IsDialogueActive) {  return; }
+        if (Player.Instance == null || !Player.Instance.CanAttack()) {  return; }
+        if (isSwordMoving || DrawRoutine != null) {  return; }
 
         EnemyCore targetEnemy = GetClosestStunnedEnemy();
         if (targetEnemy != null && strongAttackSkill != null)
         {
-            Debug.Log($"<color=yellow>[OnAttack] 스턴된 적 [{targetEnemy.name}] 발견! 강공격 진입 시도</color>");
 
             if (isAttacking && lastActivatedSkill == strongAttackSkill)
             {
-                Debug.LogWarning("<color=red>[OnAttack 캔슬] 이미 강공격이 실행 중입니다.</color>");
                 return;
             }
 
             ExecuteStrongAttack(targetEnemy);
             return;
         }
-        else
-        {
-            Debug.Log("<color=grey>[OnAttack] 스턴된 적이 없으므로 일반 공격 루틴으로 넘어갑니다.</color>");
-        }
 
-        if (isAttacking && !canComboInput) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 일반 공격 중 콤보 타이밍이 아닙니다.</color>"); return; }
-        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) { Debug.LogWarning("<color=red>[OnAttack 캔슬] 공격 연타 제한(Threshold)에 걸림</color>"); return; }
+        if (isAttacking && !canComboInput) {  return; }
+        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) { return; }
 
         StartCoroutine(AttackRoutine());
     }
@@ -292,7 +283,6 @@ public class PlayerAttack : MonoBehaviour
     private EnemyCore GetClosestStunnedEnemy(float searchRadius = 5f)
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayer);
-        Debug.Log($"<color=white>[GetClosestStunnedEnemy] 반경 {searchRadius} 내 enemyLayer 검색결과: {hits.Length} 개체</color>");
 
         EnemyCore closestEnemy = null;
         float minDistance = float.MaxValue;
@@ -303,11 +293,9 @@ public class PlayerAttack : MonoBehaviour
             if (enemy != null)
             {
                 float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                Debug.Log($"   -> 적 발견: [{enemy.name}] | 상태: {enemy.currentState} | 거리: {dist}");
 
                 if (enemy.currentState == EnemyState.Stun && !enemy.IsDead)
                 {
-                    Debug.Log($"   <color=green>=> [{enemy.name}] 스턴 상태 확인됨! 강공격 타겟 후보 등록</color>");
                     if (dist < minDistance)
                     {
                         minDistance = dist;
@@ -317,13 +305,11 @@ public class PlayerAttack : MonoBehaviour
             }
         }
 
-        if (closestEnemy != null) Debug.Log($"<color=yellow>[GetClosestStunnedEnemy] 최종 강공격 타겟 확정: {closestEnemy.name}</color>");
         return closestEnemy;
     }
 
     private IEnumerator DrawSwordImmediateAndAttack(SkillBase skillToUse)
     {
-        Debug.Log("<color=cyan>[DrawSwordImmediateAndAttack] 비무장 상태라 무기를 뽑고 공격합니다.</color>");
         yield return StartCoroutine(DrawSword());
         Attack(skillToUse);
     }
@@ -395,8 +381,6 @@ public class PlayerAttack : MonoBehaviour
     // =========================================================
     public void Attack(SkillBase skillToUse)
     {
-        Debug.Log($"<color=magenta>[Attack] 전달받은 스킬 실행: {skillToUse?.skillName}</color>");
-
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
 
         if (skillToUse != strongAttackSkill)
@@ -449,7 +433,6 @@ public class PlayerAttack : MonoBehaviour
             Player.Instance.ConsumeMP(skillToUse.MP_cost);
             GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
-            Debug.Log($"<color=magenta>[Attack] 애니메이터에 스킬({skillToUse.name}) 전달 완료. AttackLifecycleRoutine 시작.</color>");
             currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
         }
     }
@@ -523,7 +506,6 @@ public class PlayerAttack : MonoBehaviour
         }
         lastAttackEndTime = Time.time;
         currentAttackRoutine = null;
-        Debug.Log("<color=grey>[EndAttack] 공격 종료 로직 완료</color>");
     }
 
     private IEnumerator FaceTargetDuringAttack()

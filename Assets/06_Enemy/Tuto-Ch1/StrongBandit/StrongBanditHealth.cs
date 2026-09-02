@@ -22,7 +22,6 @@ public class StrongBanditHealth : MonoBehaviour
     private HpBarCanvas hpBarCanvas;
     private Coroutine stunCoroutine;
 
-    // 💡 EnemyHealth 처럼 글로벌 코어가 아닌 로컬 이벤트를 사용하도록 추가
     public event Action<float, float> OnHpChanged;
     public event Action<float, float> OnMpChanged;
 
@@ -60,7 +59,6 @@ public class StrongBanditHealth : MonoBehaviour
 
     private void Update()
     {
-        // 💡 여기서 MP가 회복될 때마다 불필요한 과부하가 걸리지 않도록 로컬 이벤트 사용
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
 
@@ -93,7 +91,14 @@ public class StrongBanditHealth : MonoBehaviour
 
     private void HandleDamage(float damage)
     {
-        if (isTransitioningPhase) return;
+        // 💡 [디버그 1] 데미지 함수 진입 여부와 전달된 데미지 값 확인
+        Debug.Log($"<color=cyan>[StrongBanditHealth] HandleDamage 진입! 전달받은 데미지: {damage} | 현재 체력: {currentHp} | 가드중 여부: {core.isGuarding} | 현재 상태: {core.currentState}</color>");
+
+        if (isTransitioningPhase)
+        {
+            Debug.LogWarning("<color=red>[피격 무시] 페이즈 전환 중이라 데미지가 무시되었습니다.</color>");
+            return;
+        }
 
         if (core.isGuarding)
         {
@@ -106,25 +111,30 @@ public class StrongBanditHealth : MonoBehaviour
                 Vector3 forward = transform.forward;
                 forward.y = 0;
 
-                if (Vector3.Angle(forward, dirToPlayer) <= 75f)
+                float angle = Vector3.Angle(forward, dirToPlayer);
+                if (angle <= 75f)
                 {
                     isFacingPlayer = true;
                 }
+                Debug.Log($"<color=yellow>[가드 각도 체크] 플레이어와의 각도: {angle}도 (정면 여부: {isFacingPlayer})</color>");
             }
 
             if (isFacingPlayer)
             {
+                Debug.Log("<color=green>[가드 성공!] 정면 공격이므로 데미지를 씹고 카운터를 시도합니다.</color>");
                 core.TriggerGuardSuccess();
                 return;
             }
             else
             {
+                Debug.Log("<color=magenta>[가드 무효화] 측/후면 공격이므로 가드를 강제로 해제하고 데미지를 받습니다.</color>");
                 core.isGuarding = false;
             }
         }
 
         if (core.currentState == EnemyState.Stun)
         {
+            Debug.Log("<color=white>[피격] 스턴 상태에서 피격당함. 스턴 해제 처리</color>");
             if (stunCoroutine != null)
             {
                 StopCoroutine(stunCoroutine);
@@ -136,13 +146,14 @@ public class StrongBanditHealth : MonoBehaviour
 
         if (!core.isTakingDoT)
         {
-            // 💡 널 레퍼런스 에러 방지를 위해 ?.Invoke 사용
             core.PlayHitSound?.Invoke(core.HittedSkill, core.HitIndex);
         }
 
+        // 실제 체력 차감 연산
+        float prevHp = currentHp;
         currentHp -= damage;
+        Debug.Log($"<color=green>[체력 차감 성공!] 기존 체력: {prevHp} -> 깎인 후 체력: {currentHp} (차감된 양: {damage})</color>");
 
-        // 💡 과부하 방지 (EnemyHealth와 동일하게 로컬 호출)
         OnHpChanged?.Invoke(currentHp, maxHP);
 
         if (hpBarCanvas != null)
@@ -150,6 +161,7 @@ public class StrongBanditHealth : MonoBehaviour
 
         if (currentHp <= 0)
         {
+            Debug.Log("<color=red>[사망/페이즈 전환] 체력이 0 이하가 되었습니다.</color>");
             if (currentPhase < maxPhase)
             {
                 currentHp = 0;
@@ -264,8 +276,6 @@ public class StrongBanditHealth : MonoBehaviour
     public void UpdateMP(float value)
     {
         currentMp = Mathf.Clamp(value, 0, maxMP);
-
-        // 💡 핵심 끊김 해결: core.TriggerMpChanged (글로벌) 호출을 지우고 로컬 호출로 변경
         OnMpChanged?.Invoke(currentMp, maxMP);
 
         if (hpBarCanvas != null)

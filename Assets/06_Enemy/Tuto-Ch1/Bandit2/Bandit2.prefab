@@ -313,6 +313,7 @@ Transform:
   - {fileID: 5133567238774841217}
   - {fileID: 3687424558148356909}
   - {fileID: 1096127343279140929}
+  - {fileID: 358684255405621218}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &887303981805832213
@@ -408,6 +409,8 @@ MonoBehaviour:
   strafeOnCloseChance: 30
   backWalkTriggerFactor: 0.7
   evasionCounterAttackChance: 60
+  hitCounterAttackChance: 60
+  hitBackWalkChance: 40
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
@@ -2051,6 +2054,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7719970536055591346}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2838387426778400932
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 358684255405621218}
+  m_Layer: 0
+  m_Name: CameraTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &358684255405621218
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2838387426778400932}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.756872, z: -0, w: 0.6535632}
+  m_LocalPosition: {x: 0, y: 9, z: 0}
+  m_LocalScale: {x: 7.4074087, y: 7.407407, z: 7.4074087}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2178093052061256794}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2945923310370760544
 GameObject:

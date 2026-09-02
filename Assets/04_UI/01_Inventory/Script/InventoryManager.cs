@@ -144,14 +144,23 @@ public class InventoryManager : MonoBehaviour
         {
             Player.Instance.UnequipWeapon();
         }
+
         if (slot != null)
         {
             if (EquippedWeapon.item.weapon != null)
             {
-                slot.item.SetItem(EquippedWeapon.item.weapon);
+                // 기존 장착 무기가 있으면 서로 스왑(교체)
+                Weapon oldWeapon = EquippedWeapon.item.weapon;
+                slot.item.SetItem(oldWeapon);
                 EquippedWeapon.item.SetItem(weapon);
             }
+            else
+            {
+                EquippedWeapon.item.SetItem(weapon);
+                slot.item.Clear(); // 💡 버그 수정: 슬롯을 비워주지 않으면 복사/증발 발생
+            }
         }
+
         Player.Instance.equippedWeapon = weapon;
         Player.Instance.EquipWeapon(weapon);
         SetInfoPanel(0);
@@ -161,22 +170,28 @@ public class InventoryManager : MonoBehaviour
     {
         InventorySlot EquippedArmor = EquippedArmorSlot.GetComponent<InventorySlot>();
         if (Player.Instance.equippedArmor == armor) return;
+
         if (Player.Instance.equippedArmor != null)
         {
             Player.Instance.UnequipArmor();
         }
+
         if (slot != null)
         {
             if (EquippedArmor.item.armor != null)
             {
-                slot.item.SetItem(EquippedArmor.item.armor);
+                // 기존 장착 방어구가 있으면 서로 스왑(교체)
+                Armor oldArmor = EquippedArmor.item.armor;
+                slot.item.SetItem(oldArmor);
                 EquippedArmor.item.SetItem(armor);
             }
             else
             {
                 EquippedArmor.item.SetItem(armor);
+                slot.item.Clear(); // 💡 버그 수정: 방어구 복사 방지
             }
         }
+
         Player.Instance.equippedArmor = armor;
         Player.Instance.EquipArmor(armor);
         SetInfoPanel(1);

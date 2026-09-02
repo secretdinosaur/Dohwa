@@ -65,6 +65,9 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 1
+  damageReductionDuringCast: 0.3
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 1, y: 1, z: 2}
@@ -123,7 +126,7 @@ MonoBehaviour:
     areaOffset: {x: 0, y: -4, z: 4}
     areaDuration: 0.6
     areaTickInterval: 0.12
-    areaDamageMultiplier: 8
+    areaDamageMultiplier: 12
   references:
     version: 2
     RefIds: []
