@@ -216251,7 +216251,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1496331611
 RectTransform:
   m_ObjectHideFlags: 0
@@ -244714,6 +244714,16 @@ MonoBehaviour:
   mpConsumptionReduction: 0
   ParryMpRecovery: 10
   GuardSuccessCostMpMult: 2.5
+  ExternalArtRatio:
+  - 0.3
+  - 0.08
+  - 0.1
+  - 0.1
+  InnerArtRatio:
+  - 0.06
+  - 0.03
+  - 0.3
+  - 0.2
   cheatMode: 0
 --- !u!1 &1689688652
 GameObject:
