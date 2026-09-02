@@ -1,5 +1,6 @@
-using UnityEngine;
 using System;
+using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class StatManager : MonoBehaviour
 {
@@ -53,7 +54,7 @@ public class StatManager : MonoBehaviour
     public float MaxHp
     {
         get => maxHp;
-            
+
         set { maxHp = value; UIManager.Instance.HpText.text = ((int)MaxHp).ToString(); }
     }
 
@@ -61,7 +62,7 @@ public class StatManager : MonoBehaviour
     public float MaxMp
     {
         get => maxMp;
-        set { maxMp = value; UIManager.Instance.MpText.text = ((int)MaxMp).ToString();  }
+        set { maxMp = value; UIManager.Instance.MpText.text = ((int)MaxMp).ToString(); }
     }
 
     [SerializeField] private float armor = 0f;
@@ -179,6 +180,11 @@ public class StatManager : MonoBehaviour
     public float ParryMpRecovery = 30f;
     public float GuardSuccessCostMpMult = 1f;
 
+
+    // 0 = MaxHp, 1 = Defense, 2 = Attack, 3 = MaxMp
+    public float[] ExternalArtRatio = { 0.3f, 0.08f, 0.1f, 0.1f };
+    public float[] InnerArtRatio = { 0.06f , 0.03f, 0.3f, 0.2f };
+
     #endregion
 
     private void Awake()
@@ -277,18 +283,18 @@ public class StatManager : MonoBehaviour
 
             case StatType.ExternalArt:
                 ExternalArt += value;
-                ApplySingleStat(StatType.MaxHp, value * 1.2f);
-                ApplySingleStat(StatType.Defense, value * 0.6f);
-                ApplySingleStat(StatType.Attack, value * 0.3f);
-                ApplySingleStat(StatType.MaxMp, value * 0.1f);
+                ApplySingleStat(StatType.MaxHp, value * ExternalArtRatio[0]);
+                ApplySingleStat(StatType.Defense, value * ExternalArtRatio[1]);
+                ApplySingleStat(StatType.Attack, value * ExternalArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, value * ExternalArtRatio[3]);
                 break;
 
             case StatType.InnerArt:
                 InnerArt += value;
-                ApplySingleStat(StatType.MaxHp, value * 0.2f);
-                ApplySingleStat(StatType.Defense, value * 0.1f);
-                ApplySingleStat(StatType.Attack, value * 0.6f);
-                ApplySingleStat(StatType.MaxMp, value * 0.8f);
+                ApplySingleStat(StatType.MaxHp, value * InnerArtRatio[0]);
+                ApplySingleStat(StatType.Defense, value * InnerArtRatio[1]);
+                ApplySingleStat(StatType.Attack, value * InnerArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, value * InnerArtRatio[3]);
                 break;
 
             case StatType.VitalStrikeRate:
@@ -367,18 +373,18 @@ public class StatManager : MonoBehaviour
 
             case StatType.ExternalArt:
                 ExternalArt = value;
-                ApplySingleStat(StatType.MaxHp, ExternalArt * 1.2f);
-                ApplySingleStat(StatType.Defense, ExternalArt * 0.6f);
-                ApplySingleStat(StatType.Attack, ExternalArt * 0.3f);
-                ApplySingleStat(StatType.MaxMp, ExternalArt * 0.1f);
+                ApplySingleStat(StatType.MaxHp, ExternalArt * ExternalArtRatio[0]);
+                ApplySingleStat(StatType.Defense, ExternalArt * ExternalArtRatio[1]);
+                ApplySingleStat(StatType.Attack, ExternalArt * ExternalArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, ExternalArt * ExternalArtRatio[3]);
                 break;
 
             case StatType.InnerArt:
                 InnerArt = value;
-                ApplySingleStat(StatType.MaxHp, InnerArt * 0.2f);
-                ApplySingleStat(StatType.Defense, InnerArt * 0.1f);
-                ApplySingleStat(StatType.Attack, InnerArt * 0.6f);
-                ApplySingleStat(StatType.MaxMp, InnerArt * 0.8f);
+                ApplySingleStat(StatType.MaxHp, InnerArt * InnerArtRatio[0]);
+                ApplySingleStat(StatType.Defense, InnerArt * InnerArtRatio[1]);
+                ApplySingleStat(StatType.Attack, InnerArt * InnerArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, InnerArt * InnerArtRatio[3]);
                 break;
 
             case StatType.VitalStrikeRate:
