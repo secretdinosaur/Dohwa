@@ -512,11 +512,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         }
 
         // 3. 일반 피격 및 넉백 분기 처리
-        if (!isStunApplied && !willDie && !isTakingDoT)
+        if (!isStunApplied && !isTakingDoT) // (수정됨) willDie 조건 제거: 죽을 때도 넉백되도록 허용
         {
             if (hasKnockback)
             {
-                // 💡 [SuperUnstoppable 2] 슈퍼 방해불가 상태면 넉백, 에어본도 무시함
+                // [SuperUnstoppable 2] 슈퍼 방해불가 상태면 넉백, 에어본도 무시함
                 if (!currentIsSuperUnstoppable)
                 {
                     CancelCurrentAction();
@@ -534,7 +534,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
                     }
                 }
             }
-            else
+            else if (!willDie) // 💡 (추가됨) 넉백 없는 일반 공격에 맞아 죽을 때는 경직 모션 없이 바로 죽음 처리
             {
                 // 일반 경직 피격일 때
                 if (!currentIsUnstoppable && !currentIsSuperUnstoppable)
@@ -1047,8 +1047,34 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     IEnumerator PlayerDead()
     {
+        // 💡 넉백/에어본 상태에서 죽었다면 땅에 떨어져 뒹굴 때까지 대기
+        if (isAirborne || (PlayerMove != null && (PlayerMove.isKnockedBack || PlayerMove.isKnockedDown)))
+        {
+            while (true)
+            {
+                if (PlayerMove == null) break;
+                if (PlayerMove.isGrounded) break;
+
+                // 물리적으로 바닥에 닿았는지 자체 레이캐스트로 확실히 체크
+                if (PlayerMove._rb != null && PlayerMove._rb.linearVelocity.y <= 0.1f)
+                {
+                    if (Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, 0.8f, PlayerMove.groundLayer))
+                    {
+                        break;
+                    }
+                }
+                yield return null;
+            }
+
+            // 바닥에 떨어지고 나서 쓰러진 모션을 잠깐(0.5초) 유지한 후 사망
+            yield return new WaitForSeconds(0.5f);
+        }
+
         CancelCurrentAction();
         ForceClearStun();
+
+        // 💡 넉백 대기로 인해 남아있는 기상(WakeUp) 관련 찌꺼기 코루틴 완벽 차단
+        if (PlayerMove != null) PlayerMove.CancelKnockBack();
 
         if (animator != null)
         {
