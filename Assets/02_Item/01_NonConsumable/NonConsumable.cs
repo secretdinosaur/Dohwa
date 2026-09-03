@@ -19,6 +19,10 @@ public class NonConsumable : ScriptableObject
     public bool isQuickSlotEquipable;
     public bool isEatable = false;
     public bool isDeletable;
+    [Space(20f)]
+    public bool isStackable;
+    public int MaxAmount;
+    public int LeftAmount;
     public virtual void Use() { }
 
 #if UNITY_EDITOR

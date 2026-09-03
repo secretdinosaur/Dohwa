@@ -639,6 +639,13 @@ public class InventoryManager : MonoBehaviour
                     .FirstOrDefault(slot =>
                         slot.item.consumable?.Id == id ||
                         slot.item.nonConsumable?.Id == id);
+
+                if (FoundedSlot == null && UIManager.Instance != null && UIManager.Instance.GameQuickSlots != null)
+                {
+                    FoundedSlot = UIManager.Instance.GameQuickSlots
+                        .FirstOrDefault(slot => slot != null && slot.item != null &&
+                            (slot.item.consumable?.Id == id || slot.item.nonConsumable?.Id == id));
+                }
                 break;
             default:
                 FoundedSlot = null;
