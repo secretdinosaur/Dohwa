@@ -90,6 +90,7 @@ public class InventoryManager : MonoBehaviour
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
     public GameObject CantDeleteMessagePanel;
+    public GameObject CantAssignMessagePanel;
     public GameObject StatToolTip;
     Coroutine StatToolTipRoutine;
 
@@ -863,8 +864,7 @@ public class InventoryManager : MonoBehaviour
         if (selectedItem.item.weapon != null || selectedItem.item.armor != null)
         { ItemContextMenu.OnEquipmentContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.isQuickSlot) { ItemContextMenu.OnQuickSlotContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
-        else if (selectedItem.item.consumable != null) { ItemContextMenu.OnConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
-        else if (selectedItem.item.nonConsumable != null) { ItemContextMenu.OnNonConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
+        else if (selectedItem.item.consumable != null || selectedItem.item.nonConsumable != null) { ItemContextMenu.OnItemContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.skillBook != null) { HideItemContextMenu(); ShowSkillBookDetail(selectedItem.item.skillBook); }
         else { return; }
     }

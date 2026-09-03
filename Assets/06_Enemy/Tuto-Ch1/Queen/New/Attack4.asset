@@ -51,9 +51,9 @@ MonoBehaviour:
     m_LocalVariables: []
   damageMultipliers:
   - 0
-  - 10
-  - 10
-  - 30
+  - 12
+  - 12
+  - 25
   - 0
   HitSound:
   - {fileID: 0}
@@ -74,6 +74,9 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 2, y: 2, z: 4}
@@ -107,7 +110,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.5, z: 1.5}
     boxSize: {x: 2, y: 2, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 12
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -136,7 +139,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.5, z: 1.5}
     boxSize: {x: 2, y: 2, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 12
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -165,7 +168,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1.5, z: 1.5}
     boxSize: {x: 2, y: 2, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 30
+    damageMultiplier: 25
     knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5

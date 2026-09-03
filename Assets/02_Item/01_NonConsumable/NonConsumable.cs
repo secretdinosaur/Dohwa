@@ -16,6 +16,7 @@ public class NonConsumable : ScriptableObject
     public string ItemDescription => Localize_ItemDescription.GetLocalizedString();
     public string EffectDescription => Localize_EffectDescription.GetLocalizedString();
     public Sprite icon;
+    public bool isQuickSlotEquipable;
     public bool isEatable = false;
     public bool isDeletable;
     public virtual void Use() { }

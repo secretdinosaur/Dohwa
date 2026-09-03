@@ -50,10 +50,10 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
+  - 5
   - 10
-  - 15
-  - 15
-  - 40
+  - 10
+  - 35
   HitSound:
   - {fileID: 8300000, guid: bc28f7f4ef3eaef48bce48f6e2999d48, type: 3}
   HitEffects:
@@ -68,9 +68,27 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   projectilePrefab: {fileID: 2138335265188839783, guid: 8ea29d48414e6ef468272da31deeeb13, type: 3}
   range: 200
   hitDataList:
+  - spawnOffset: {x: 0, y: 0, z: 0}
+    damageMultiplier: 5
+    knockbackForce: {x: 0, y: 0, z: 0}
+    hitSound: {fileID: 0}
+    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
+    useGuardSettings: 1
+    useStunSettings: 0
+    guardData:
+      guardable: 1
+      parryable: 0
+    stunData:
+      stunType: 0
+      offset: {x: 0, y: 0, z: 0}
+      isRealtimeFollow: 0
+      stunDuration: 0
   - spawnOffset: {x: 0, y: 0, z: 0}
     damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
@@ -87,7 +105,7 @@ MonoBehaviour:
       isRealtimeFollow: 0
       stunDuration: 0
   - spawnOffset: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 10
     knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 0}
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
@@ -102,22 +120,7 @@ MonoBehaviour:
       isRealtimeFollow: 0
       stunDuration: 0
   - spawnOffset: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
-    knockbackForce: {x: 0, y: 0, z: 0}
-    hitSound: {fileID: 0}
-    playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
-    useGuardSettings: 1
-    useStunSettings: 0
-    guardData:
-      guardable: 1
-      parryable: 0
-    stunData:
-      stunType: 0
-      offset: {x: 0, y: 0, z: 0}
-      isRealtimeFollow: 0
-      stunDuration: 0
-  - spawnOffset: {x: 0, y: 0, z: 0}
-    damageMultiplier: 40
+    damageMultiplier: 35
     knockbackForce: {x: 0, y: 0, z: 0}
     hitSound: {fileID: 0}
     playerHitEffect: {fileID: 11400000, guid: b9f2e579f9734fb4dbfdba684c0ea2e6, type: 2}
