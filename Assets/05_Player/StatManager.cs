@@ -182,8 +182,8 @@ public class StatManager : MonoBehaviour
 
 
     // 0 = MaxHp, 1 = Defense, 2 = Attack, 3 = MaxMp
-    public float[] ExternalArtRatio = { 0.3f, 0.08f, 0.1f, 0.1f };
-    public float[] InnerArtRatio = { 0.06f , 0.03f, 0.3f, 0.2f };
+    private float[] ExternalArtRatio;
+    private float[] InnerArtRatio;
 
     #endregion
 
@@ -214,6 +214,9 @@ public class StatManager : MonoBehaviour
         HpRecoveryAmount = hpRecoveryAmount;
         MpRecoveryAmount = mpRecoveryAmount;
         MpConsumptionReduction = mpConsumptionReduction;
+
+        ExternalArtRatio = new float[] { 0.9f, 0.2f, 0.14f, 0.11f };
+        InnerArtRatio = new float[] { 0.1f, 0.03f, 0.5f, 0.25f };
     }
 
     public bool cheatMode = false;

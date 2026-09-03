@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 313f1cc6bdc3c4749ad2eafa109f5f5c, type: 3}
+  m_Name: Potion
+  m_EditorClassIdentifier: Assembly-CSharp::Potion
+  Localize_NonConsumableName:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 26939405389819904
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_ItemDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 26939405448540160
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  Localize_EffectDescription:
+    m_TableReference:
+      m_TableCollectionName: GUID:51aff1086d4baf64da390ea2a80e7a96
+    m_TableEntryReference:
+      m_KeyId: 26939405448540161
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  id: 3abef340-ac0e-4538-9727-e386d2ef4e53
+  icon: {fileID: -179331447, guid: e23f8635d23e45643b54b275f35b9b11, type: 3}
+  isQuickSlotEquipable: 1
+  isEatable: 1
+  isDeletable: 0
+  MaxAmount: 3
+  LeftAmount: 0
+  HealPercentage: 0
+  HealAmount: 25
+  references:
+    version: 2
+    RefIds: []

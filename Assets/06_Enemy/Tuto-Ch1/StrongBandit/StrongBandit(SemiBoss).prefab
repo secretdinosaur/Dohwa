@@ -3677,7 +3677,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a460de72b65cfa142a321e6a66fa1316, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StrongBanditHealth
-  maxHP: 350
+  maxHP: 300
   maxMP: 100
   mpRecoveryPerSecond: 5
   stunDuration: 4
@@ -3728,6 +3728,14 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 15
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 30
+  backWalkTriggerFactor: 0.5
+  evasionCounterAttackChance: 60
+  hitCounterAttackChance: 60
+  hitBackWalkChance: 40
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
@@ -3736,11 +3744,6 @@ MonoBehaviour:
   FightWall: {fileID: 0}
   startFightPreDelay: 0
   startFightAnimDuration: 4
-  moveBeforeAttackChance: 15
-  backWalkTriggerFactor: 0.5
-  strafeOnCloseChance: 30
-  parriedBackWalkChance: 60
-  normalBackWalkChance: 20
   guardSkill: {fileID: 11400000, guid: a687a255a43ea024399bafb1b56b35a8, type: 2}
   counterSkill: {fileID: 11400000, guid: 7dab344497609af4885de1eaa6ae5046, type: 2}
   guardChancePerSec: 15

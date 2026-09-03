@@ -1957,6 +1957,14 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 50
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 30
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
+  hitCounterAttackChance: 60
+  hitBackWalkChance: 40
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
@@ -1964,8 +1972,6 @@ MonoBehaviour:
   reselectCooldown: 1
   walkApproachFactor: 1.5
   walkApproachChance: 0.2
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 30
   runAttackSkill: {fileID: 11400000, guid: 4bda273f2fb832945983942fddb26ba6, type: 2}
   runAttackCollider: {fileID: 6112030227376223174}
   runAttackChancePerSec: 30
@@ -2054,7 +2060,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78841b4a45c586542ab726d5138f8829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHP: 120
+  maxHP: 150
   maxMP: 100
   mpRecoveryPerSecond: 5
   stunDuration: 3

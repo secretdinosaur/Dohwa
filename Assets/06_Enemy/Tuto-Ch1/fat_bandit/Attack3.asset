@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
-  MP_cost: 20
+  MP_cost: 25
   clip: {fileID: 7400000, guid: 73ed7dd97516e8749b5cf83d38d0f235, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 9c9171d39faa4064bba89a80f8481ec3, type: 3}
@@ -50,7 +50,7 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 15
+  - 35
   HitSound:
   - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
   HitEffects:
@@ -62,11 +62,14 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0, y: 2, z: 1}
     boxSize: {x: 1, y: 3, z: 5}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 35
     knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5
