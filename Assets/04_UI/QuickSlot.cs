@@ -8,6 +8,7 @@ public class QuickSlot : InventorySlot
 {
     public InventorySlot OriginalSlot;
     public Image Cooldown;
+    public string quickSlotItemID;
 
     public static float globalQuickSlotDelay = 5f;
     public float nextAllowedUseTime = 0f;
@@ -24,6 +25,7 @@ public class QuickSlot : InventorySlot
             OriginalSlot.item.SetItem(item.nonConsumable);
         }
         OriginalSlot.item.Count = item.Count;
+        OriginalSlot.GetComponent<QuickSlot>().quickSlotItemID = quickSlotItemID;
     }
     public void OnClickQuickSlot()
     {

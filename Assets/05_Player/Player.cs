@@ -1193,6 +1193,9 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             return;
         }
+        if (item.nonConsumable != null && item.nonConsumable.isStackable)
+            if (item.nonConsumable.LeftAmount <= 0)
+                return;
         if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
             EatRoutine = StartCoroutine(UseItemRoutine(Slot));
     }
@@ -1206,10 +1209,12 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         InventoryItem item = Slot.item;
         if (item.consumable != null)
+        {
             item.consumable.Use();
+            item.Count--;
+        }
         else if (item.nonConsumable != null)
             item.nonConsumable.Use();
-        item.Count--;
         if (Slot.GetComponent<QuickSlot>() != null)
         {
             Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;

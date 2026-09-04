@@ -66,6 +66,19 @@ public class Checkpoint : NPC
             DataManager.Instance.AllSave();
         }
 
+        if(InventoryManager.Instance != null)
+        {
+            InventorySlot slot = InventoryManager.Instance.FindItem(InventoryManager.InventoryType.Item, "3abef340-ac0e-4538-9727-e386d2ef4e53");
+            if(slot != null)
+            {
+                slot.item.nonConsumable.LeftAmount = slot.item.nonConsumable.MaxAmount;
+                slot.item.icon.sprite = slot.item.nonConsumable.icon;
+                if (slot.gameObject.GetComponent<QuickSlot>())
+                    UIManager.Instance.SyncGameQuickSlots();
+            }
+
+        }
+
         if (activeParticle != null)
         {
             activeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
