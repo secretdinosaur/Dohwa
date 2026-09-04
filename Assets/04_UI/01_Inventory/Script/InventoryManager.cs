@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -460,15 +461,31 @@ public class InventoryManager : MonoBehaviour
 
         if (existingSlot != null)
         {
+            Debug.Log(1);
             existingSlot.item.Count++;
             UIManager.Instance.SyncGameQuickSlots();
 
             return;
         }
-        InventorySlot slot = GetEmptySlot(InventoryType.Item);
-        slot.item.SetItem(consumable);
-        UpdateSlots(InventoryType.Item);
-
+        else
+        {
+            InventorySlot beforeEquippedSlot = GetQuickSlotForEquippedItemBefore(InventoryType.Item, consumable);
+            if(beforeEquippedSlot != null)
+            {
+                Debug.Log(2);
+                Debug.Log(consumable);
+                beforeEquippedSlot.item.SetItem(consumable);
+                Debug.Log(beforeEquippedSlot.gameObject.name);
+                UpdateSlots(InventoryType.Item);
+            }
+            else
+            {
+                Debug.Log(3);
+                InventorySlot slot = GetEmptySlot(InventoryType.Item);
+                slot.item.SetItem(consumable);
+                UpdateSlots(InventoryType.Item);
+            }
+        }
         UIManager.Instance.SyncGameQuickSlots();
     }
 
@@ -481,9 +498,22 @@ public class InventoryManager : MonoBehaviour
             existingSlot.item.Count++;
             return;
         }
-        InventorySlot slot = GetEmptySlot(InventoryType.Item);
-        slot.item.SetItem(nonConsumable);
-        UpdateSlots(InventoryType.Item);
+        else
+        {
+            InventorySlot beforeEquippedSlot = GetQuickSlotForEquippedItemBefore(InventoryType.Item, nonConsumable);
+            if (beforeEquippedSlot != null)
+            {
+                beforeEquippedSlot.item.SetItem(nonConsumable);
+                UpdateSlots(InventoryType.Item);
+            }
+            else
+            {
+                InventorySlot slot = GetEmptySlot(InventoryType.Item);
+                slot.item.SetItem(nonConsumable);
+                UpdateSlots(InventoryType.Item);
+            }
+        }
+        UIManager.Instance.SyncGameQuickSlots();
     }
 
     private InventorySlot GetEmptySlot(InventoryType type)
@@ -588,6 +618,21 @@ public class InventoryManager : MonoBehaviour
         return null;
     }
 
+    InventorySlot GetQuickSlotForEquippedItemBefore(InventoryType type, Consumable consumable)
+    {
+        foreach (QuickSlot slot in UIManager.Instance.GameQuickSlots)
+        {
+            if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
+            {
+                if (slot.item.consumable == null && slot.quickSlotItemID == consumable.Id)
+                {
+                    return slot;
+                }
+            }
+        }
+        return null;
+    }
+
     InventorySlot GetSlotWithSameItem(InventoryType type, NonConsumable nonConsumable)
     {
         InventorySlot[] NonConsumableSlots = ItemSlotContainer.GetComponentsInChildren<InventorySlot>();
@@ -606,6 +651,21 @@ public class InventoryManager : MonoBehaviour
             if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
             {
                 if (slot.item.nonConsumable != null && slot.item.nonConsumable.Id == nonConsumable.Id)
+                {
+                    return slot;
+                }
+            }
+        }
+        return null;
+    }
+
+    InventorySlot GetQuickSlotForEquippedItemBefore(InventoryType type, NonConsumable nonConsumable)
+    {
+        foreach (QuickSlot slot in UIManager.Instance.GameQuickSlots)
+        {
+            if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
+            {
+                if (slot.item.nonConsumable == null && slot.quickSlotItemID == nonConsumable.Id)
                 {
                     return slot;
                 }

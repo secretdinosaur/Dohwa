@@ -35627,6 +35627,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 2098864420}
   Cooldown: {fileID: 0}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &185000310
 MonoBehaviour:
@@ -66755,6 +66756,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 1664121509}
   Cooldown: {fileID: 0}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &543641216
 MonoBehaviour:
@@ -87510,6 +87512,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 2089920609}
   Cooldown: {fileID: 0}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &839578029
 MonoBehaviour:
@@ -116853,6 +116856,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 1648829588}
   Cooldown: {fileID: 890303168}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &975829120
 MonoBehaviour:
@@ -187495,15 +187499,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 366.87
+      value: 319.977
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 42.12
+      value: 41.78
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 98.49
+      value: 177.406
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalRotation.w
@@ -187511,15 +187515,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: -0.000008800916
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -187531,7 +187535,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3509663074910443561, guid: 6dd19b99968cc064d8ef9b3d0d9859bc, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: -0.001
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -241338,6 +241342,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 975829119}
   Cooldown: {fileID: 0}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &1648829589
 MonoBehaviour:
@@ -243258,6 +243263,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 543641215}
   Cooldown: {fileID: 433986928}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &1664121510
 MonoBehaviour:
@@ -244605,7 +244611,7 @@ MonoBehaviour:
   mpConsumptionReduction: 0
   ParryMpRecovery: 10
   GuardSuccessCostMpMult: 2.5
-  cheatMode: 1
+  cheatMode: 0
 --- !u!1 &1689688652
 GameObject:
   m_ObjectHideFlags: 0
@@ -328288,6 +328294,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 839578028}
   Cooldown: {fileID: 1011279397}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &2089920610
 MonoBehaviour:
@@ -328691,6 +328698,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   OriginalSlot: {fileID: 185000309}
   Cooldown: {fileID: 912438941}
+  quickSlotItemID: 
   nextAllowedUseTime: 0
 --- !u!114 &2098864421
 MonoBehaviour:
