@@ -1094,7 +1094,10 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         InkBrushEffectManager.Instance.PlayDeathEffect();
         SettingManager.Instance.SetSensitivityZero();
         SoundManager.Instance.PlaySound(DeathSound);
-
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.MuffleBGMOnDeath();
+        }
         yield return new WaitForSeconds(deathUIWaitTime);
         UIManager.Instance.DeathPanel.SetActive(true);
 
@@ -1149,6 +1152,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         isDeathPanelOn = false;
         DeathRoutine = null;
         SoundManager.Instance.PlaySound(RespawnSound);
+        SoundManager.Instance.RestoreBGMOnRespawn();
         SettingManager.Instance.RestoreSensitivity();
 
         StartCoroutine(InitialAttackPreventRoutine());

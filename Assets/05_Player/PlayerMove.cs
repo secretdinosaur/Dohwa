@@ -62,6 +62,11 @@ public class PlayerMove : MonoBehaviour
 
     private bool _isSprintBtnHeld = false;
     private float _sprintPressTime = 0f;
+
+    // 💡 [추가] 낙하 사운드(바람 소리 등) 제어를 위한 변수
+    private SoundObject fallSoundInstance;
+    private bool isFallSoundPlaying = false;
+    private float fallSoundTimer = 0f;
     #endregion
 
     #region Tuning Settings
@@ -350,7 +355,7 @@ public class PlayerMove : MonoBehaviour
             targetAnimValue = AnimValueWalk;
         }
 
-        // 💡 ConsumeMP 적용
+        // ConsumeMP 적용
         if (_isSprinting && !_isWalking)
             Player.Instance.ConsumeMP(Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP));
 
@@ -451,11 +456,16 @@ public class PlayerMove : MonoBehaviour
     #region Jump & Fall Damage Logic
     private void CheckFallDamage()
     {
-        if (_rb == null || Player.Instance == null || !Player.Instance.IsAlive) return;
+        if (_rb == null || Player.Instance == null || !Player.Instance.IsAlive)
+        {
+            StopFallSound();
+            return;
+        }
 
         if (transform.position.y < deathYLevel)
         {
             Player.Instance.HP = 0;
+            StopFallSound();
             return;
         }
 
@@ -470,10 +480,46 @@ public class PlayerMove : MonoBehaviour
             {
                 _highestFallPoint = transform.position.y;
             }
+
+            // 💡 [핵심] 낙하 사운드 재생 로직 (현재 낙하 속도 기준 3초 거리 계산)
+            float fallSpeed = Mathf.Abs(_rb.linearVelocity.y);
+            float checkDistance = fallSpeed * 3f; // 지금 속도로 3초 뒤 도달할 거리
+
+            // 아래쪽으로 레이를 쏴서 3초 이내 거리에 땅이 있는지 검사
+            bool isCloseToGround = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, checkDistance, groundLayer);
+
+            if (!isCloseToGround)
+            {
+                // 땅과 멀리 떨어져 있다면 사운드 반복 재생
+                if (fallSoundTimer <= 0f)
+                {
+                    if (SoundManager.Instance != null && SoundManager.Instance.MovementSounds.Length > 17)
+                    {
+                        AudioClip fallClip = SoundManager.Instance.MovementSounds[17];
+                        if (fallClip != null)
+                        {
+                            fallSoundInstance = SoundManager.Instance.PlaySound(fallClip);
+                            fallSoundTimer = fallClip.length; // 클립 길이만큼 대기 후 재실행(반복 효과)
+                            isFallSoundPlaying = true;
+                        }
+                    }
+                }
+                else
+                {
+                    fallSoundTimer -= Time.deltaTime;
+                }
+            }
+            else
+            {
+                // 땅에 닿기 3초 전이 되면 사운드 정지
+                StopFallSound();
+            }
         }
         else if (_isFallingDown && _rb.linearVelocity.y >= fallStopVelocityThreshold)
         {
             _isFallingDown = false;
+            StopFallSound(); // 착지했으므로 사운드 끔
+
             float fallDistance = _highestFallPoint - transform.position.y;
 
             if (fallDistance > safeFallDistance)
@@ -490,7 +536,27 @@ public class PlayerMove : MonoBehaviour
                 Player.Instance.TakeFallDamage(fallDamage);
             }
         }
+        else if (isGrounded)
+        {
+            StopFallSound(); // 혹시나 땅에 닿아있으면 끔
+        }
     }
+
+    // 💡 [추가] 낙하 사운드를 안전하게 끄는 메서드
+    private void StopFallSound()
+    {
+        if (isFallSoundPlaying && fallSoundInstance != null)
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopSound(fallSoundInstance);
+            }
+            fallSoundInstance = null;
+        }
+        isFallSoundPlaying = false;
+        fallSoundTimer = 0f;
+    }
+
     private void CheckLedgeFall()
     {
         if (isGrounded && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
