@@ -20,6 +20,7 @@ public class PlayerMove : MonoBehaviour
     #region Movement Settings
     [Header("Movement Settings")]
     [SerializeField] private float dashForce = 10f;
+    [SerializeField] private float backDashMultiplier = 0.6f;
     [SerializeField] private float sprintMultiplier = 3f;
     [SerializeField] private float acceleration = 10f;
     [SerializeField] private float walkMultiplier = 0.5f;
@@ -63,7 +64,6 @@ public class PlayerMove : MonoBehaviour
     private bool _isSprintBtnHeld = false;
     private float _sprintPressTime = 0f;
 
-    // 💡 [추가] 낙하 사운드(바람 소리 등) 제어를 위한 변수
     private SoundObject fallSoundInstance;
     private bool isFallSoundPlaying = false;
     private float fallSoundTimer = 0f;
@@ -97,6 +97,7 @@ public class PlayerMove : MonoBehaviour
     private float slopeRaycastDistance = 0.5f;
 
     public float SprintMP;
+    public float DashMP = 10f;
     #endregion
 
     #region Constants
@@ -213,7 +214,7 @@ public class PlayerMove : MonoBehaviour
                 if (!_isDashCooldown && isGrounded &&
                     Player.Instance.IsAlive && !Player.Instance.isCinematic &&
                     !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp &&
-                    !Player.Instance.isInvincible)
+                    !Player.Instance.isInvincible && Player.Instance.MP >= DashMP)
                 {
                     Player.Instance.CancelCurrentAction();
                     StartCoroutine(DashRoutine());
@@ -355,7 +356,6 @@ public class PlayerMove : MonoBehaviour
             targetAnimValue = AnimValueWalk;
         }
 
-        // ConsumeMP 적용
         if (_isSprinting && !_isWalking)
             Player.Instance.ConsumeMP(Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP));
 
@@ -481,16 +481,13 @@ public class PlayerMove : MonoBehaviour
                 _highestFallPoint = transform.position.y;
             }
 
-            // 💡 [핵심] 낙하 사운드 재생 로직 (현재 낙하 속도 기준 3초 거리 계산)
             float fallSpeed = Mathf.Abs(_rb.linearVelocity.y);
-            float checkDistance = fallSpeed * 3f; // 지금 속도로 3초 뒤 도달할 거리
+            float checkDistance = fallSpeed * 3f;
 
-            // 아래쪽으로 레이를 쏴서 3초 이내 거리에 땅이 있는지 검사
             bool isCloseToGround = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, checkDistance, groundLayer);
 
             if (!isCloseToGround)
             {
-                // 땅과 멀리 떨어져 있다면 사운드 반복 재생
                 if (fallSoundTimer <= 0f)
                 {
                     if (SoundManager.Instance != null && SoundManager.Instance.MovementSounds.Length > 17)
@@ -499,7 +496,7 @@ public class PlayerMove : MonoBehaviour
                         if (fallClip != null)
                         {
                             fallSoundInstance = SoundManager.Instance.PlaySound(fallClip);
-                            fallSoundTimer = fallClip.length; // 클립 길이만큼 대기 후 재실행(반복 효과)
+                            fallSoundTimer = fallClip.length;
                             isFallSoundPlaying = true;
                         }
                     }
@@ -511,14 +508,13 @@ public class PlayerMove : MonoBehaviour
             }
             else
             {
-                // 땅에 닿기 3초 전이 되면 사운드 정지
                 StopFallSound();
             }
         }
         else if (_isFallingDown && _rb.linearVelocity.y >= fallStopVelocityThreshold)
         {
             _isFallingDown = false;
-            StopFallSound(); // 착지했으므로 사운드 끔
+            StopFallSound();
 
             float fallDistance = _highestFallPoint - transform.position.y;
 
@@ -538,11 +534,10 @@ public class PlayerMove : MonoBehaviour
         }
         else if (isGrounded)
         {
-            StopFallSound(); // 혹시나 땅에 닿아있으면 끔
+            StopFallSound();
         }
     }
 
-    // 💡 [추가] 낙하 사운드를 안전하게 끄는 메서드
     private void StopFallSound()
     {
         if (isFallSoundPlaying && fallSoundInstance != null)
@@ -559,7 +554,8 @@ public class PlayerMove : MonoBehaviour
 
     private void CheckLedgeFall()
     {
-        if (isGrounded && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
+        // 💡 [버그 수정 3] 대시 도중 바닥 요철 등으로 인해 점프 판정이 강제로 떠버려 애니메이션이 교체되는 문제 방지
+        if (isGrounded && !_isDashing && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
         {
             int layerMask = ~LayerMask.GetMask("Player");
             Vector3 castOrigin = transform.position + Vector3.up * (sphereCastRadius + sphereCastHeightOffset);
@@ -692,6 +688,7 @@ public class PlayerMove : MonoBehaviour
             _rb.linearVelocity = Vector3.zero;
         }
     }
+
     private IEnumerator LookAtTargetOnKnockDown()
     {
         if (Player.Instance.PlayerAttack == null || !Player.Instance.PlayerAttack.isLockedOn || Player.Instance.PlayerAttack.currentTarget == null)
@@ -719,6 +716,7 @@ public class PlayerMove : MonoBehaviour
             yield return null;
         }
     }
+
     public void KnockBack(Vector3 force, int knockdownType = 0, float knockdownDuration = 1.5f)
     {
         if (force.magnitude == 0 && knockdownType == 0) return;
@@ -879,6 +877,8 @@ public class PlayerMove : MonoBehaviour
         _isDashing = true;
         Player.Instance.PreventAttack = true;
 
+        Player.Instance.ConsumeMP(DashMP);
+
         Vector3 dashDirection = Vector3.zero;
         bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
         Transform target = Player.Instance.PlayerAttack != null ? Player.Instance.PlayerAttack.currentTarget : null;
@@ -908,10 +908,25 @@ public class PlayerMove : MonoBehaviour
         if (dashDirection.sqrMagnitude < DirectionSqrMagnitudeMin) dashDirection = transform.forward;
         else dashDirection.Normalize();
 
+        float appliedDashForce = dashForce;
+        if (_inputMove.y < -0.1f)
+        {
+            appliedDashForce *= backDashMultiplier;
+        }
+
         if (_rb != null)
         {
             _rb.linearVelocity = Vector3.zero;
-            _rb.AddForce(dashDirection * dashForce, ForceMode.Impulse);
+            _rb.AddForce(dashDirection * appliedDashForce, ForceMode.Impulse);
+        }
+
+        // 💡 [버그 수정 1] 잔여 이동 속도로 인해 대시 애니메이션이 달리기(Locomotion)로 즉시 취소되는 문제 완벽 차단
+        _animSpeed = 0f;
+        if (Player.Instance.animator != null)
+        {
+            Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
+            // 💡 [버그 수정 2] 혹시 쌓여있던 다른 행동 트리거 리셋으로 꼬임 방지
+            Player.Instance.animator.ResetTrigger("isDash");
         }
 
         Player.Instance.Animator_SetTrigger("isDash");

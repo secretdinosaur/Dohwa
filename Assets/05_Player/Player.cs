@@ -186,7 +186,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     #endregion
 
     #region Constants
-    public const float ArmorReductionFactor = 0.06f;
+    public const float ArmorReductionFactor = 0.005f;
     private const float FootstepCooldown = 0.2f;
     private const float GuardAngleThreshold = 0.7f;
     public float WallCheckRadius = 0.3f;
@@ -755,7 +755,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private float mpRecoveryDelay;
     public void mpRecoveryDelayStart()
     {
-        mpRecoveryDelay = 1f;
+        mpRecoveryDelay = 0.8f;
     }
     IEnumerator RecoveryRoutine()
     {
@@ -779,7 +779,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private float ApplyArmorReduction(float incoming)
     {
         if (StatManager.Instance.Armor <= 0f) return incoming;
-        float reduction = (StatManager.Instance.Armor * ArmorReductionFactor) / (1f + ArmorReductionFactor * StatManager.Instance.Armor);
+
+        float reduction = 0.15f * Mathf.Log(1f + 0.01f * StatManager.Instance.Armor);
+
+        reduction = Mathf.Min(reduction, 0.8f);
+
         return incoming * (1f - reduction);
     }
 
@@ -1197,6 +1201,9 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             return;
         }
+        if (item.nonConsumable != null && item.nonConsumable.isStackable)
+            if (item.nonConsumable.LeftAmount <= 0)
+                return;
         if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
             EatRoutine = StartCoroutine(UseItemRoutine(Slot));
     }
@@ -1210,10 +1217,12 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         InventoryItem item = Slot.item;
         if (item.consumable != null)
+        {
             item.consumable.Use();
+            item.Count--;
+        }
         else if (item.nonConsumable != null)
             item.nonConsumable.Use();
-        item.Count--;
         if (Slot.GetComponent<QuickSlot>() != null)
         {
             Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;

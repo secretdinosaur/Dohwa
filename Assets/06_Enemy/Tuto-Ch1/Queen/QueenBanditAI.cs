@@ -52,6 +52,13 @@ public class QueenBanditAI : EnemyAIBase
     public float evasionCooldown = 5f;
     public float evasionProbability = 0.7f;
 
+    [Header("Front Jump Settings")]
+    public float frontJumpThreshold = 15f;
+    public float frontJumpChancePerSec = 20f;
+    public float frontJumpDuration = 0.4f;
+    public float frontJumpCooldown = 5f;
+    private float lastFrontJumpTime = -9999f;
+
     [Header("Attack 9 Dash Settings")]
     public float attack9DashDuration = 0.3f;
     public float attack9DashDelay = 0.2f;
@@ -181,6 +188,8 @@ public class QueenBanditAI : EnemyAIBase
 
     private void HandlePlayerDetected()
     {
+        StopActionRoutine();
+
         if (fightSequenceRoutine != null) StopCoroutine(fightSequenceRoutine);
         fightSequenceRoutine = StartCoroutine(StartFightSequence());
     }
@@ -353,18 +362,12 @@ public class QueenBanditAI : EnemyAIBase
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        // 💡 [핵심 버그 수정] 코루틴이 진행 중일 때(CooldownWalk, BackWalk) 무조건 입력을 차단하여 
-        // 1초에 코루틴이 수십 개씩 중복 생성되는 현상을 완벽하게 방지합니다.
-        if (isAttacking || isStepping || isTransitioning || isStartingFight || core.IsDead ||
-            core.currentState == EnemyState.BackWalk ||
-            core.currentState == EnemyState.CooldownWalk ||
-            core.currentState == EnemyState.Attack ||
-            actionCoroutine != null)
+        if (isAttacking || isStepping || isTransitioning || isStartingFight || core.IsDead || actionCoroutine != null)
         {
             return;
         }
 
-        if (isMemorizingPlayer)
+        if (isDetectedPlayer || isMemorizingPlayer)
         {
             if (selectedSkill == null)
             {
@@ -386,6 +389,16 @@ public class QueenBanditAI : EnemyAIBase
                 if (distToLastPos > 5f) UpdateChaseTarget(1f);
                 else HandleCooldownWalk(2.5f);
                 return;
+            }
+
+            if (distToLastPos >= frontJumpThreshold && Time.time >= lastFrontJumpTime + frontJumpCooldown)
+            {
+                if (UnityEngine.Random.Range(0f, 100f) < frontJumpChancePerSec * Time.deltaTime)
+                {
+                    actionCoroutine = StartCoroutine(FrontJumpSequence(selectedSkill));
+                    lastActionWasEvasion = false;
+                    return;
+                }
             }
 
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
@@ -513,6 +526,7 @@ public class QueenBanditAI : EnemyAIBase
         else yield return PerformAttackSequence(skill);
     }
 
+    // 💡 [개선] 양옆 이동은 루트모션에 맡기고 앞뒤 거리만 교정하는 로직
     private IEnumerator StepAttackSequence(SkillBase skill, string stepAnimName, float stepDuration)
     {
         if (skill == null || core.IsDead) yield break;
@@ -529,6 +543,19 @@ public class QueenBanditAI : EnemyAIBase
         if (stepAnimName == "Step_Back") SoundManager.Instance.PlaySound(BackStepSound);
         else SoundManager.Instance.PlaySound(StepSound);
 
+        float optimalDist = 2.5f;
+        if (skill != null)
+        {
+            if (skill is Skill_Melee m && m.hitDataList.Count > 0)
+                optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z / 2f);
+            else if (skill is Skill_Range r)
+                optimalDist = r.range * 0.8f;
+        }
+
+        Vector3 startPlayerPos = Player.Instance.transform.position;
+        startPlayerPos.y = transform.position.y;
+        float startDist = Vector3.Distance(transform.position, startPlayerPos);
+
         core.animator.CrossFade(stepAnimName, 0.1f);
 
         float elapsed = 0f;
@@ -536,6 +563,35 @@ public class QueenBanditAI : EnemyAIBase
         {
             if (core.IsDead) yield break;
             elapsed += Time.deltaTime;
+
+            // 시간에 따른 목표 거리 보간 (현재 거리 -> 이상적 거리)
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / stepDuration);
+            float currentTargetDist = Mathf.Lerp(startDist, optimalDist, t);
+
+            // 현재 적의 위치 (루트모션에 의해 이미 좌우로 이동된 상태)
+            Vector3 myPos = transform.position;
+            Vector3 currentPlayerPos = Player.Instance.transform.position;
+            currentPlayerPos.y = myPos.y; // 높이 오차 무시
+
+            // 플레이어로부터 적을 향하는 방향 (좌우 이동이 반영된 현재의 상대 각도)
+            Vector3 dirFromPlayer = (myPos - currentPlayerPos).normalized;
+            if (dirFromPlayer.sqrMagnitude < 0.001f) dirFromPlayer = -transform.forward;
+
+            // 💡 [핵심] 방향은 루트모션을 존중하되, 거리(길이)만 덮어씌워서 앞/뒤 위치를 교정
+            Vector3 correctedPos = currentPlayerPos + (dirFromPlayer * currentTargetDist);
+
+            // 벽 뚫기 검사
+            Vector3 checkDir = (correctedPos - transform.position).normalized;
+            float checkDist = Vector3.Distance(transform.position, correctedPos);
+            if (checkDist > 0.001f && Physics.SphereCast(transform.position + Vector3.up * 0.5f, 0.3f, checkDir, out RaycastHit hit, checkDist, wallLayer))
+            {
+                // 벽에 닿았다면 거리를 더 조정하지 않음
+            }
+            else
+            {
+                transform.position = correctedPos;
+            }
+
             if (Player.Instance != null)
             {
                 core.CmdLookAt?.Invoke(Player.Instance.transform.position);
@@ -610,6 +666,72 @@ public class QueenBanditAI : EnemyAIBase
         lastActionWasEvasion = true;
     }
 
+    private IEnumerator FrontJumpSequence(SkillBase skill)
+    {
+        isStepping = true;
+        lastFrontJumpTime = Time.time;
+
+        core.CmdStopMovement?.Invoke();
+        core.ChangeState(EnemyState.Chase);
+        core.SetMoveAnimations(0f, 0f, 0f);
+
+        if (StepSound != null) SoundManager.Instance.PlaySound(StepSound);
+
+        float optimalDist = 2.5f;
+        if (skill != null)
+        {
+            if (skill is Skill_Melee m && m.hitDataList.Count > 0)
+                optimalDist = Mathf.Abs(m.hitDataList[0].centerOffset.z / 2f);
+            else if (skill is Skill_Range r)
+                optimalDist = r.range * 0.8f;
+        }
+
+        Vector3 startPos = transform.position;
+        Vector3 playerPos = Player.Instance.transform.position;
+
+        Vector3 dirToPlayer = (playerPos - startPos).normalized;
+        dirToPlayer.y = 0f;
+        if (dirToPlayer.sqrMagnitude < 0.001f) dirToPlayer = transform.forward;
+
+        Vector3 targetPos = playerPos - (dirToPlayer * optimalDist);
+        targetPos.y = startPos.y;
+
+        core.animator.CrossFade("Step_Front", 0.1f);
+
+        float elapsed = 0f;
+        while (elapsed < frontJumpDuration)
+        {
+            if (core.IsDead) yield break;
+
+            elapsed += Time.deltaTime;
+
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / frontJumpDuration);
+            Vector3 nextPos = Vector3.Lerp(startPos, targetPos, t);
+
+            Vector3 moveDir = (nextPos - transform.position).normalized;
+            float moveDist = Vector3.Distance(transform.position, nextPos);
+            if (moveDist > 0.001f && Physics.SphereCast(transform.position + Vector3.up * 0.5f, 0.3f, moveDir, out RaycastHit hit, moveDist, wallLayer))
+            {
+                break;
+            }
+
+            transform.position = nextPos;
+            core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+
+            yield return null;
+        }
+
+        if (core.IsDead) yield break;
+
+        core.CmdTrySnapToNavMesh?.Invoke();
+        core.SetMoveAnimations(0f, 0f);
+        isStepping = false;
+
+        if (!core.IsDead) core.ChangeState(EnemyState.Idle);
+
+        actionCoroutine = null;
+    }
+
     private IEnumerator EvasiveBackStepSequence()
     {
         isStepping = true;
@@ -640,7 +762,6 @@ public class QueenBanditAI : EnemyAIBase
 
         if (!core.IsDead) core.ChangeState(EnemyState.Idle);
 
-        // 💡 [핵심 버그 픽스] 코루틴이 끝났음을 AI에게 알려주어 다음 패턴을 정상적으로 고르게 만듭니다.
         actionCoroutine = null;
     }
 

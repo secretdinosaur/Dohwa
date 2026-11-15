@@ -25,6 +25,7 @@ public class PlayerAttack : MonoBehaviour
     public bool isArmed = false;
     public bool isSwordMoving = false;
     [HideInInspector] public bool canComboInput = false;
+    [HideInInspector] public bool canGuardCancel = false; // 가드 캔슬 가능 여부 플래그
 
     [Header("Combat Targets & Skills")]
     public Transform currentTarget;
@@ -70,6 +71,9 @@ public class PlayerAttack : MonoBehaviour
     private float autoAimAngle = 22.5f;
 
     [Header("Timing Settings")]
+    [SerializeField] private float comboCancelOffset = 0.2f; // 콤보 연계 오프셋 (기존 하드코딩 수치 분리)
+    [SerializeField] private float guardCancelOffset = 1f; // 가드 캔슬 허용 오프셋
+
     private float guardCooldown = 0.3f;
     private float attackComboThreshold = 0.125f;
     private float autoSheathDelay = 20f;
@@ -247,16 +251,13 @@ public class PlayerAttack : MonoBehaviour
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
 
-    // =========================================================
-    // 💡 디버그 1: OnAttack 진입부 및 강공격 체크
-    // =========================================================
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.started) return;
 
-        if (DialogueManager.Instance.IsDialogueActive) {  return; }
-        if (Player.Instance == null || !Player.Instance.CanAttack()) {  return; }
-        if (isSwordMoving || DrawRoutine != null) {  return; }
+        if (DialogueManager.Instance.IsDialogueActive) { return; }
+        if (Player.Instance == null || !Player.Instance.CanAttack()) { return; }
+        if (isSwordMoving || DrawRoutine != null) { return; }
 
         EnemyCore targetEnemy = GetClosestStunnedEnemy();
         if (targetEnemy != null && strongAttackSkill != null)
@@ -271,15 +272,12 @@ public class PlayerAttack : MonoBehaviour
             return;
         }
 
-        if (isAttacking && !canComboInput) {  return; }
+        if (isAttacking && !canComboInput) { return; }
         if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) { return; }
 
         StartCoroutine(AttackRoutine());
     }
 
-    // =========================================================
-    // 💡 디버그 2: 스턴된 적 스캔부
-    // =========================================================
     private EnemyCore GetClosestStunnedEnemy(float searchRadius = 5f)
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayer);
@@ -376,9 +374,6 @@ public class PlayerAttack : MonoBehaviour
 
     private SoundObject currentSkillSound;
 
-    // =========================================================
-    // 💡 디버그 3: 실제 스킬 실행부 (Attack)
-    // =========================================================
     public void Attack(SkillBase skillToUse)
     {
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
@@ -400,6 +395,7 @@ public class PlayerAttack : MonoBehaviour
 
         isAttacking = true;
         canComboInput = false;
+        canGuardCancel = false;
         lastAttackTime = Time.time;
         lastActivatedSkill = skillToUse;
 
@@ -437,12 +433,14 @@ public class PlayerAttack : MonoBehaviour
         }
     }
 
+    // 공격 사이클 내에서 지정된 오프셋 이후 콤보 연계 및 가드 캔슬 허용
     private IEnumerator AttackLifecycleRoutine(SkillBase skillToUse)
     {
         Player.Instance.Animator_SetFloat("motiontimeforskill", 0f);
 
         float clipLength = skillToUse.clip != null ? skillToUse.clip.length : 2f;
-        float cancelTime = clipLength;
+        float comboCancelTime = clipLength;
+        float guardCancelTime = clipLength;
 
         if (skillToUse.clip != null)
         {
@@ -453,14 +451,15 @@ public class PlayerAttack : MonoBehaviour
                 {
                     if (animEvent.time > lastHitEventTime)
                     {
-                        lastHitEventTime = animEvent.time + 0.2f;
+                        lastHitEventTime = animEvent.time;
                     }
                 }
             }
 
             if (lastHitEventTime >= 0f)
             {
-                cancelTime = lastHitEventTime;
+                comboCancelTime = lastHitEventTime + comboCancelOffset;
+                guardCancelTime = lastHitEventTime + guardCancelOffset;
             }
         }
 
@@ -471,9 +470,14 @@ public class PlayerAttack : MonoBehaviour
             elapsedTime += Time.deltaTime;
             Player.Instance.Animator_SetFloat("motiontimeforskill", Mathf.Clamp01(elapsedTime / clipLength));
 
-            if (elapsedTime >= cancelTime && !canComboInput)
+            if (elapsedTime >= comboCancelTime && !canComboInput)
             {
                 canComboInput = true;
+            }
+
+            if (elapsedTime >= guardCancelTime && !canGuardCancel)
+            {
+                canGuardCancel = true;
             }
 
             yield return null;
@@ -486,6 +490,7 @@ public class PlayerAttack : MonoBehaviour
     {
         isAttacking = false;
         canComboInput = false;
+        canGuardCancel = false;
 
         if (skillToUse == strongAttackSkill)
         {
@@ -555,6 +560,7 @@ public class PlayerAttack : MonoBehaviour
 
         isAttacking = false;
         canComboInput = false;
+        canGuardCancel = false;
     }
 
     public void CancelDrawSword()
@@ -627,13 +633,8 @@ public class PlayerAttack : MonoBehaviour
 
     [SerializeField] private Vector3 strongAttackOffset = new Vector3(0f, 0f, 1.5f);
 
-    // =========================================================
-    // 💡 디버그 4: ExecuteStrongAttack 진입
-    // =========================================================
     private void ExecuteStrongAttack(EnemyCore targetEnemy)
     {
-        Debug.Log("<color=green>[ExecuteStrongAttack] 처형/강공격 연산 시작!</color>");
-
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
         CancelCurrentSkill();
@@ -643,8 +644,6 @@ public class PlayerAttack : MonoBehaviour
 
         Vector3 targetIdealPos = targetEnemy.transform.TransformPoint(strongAttackOffset);
         Vector3 safePosition = GetSafeStrongAttackPosition(targetEnemy.transform.position, targetIdealPos);
-
-        Debug.Log($"<color=green>   -> 플레이어 이동 좌표 계산됨: {safePosition}</color>");
 
         if (Player.Instance.PlayerMove != null && Player.Instance.PlayerMove._rb != null)
         {
@@ -665,12 +664,10 @@ public class PlayerAttack : MonoBehaviour
 
         if (!isArmed)
         {
-            Debug.Log("<color=green>   -> 검을 꺼낸 뒤 강공격을 연계합니다.</color>");
             if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
         }
         else
         {
-            Debug.Log("<color=green>   -> 즉시 강공격을 발동합니다.</color>");
             Attack(strongAttackSkill);
         }
     }
@@ -718,7 +715,17 @@ public class PlayerAttack : MonoBehaviour
     {
         if (context.started)
         {
-            if (Player.Instance == null || !Player.Instance.CanGuard() || Time.time - lastGuardTime < guardCooldown) return;
+            if (Player.Instance == null || Time.time - lastGuardTime < guardCooldown) return;
+
+            // 공격 중이더라도 가드 캔슬 타이밍을 넘겼다면 스킬을 취소하고 가드 발동
+            if (isAttacking && canGuardCancel)
+            {
+                CancelCurrentSkill();
+            }
+            else if (!Player.Instance.CanGuard())
+            {
+                return;
+            }
 
             isGuardPressed = true;
             if (GuardRoutine == null)

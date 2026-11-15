@@ -92,7 +92,7 @@ public class GradeManager : MonoBehaviour
                     if (UIManager.Instance.ExpBarFill.material != null)
                         UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", currentExp / nextExpRequirement);
 
-                    UIManager.Instance.NextGradeText.text = CurrentGradeIndex < LocalizedGrades.Length - 1 ? LocalizedGrades[CurrentGradeIndex + 1].GetLocalizedString() : "Max Grade";
+                    UIManager.Instance.NextGradeText.text = CurrentGradeIndex < LocalizedGrades.Length ? LocalizedGrades[CurrentGradeIndex].GetLocalizedString() : MaxGradeText.GetLocalizedString();
                     UIManager.Instance.GradeAbilityText.text = CurrentGradeIndex < LocalizedGrades.Length - 1 ? LocalizedGradeAbilityDescriptions[CurrentGradeIndex + 1].GetLocalizedString() : "";
                     UIManager.Instance.ExpText.text = $"{(int)currentExp} / {nextExpRequirement}";
                 }
@@ -130,7 +130,7 @@ public class GradeManager : MonoBehaviour
                 UIManager.Instance.ExpBarFill.material.SetFloat("_FillAmount", initialRatio);
 
             UIManager.Instance.ExpText.text = $"{(int)currentExp} / {ExpRequirementTable[CurrentGradeIndex]}";
-            UIManager.Instance.NextGradeText.text = CurrentGradeIndex < LocalizedGrades.Length - 1 ? LocalizedGrades[CurrentGradeIndex + 1].GetLocalizedString() : "Max Grade";
+            UIManager.Instance.NextGradeText.text = CurrentGradeIndex < LocalizedGrades.Length ? LocalizedGrades[CurrentGradeIndex].GetLocalizedString() : MaxGradeText.GetLocalizedString();
             UIManager.Instance.GradeAbilityText.text = CurrentGradeIndex < LocalizedGrades.Length - 1 ? LocalizedGradeAbilityDescriptions[CurrentGradeIndex + 1].GetLocalizedString() : "";
         }
     }

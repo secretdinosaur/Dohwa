@@ -44,8 +44,12 @@ MonoBehaviour:
   isQuickSlotEquipable: 1
   isEatable: 1
   isDeletable: 0
-  MaxAmount: 3
-  LeftAmount: 3
+  isStackable: 1
+  MaxAmount: 10
+  LeftAmount: 0
+  icon2: {fileID: -459555757, guid: 4acc2a61068d47a47af149a1c87e4c92, type: 3}
+  icon3: {fileID: 575571413, guid: 925e42d0a5874e24aa0a3cceea2c8d54, type: 3}
+  icon4: {fileID: 21300000, guid: a474799baded1f448b78bc763d6d725f, type: 3}
   HealPercentage: 0
   HealAmount: 25
   references:

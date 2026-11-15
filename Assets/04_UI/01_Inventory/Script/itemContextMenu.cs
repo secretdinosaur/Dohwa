@@ -81,16 +81,17 @@ public class itemContextMenu : MonoBehaviour
         }
         if (slot != null)
         {
-            
             if (selectedItem.consumable != null)
             {
                 slot.item.SetItem(selectedItem.consumable);
                 slot.item.Count = selectedItem.Count;
+                slot.quickSlotItemID = selectedItem.consumable.Id;
             }
             else if (selectedItem.nonConsumable != null)
             {
                 slot.item.SetItem(selectedItem.nonConsumable);
                 slot.item.Count = selectedItem.Count;
+                slot.quickSlotItemID = selectedItem.nonConsumable.Id;
             }
             selectedItem.Count = 0;
             InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
@@ -104,6 +105,7 @@ public class itemContextMenu : MonoBehaviour
     public void OnRemoveQuickSlot()
     {
         var selectedItem = InventoryManager.Instance.selectedItem.GetComponent<QuickSlot>().OriginalSlot.GetComponent<QuickSlot>();
+        selectedItem.quickSlotItemID = "";
         if (selectedItem.item.consumable != null)
         {
             Consumable item = selectedItem.item.consumable;

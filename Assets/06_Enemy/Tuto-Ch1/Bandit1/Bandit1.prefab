@@ -1225,7 +1225,7 @@ MonoBehaviour:
     rotationRange: {x: -120, y: -90}
     offsetMin: {x: -0.01, y: -0.005, z: -0.02}
     offsetMax: {x: -0.01, y: 0.01, z: 0.02}
-  maxDecals: 20
+  maxDecals: 15
   depth: 0.3
   fadeDuration: 0.2
 --- !u!114 &4244292749159656521
@@ -3949,7 +3949,7 @@ MeshRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: fb0b0164602464a4a9006544b7db72cb, type: 2}

@@ -14,7 +14,10 @@ public class Bandit4AI : EnemyAIBase
     protected override void HandleBehaviorLogic(float dist)
     {
         if (core.IsDead) return;
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+
+        // 💡 [핵심 버그 수정] 퀸 밴딧과 동일한 굳음(프리징) 문제 해결!
+        // 상태값(BackWalk, CooldownWalk)으로 막아버리던 것을 지우고, 행동 코루틴 중복 실행만 막습니다.
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isDetectedPlayer || (core.currentState == EnemyState.Chase && dist <= chaseRange))
         {
@@ -121,7 +124,7 @@ public class Bandit4AI : EnemyAIBase
             core.CmdPerformAttack?.Invoke(skill);
 
             float prepTime = 0f;
-            while (prepTime < 0.75f)
+            while (prepTime < 0.5f)
             {
                 if (core.skillSelector.isInstantComboTriggered) break;
                 prepTime += Time.deltaTime;

@@ -64,13 +64,7 @@ public class EnemyCombat : MonoBehaviour
         currentActiveSkill = skill;
         core.ChangeState(EnemyState.Attack);
 
-        float elapsed = 0f;
-        while (elapsed < preAttackLookDelay)
-        {
-            core.CmdFastLookAt?.Invoke(Player.Instance.transform.position);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
+        StartCoroutine(rotateRoutine());
 
         Animator_PlaySkill(skill);
         core.CmdConsumeMP?.Invoke(skill.MP_cost);
@@ -82,6 +76,17 @@ public class EnemyCombat : MonoBehaviour
         float nextAttackTime = Time.time + UnityEngine.Random.Range(attackCooldownRange.x, attackCooldownRange.y);
         core.OnAttackCompleted?.Invoke(nextAttackTime);
         attackRoutine = null;
+    }
+
+    IEnumerator rotateRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < preAttackLookDelay)
+        {
+            core.CmdFastLookAt?.Invoke(Player.Instance.transform.position);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 
     private void Animator_PlaySkill(SkillBase skill, float crossFadeDuration = 0.1f)
