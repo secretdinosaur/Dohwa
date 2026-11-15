@@ -47,8 +47,8 @@ public class FatBanditAI : EnemyAIBase
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isMemorizingPlayer)
         {

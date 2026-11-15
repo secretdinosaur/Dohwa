@@ -17,7 +17,7 @@ MonoBehaviour:
   UpgradedSkill: {fileID: 0}
   commands: 
   MP_cost: 15
-  clip: {fileID: 7400000, guid: c344df5ce428847419b5a588e9bd889a, type: 2}
+  clip: {fileID: 7400000, guid: f98ed8c32a639e2459109a354d191335, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: ef981c0885fb9304a8e316f50e611d3c, type: 3}
   effect: {fileID: 0}
@@ -71,6 +71,9 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 2}
     boxSize: {x: 2, y: 1, z: 5}

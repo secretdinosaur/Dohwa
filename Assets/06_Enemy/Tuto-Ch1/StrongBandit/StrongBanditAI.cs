@@ -4,6 +4,12 @@ using System.Collections;
 
 public class StrongBanditAI : EnemyAIBase
 {
+    [Header("Behavior Tuning")]
+    public float walkApproachFactor = 1.5f;
+    public float chaseBuffer = 1.0f;
+    public float stateChangeDelay = 2.0f;
+    private float nextStateChangeTime = 0f;
+
     [Header("Start Fight")]
     public GameObject FightWall;
     public float startFightPreDelay = 1.0f;
@@ -140,7 +146,7 @@ public class StrongBanditAI : EnemyAIBase
     protected override void HandleBehaviorLogic(float dist)
     {
         if (core.IsDead) return;
-        if (isAttacking || isStartingFight || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+        if (isAttacking || isStartingFight || actionCoroutine != null) return;
 
         if (wasStunned)
         {
@@ -228,7 +234,18 @@ public class StrongBanditAI : EnemyAIBase
                 }
                 else
                 {
-                    UpdateChaseTarget();
+                    float baseThreshold = executeRange * walkApproachFactor;
+                    float currentThreshold = isRunningForward ? (baseThreshold - chaseBuffer) : (baseThreshold + chaseBuffer);
+                    bool shouldRun = dist > currentThreshold;
+
+                    if (shouldRun != isRunningForward && Time.time >= nextStateChangeTime)
+                        nextStateChangeTime = Time.time + stateChangeDelay;
+                    else if (Time.time < nextStateChangeTime)
+                        shouldRun = isRunningForward;
+
+                    if (shouldRun) UpdateChaseTarget();
+                    else UpdateWalkApproachTarget();
+
                     lastActionWasEvasion = false;
                 }
             }
@@ -240,10 +257,57 @@ public class StrongBanditAI : EnemyAIBase
         }
     }
 
+    private void UpdateChaseTarget(float stopDist = 0f)
+    {
+        if (agent != null)
+        {
+            agent.updateRotation = false;
+            if (agent.enabled) agent.isStopped = false;
+        }
+
+        core.ChangeState(EnemyState.Chase);
+        core.SetMoveAnimations(0f, 1f, 2f);
+        isRunningForward = true;
+        core.CmdLookAt?.Invoke(lastKnownPlayerPos);
+
+        if (Time.time >= nextTargetUpdateTime)
+        {
+            nextTargetUpdateTime = Time.time + targetUpdateInterval;
+
+            Vector3 targetPos = lastKnownPlayerPos;
+            if (playerVelocity.sqrMagnitude > 1f)
+            {
+                float predictDist = Vector3.Distance(transform.position, targetPos);
+                float predictionTime = Mathf.Clamp(predictDist / (core.BaseMovementSpeed * chaseSpeedMultiplier), 0f, maxPredictionTime);
+                targetPos += new Vector3(playerVelocity.x, 0f, playerVelocity.z) * predictionTime;
+            }
+
+            core.CmdMoveTo?.Invoke(targetPos, chaseSpeedMultiplier);
+        }
+    }
+
+    private void UpdateWalkApproachTarget(float stopDist = 0f)
+    {
+        if (agent != null)
+        {
+            agent.updateRotation = false;
+            if (agent.enabled) agent.isStopped = false;
+        }
+
+        core.ChangeState(EnemyState.Chase);
+        core.SetMoveAnimations(0f, 1f, 1f);
+        isRunningForward = false;
+        core.CmdLookAt?.Invoke(lastKnownPlayerPos);
+
+        if (Time.time >= nextTargetUpdateTime)
+        {
+            nextTargetUpdateTime = Time.time + targetUpdateInterval;
+            core.CmdMoveTo?.Invoke(lastKnownPlayerPos, 1f);
+        }
+    }
+
     public void TriggerCounter()
     {
-        // 💡 [핵심 버그 수정] 어떤 상황이든 일단 방어 판정이 발생하면 가드 상태를 무조건 해제!
-        // 이게 아래쪽 return보다 밑에 있어서 출혈 중이거나 스킬이 없을 때 무한 무적 버그가 발생했음.
         core.isGuarding = false;
 
         if (core != null && core.isTakingDoT) return;

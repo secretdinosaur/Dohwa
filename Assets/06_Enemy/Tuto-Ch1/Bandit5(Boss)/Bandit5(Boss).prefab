@@ -7466,6 +7466,14 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 50
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 20
+  strafeOnCloseChance: 15.2
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
+  hitCounterAttackChance: 60
+  hitBackWalkChance: 40
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
@@ -7473,8 +7481,6 @@ MonoBehaviour:
   reselectCooldown: 1
   walkApproachFactor: 1.5
   walkApproachChance: 0.2
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 15.2
   runAttackSkill: {fileID: 11400000, guid: 13b440d5c7252404bbcfa45fa5e56bc5, type: 2}
   runDuration: 2
   runStopOffset: 1.5
@@ -7543,7 +7549,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBossCombat
   Power: 1
-  attackCooldownRange: {x: 0, y: 1.5}
+  attackCooldownRange: {x: 0, y: 1}
 --- !u!114 &2195481694920036551
 MonoBehaviour:
   m_ObjectHideFlags: 0

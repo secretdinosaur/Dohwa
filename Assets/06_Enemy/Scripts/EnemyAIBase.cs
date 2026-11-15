@@ -27,7 +27,7 @@ public abstract class EnemyAIBase : MonoBehaviour
     public float strafeMaxDuration = 5.0f;
 
     [Header("Combat Common")]
-    public float skillRangeMultiplier = 0.9f;
+    public const float skillRangeMultiplier = 0.75f;
     public float targetUpdateInterval = 0.2f;
     public float firstDetectionDelay = 1.0f;
 

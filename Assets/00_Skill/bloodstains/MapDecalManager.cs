@@ -1,6 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MapDecalManager : MonoBehaviour
 {
@@ -19,6 +20,10 @@ public class MapDecalManager : MonoBehaviour
 
     public float SpawnChance = 0.9f;
 
+    // 💡 최대 데칼 개수 설정 및 관리를 위한 큐 추가
+    public int maxDecals = 100;
+    private Queue<GameObject> activeDecals = new Queue<GameObject>();
+
     private void Awake()
     {
         if (Instance == null)
@@ -28,6 +33,27 @@ public class MapDecalManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    // 💡 데칼 개수 제한 관리 메서드
+    private void HandleMaxDecals()
+    {
+        while (activeDecals.Count >= maxDecals)
+        {
+            GameObject oldestDecal = activeDecals.Dequeue();
+
+            // 수명이 다해 이미 코루틴에서 파괴된 null 객체는 무시하고, 
+            // 아직 남아있는 가장 오래된 데칼을 찾아 파괴합니다.
+            if (oldestDecal != null)
+            {
+                DecalProjector projector = oldestDecal.GetComponent<DecalProjector>();
+                if (projector != null && projector.material != null)
+                {
+                    Destroy(projector.material);
+                }
+                Destroy(oldestDecal);
+            }
         }
     }
 
@@ -48,7 +74,10 @@ public class MapDecalManager : MonoBehaviour
             rotation = Quaternion.LookRotation(-hitNormal) * Quaternion.Euler(0, 0, Random.Range(0f, 360f));
         }
 
+        HandleMaxDecals(); // 생성 전 개수 확인 및 오래된 데칼 삭제
+
         GameObject decal = Instantiate(decalPrefab, hitPoint, rotation, transform);
+        activeDecals.Enqueue(decal); // 큐에 새로 생성된 데칼 등록
 
         DecalProjector projector = decal.GetComponent<DecalProjector>();
         if (projector != null)
@@ -70,7 +99,6 @@ public class MapDecalManager : MonoBehaviour
         }
     }
 
-    // ������: width�� height�� �Ű������� �޾� ���� ��Į ����� �����մϴ�.
     public void SpawnCustomDecal(Vector3 hitPoint, Vector3 hitNormal, Vector3 velocity, Material Mat, float width, float height)
     {
         Quaternion rotation;
@@ -85,12 +113,14 @@ public class MapDecalManager : MonoBehaviour
             rotation = Quaternion.LookRotation(-hitNormal) * Quaternion.Euler(0, 0, Random.Range(0f, 360f));
         }
 
+        HandleMaxDecals(); // 생성 전 개수 확인 및 오래된 데칼 삭제
+
         GameObject decal = Instantiate(decalPrefab, hitPoint, rotation, transform);
+        activeDecals.Enqueue(decal); // 큐에 새로 생성된 데칼 등록
 
         DecalProjector projector = decal.GetComponent<DecalProjector>();
         if (projector != null)
         {
-            // ���޹��� width, height ����
             projector.size = new Vector3(width, height, depth);
 
             Material selectedMat = Mat;
@@ -107,6 +137,7 @@ public class MapDecalManager : MonoBehaviour
     public void ClearAllDecals()
     {
         StopAllCoroutines();
+        activeDecals.Clear(); // 큐 초기화
 
         foreach (Transform child in transform)
         {

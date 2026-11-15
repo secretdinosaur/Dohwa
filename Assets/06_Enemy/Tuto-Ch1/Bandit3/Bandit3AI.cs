@@ -9,7 +9,7 @@ public class Bandit3AI : EnemyAIBase
     protected override void HandleBehaviorLogic(float dist)
     {
         if (core.IsDead) return;
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isDetectedPlayer || (core.currentState == EnemyState.Chase && dist <= chaseRange))
         {

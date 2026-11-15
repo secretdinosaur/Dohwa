@@ -215,8 +215,8 @@ public class StatManager : MonoBehaviour
         MpRecoveryAmount = mpRecoveryAmount;
         MpConsumptionReduction = mpConsumptionReduction;
 
-        ExternalArtRatio = new float[] { 0.9f, 0.2f, 0.14f, 0.11f };
-        InnerArtRatio = new float[] { 0.1f, 0.03f, 0.5f, 0.25f };
+        ExternalArtRatio = new float[] { 0.5f, 0.2f, 0.14f, 0.11f };
+        InnerArtRatio = new float[] { 0.05f, 0.03f, 0.5f, 0.25f };
     }
 
     public bool cheatMode = false;

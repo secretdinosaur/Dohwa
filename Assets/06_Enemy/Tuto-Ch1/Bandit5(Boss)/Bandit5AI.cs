@@ -33,16 +33,33 @@ public class Bandit5AI : EnemyAIBase
     {
         base.Awake();
         skillSelector = GetComponent<SkillSelector>();
+
+        // 💡 [버그 픽스 1] 플레이어를 발견하는 즉시 배회(Wander) 코루틴을 끊어내기 위한 이벤트 구독
+        core.OnPlayerDetected += HandlePlayerDetected;
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        if (core != null)
+        {
+            core.OnPlayerDetected -= HandlePlayerDetected;
+        }
+    }
+
+    private void HandlePlayerDetected()
+    {
+        StopActionRoutine(); // 플레이어를 발견한 첫 순간에만 하던 행동을 정지합니다.
     }
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+        if (isAttacking || actionCoroutine != null) return;
 
-        if (isMemorizingPlayer)
+        if (isDetectedPlayer || isMemorizingPlayer)
         {
-            StopActionRoutine();
+            // 🚨 [핵심 버그 픽스 2] 매 프레임마다 AI의 이동을 강제로 멈추게 만들던 StopActionRoutine(); 삭제!
 
             if (selectedSkill == null)
                 selectedSkill = skillSelector.GetNextSkill(distToLastPos);
@@ -229,6 +246,9 @@ public class Bandit5AI : EnemyAIBase
         finally
         {
             ClearAttackHandler();
+            // 💡 [핵심 버그 픽스 3] 공격 로직이 정상 종료되든, 스턴에 걸려 강제 종료되든 무조건 행동 잠금을 해제합니다.
+            isAttacking = false;
+            actionCoroutine = null;
         }
 
         if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
@@ -255,7 +275,7 @@ public class Bandit5AI : EnemyAIBase
             core.CmdPerformAttack?.Invoke(skill);
 
             float elapsed = 0f;
-            yield return new WaitForSeconds(2.8f);
+            yield return new WaitForSeconds(2f);
 
             Vector3 startPos = transform.position;
 
@@ -288,6 +308,9 @@ public class Bandit5AI : EnemyAIBase
         finally
         {
             ClearAttackHandler();
+            // 💡 [핵심 버그 픽스 3] 여기도 마찬가지로 잠금을 해제해줍니다.
+            isAttacking = false;
+            actionCoroutine = null;
         }
 
         if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;

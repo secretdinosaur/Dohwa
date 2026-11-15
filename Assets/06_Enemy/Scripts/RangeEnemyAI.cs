@@ -10,7 +10,7 @@ public class RangeEnemyAI : EnemyAIBase
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
         if (core.IsDead) return;
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isMemorizingPlayer)
         {
