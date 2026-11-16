@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 0000000001000000030000000200000000000000
-  MP_cost: 35
+  MP_cost: 50
   clip: {fileID: 7400000, guid: 437bb4382b794bc46a553166d5520881, type: 2}
   icon: {fileID: 808806005, guid: ea6a9b12e2ee68f458ae37c2517b00b8, type: 3}
   sound: {fileID: 8300000, guid: 7e49581338b5f2049bf77a7e41a3d68c, type: 3}
@@ -65,6 +65,9 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 1
+  damageReductionDuringCast: 0.3
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 1}
     boxSize: {x: 1, y: 1, z: 2}
@@ -86,6 +89,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 6577955987984499167, guid: f2b64ab4b9462f348899627900898420, type: 3}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -112,12 +118,15 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 1
     areaPrefab: {fileID: 6577955987984499167, guid: f2b64ab4b9462f348899627900898420, type: 3}
     areaOffset: {x: 0, y: -4, z: 4}
     areaDuration: 0.6
     areaTickInterval: 0.12
-    areaDamageMultiplier: 8
+    areaDamageMultiplier: 10
   references:
     version: 2
     RefIds: []

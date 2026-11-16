@@ -1,5 +1,6 @@
-using UnityEngine;
 using System;
+using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class StatManager : MonoBehaviour
 {
@@ -42,7 +43,7 @@ public class StatManager : MonoBehaviour
         }
     }
     #region Stat Variables and Texts
-    [SerializeField] private float attackPower = 100f;
+    [SerializeField] private float attackPower = 90f;
     public float AttackPower
     {
         get => attackPower;
@@ -53,14 +54,15 @@ public class StatManager : MonoBehaviour
     public float MaxHp
     {
         get => maxHp;
-        set { maxHp = value; }
+
+        set { maxHp = value; UIManager.Instance.HpText.text = ((int)MaxHp).ToString(); }
     }
 
     [SerializeField] private float maxMp = 100f;
     public float MaxMp
     {
         get => maxMp;
-        set { maxMp = value; }
+        set { maxMp = value; UIManager.Instance.MpText.text = ((int)MaxMp).ToString(); }
     }
 
     [SerializeField] private float armor = 0f;
@@ -88,21 +90,21 @@ public class StatManager : MonoBehaviour
     public float VitalStrikeRate
     {
         get => vitalStrikeRate;
-        set { vitalStrikeRate = value; UIManager.Instance.VitalStrikeRateText.text = (vitalStrikeRate * 100f).ToString("0.#") + "%"; }
+        set { vitalStrikeRate = value; UIManager.Instance.VitalStrikeRateText.text = ((int)(vitalStrikeRate * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float vitalStrikeDamage = 1.1f;
     public float VitalStrikeDamage
     {
         get => vitalStrikeDamage;
-        set { vitalStrikeDamage = value; UIManager.Instance.VitalStrikeDamageText.text = (vitalStrikeDamage * 100f).ToString("0.#") + "%"; }
+        set { vitalStrikeDamage = value; UIManager.Instance.VitalStrikeDamageText.text = ((int)(vitalStrikeDamage * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float hpRecoveryAmount = 1f;
     public float HpRecoveryAmount
     {
         get => hpRecoveryAmount;
-        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = (HpRecoveryAmount * 100f).ToString("0.#") + "%"; }
+        set { hpRecoveryAmount = value; UIManager.Instance.HpRecoveryAmountText.text = ((int)(hpRecoveryAmount * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float mpRecoveryAmount = 10f;
@@ -123,28 +125,28 @@ public class StatManager : MonoBehaviour
     public float PoisonResistance
     {
         get => poisonResistance;
-        set { poisonResistance = value; UIManager.Instance.PoisonResistanceText.text = (poisonResistance * 100f).ToString("0.#") + "%"; }
+        set { poisonResistance = value; UIManager.Instance.PoisonResistanceText.text = ((int)(poisonResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float bleedResistance = 0f;
     public float BleedResistance
     {
         get => bleedResistance;
-        set { bleedResistance = value; UIManager.Instance.BleedResistanceText.text = (bleedResistance * 100f).ToString("0.#") + "%"; }
+        set { bleedResistance = value; UIManager.Instance.BleedResistanceText.text = ((int)(bleedResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float fireResistance = 0f;
     public float FireResistance
     {
         get => fireResistance;
-        set { fireResistance = value; UIManager.Instance.FireResistanceText.text = (fireResistance * 100f).ToString("0.#") + "%"; }
+        set { fireResistance = value; UIManager.Instance.FireResistanceText.text = ((int)(fireResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float lightningResistance = 0f;
     public float LightningResistance
     {
         get => lightningResistance;
-        set { lightningResistance = value; UIManager.Instance.LightningResistanceText.text = (lightningResistance * 100f).ToString("0.#") + "%"; }
+        set { lightningResistance = value; UIManager.Instance.LightningResistanceText.text = ((int)(lightningResistance * 100f)).ToString() + "%"; }
     }
 
     [SerializeField] private float orthodox = 0f;
@@ -165,48 +167,29 @@ public class StatManager : MonoBehaviour
     public float Demonic
     {
         get => demonic;
-        set { demonic = value; UIManager.Instance.DemonicText.text = ((int)demonic).ToString(); }
+        set { demonic = value; /*UIManager.Instance.DemonicText.text = ((int)demonic).ToString();*/ }
     }
 
     [SerializeField] private float mpConsumptionReduction = 0f;
     public float MpConsumptionReduction
     {
         get => mpConsumptionReduction;
-        set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = (mpConsumptionReduction * 100f).ToString("0.#") + "%"; }
+        set { mpConsumptionReduction = value; UIManager.Instance.MpConsumptionReductionText.text = ((int)(mpConsumptionReduction * 100f)).ToString() + "%"; }
     }
 
-    public float ParryMpRecovery = 20f;
+    public float ParryMpRecovery = 30f;
     public float GuardSuccessCostMpMult = 1f;
+
+
+    // 0 = MaxHp, 1 = Defense, 2 = Attack, 3 = MaxMp
+    private float[] ExternalArtRatio;
+    private float[] InnerArtRatio;
 
     #endregion
 
     private void Awake()
     {
         Instance = this;
-
-        armor = 0f;
-        attackPower = 280f;
-        maxHp = 100f;
-        maxMp = 100f;
-
-        externalArt = 0f;
-        innerArt = 0f;
-        vitalStrikeRate = 0f;
-        vitalStrikeDamage = 1.1f;
-        moveSpeed = 5f;
-
-        poisonResistance = 0f;
-        bleedResistance = 0f;
-        fireResistance = 0f;
-        lightningResistance = 0f;
-
-        orthodox = 0f;
-        unorthodox = 0f;
-        demonic = 0f;
-
-        hpRecoveryAmount = 10f;
-        mpRecoveryAmount = 10f;
-        mpConsumptionReduction = 0f;
 
         Armor = armor;
         AttackPower = attackPower;
@@ -231,6 +214,9 @@ public class StatManager : MonoBehaviour
         HpRecoveryAmount = hpRecoveryAmount;
         MpRecoveryAmount = mpRecoveryAmount;
         MpConsumptionReduction = mpConsumptionReduction;
+
+        ExternalArtRatio = new float[] { 0.5f, 0.2f, 0.14f, 0.11f };
+        InnerArtRatio = new float[] { 0.05f, 0.03f, 0.5f, 0.25f };
     }
 
     public bool cheatMode = false;
@@ -300,18 +286,18 @@ public class StatManager : MonoBehaviour
 
             case StatType.ExternalArt:
                 ExternalArt += value;
-                ApplySingleStat(StatType.MaxHp, value * 1.2f);
-                ApplySingleStat(StatType.Defense, value * 0.3f);
-                ApplySingleStat(StatType.Attack, value * 0.5f);
-                ApplySingleStat(StatType.MaxMp, value * 0.1f);
+                ApplySingleStat(StatType.MaxHp, value * ExternalArtRatio[0]);
+                ApplySingleStat(StatType.Defense, value * ExternalArtRatio[1]);
+                ApplySingleStat(StatType.Attack, value * ExternalArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, value * ExternalArtRatio[3]);
                 break;
 
             case StatType.InnerArt:
                 InnerArt += value;
-                ApplySingleStat(StatType.MaxHp, value * 0.2f);
-                ApplySingleStat(StatType.Defense, value * 0.1f);
-                ApplySingleStat(StatType.Attack, value * 0.5f);
-                ApplySingleStat(StatType.MaxMp, value * 0.8f);
+                ApplySingleStat(StatType.MaxHp, value * InnerArtRatio[0]);
+                ApplySingleStat(StatType.Defense, value * InnerArtRatio[1]);
+                ApplySingleStat(StatType.Attack, value * InnerArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, value * InnerArtRatio[3]);
                 break;
 
             case StatType.VitalStrikeRate:
@@ -390,18 +376,18 @@ public class StatManager : MonoBehaviour
 
             case StatType.ExternalArt:
                 ExternalArt = value;
-                ApplySingleStat(StatType.MaxHp, ExternalArt * 1.2f);
-                ApplySingleStat(StatType.Defense, ExternalArt * 0.3f);
-                ApplySingleStat(StatType.Attack, ExternalArt * 0.5f);
-                ApplySingleStat(StatType.MaxMp, ExternalArt * 0.1f);
+                ApplySingleStat(StatType.MaxHp, ExternalArt * ExternalArtRatio[0]);
+                ApplySingleStat(StatType.Defense, ExternalArt * ExternalArtRatio[1]);
+                ApplySingleStat(StatType.Attack, ExternalArt * ExternalArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, ExternalArt * ExternalArtRatio[3]);
                 break;
 
             case StatType.InnerArt:
                 InnerArt = value;
-                ApplySingleStat(StatType.MaxHp, InnerArt * 0.2f);
-                ApplySingleStat(StatType.Defense, InnerArt * 0.1f);
-                ApplySingleStat(StatType.Attack, InnerArt * 0.5f);
-                ApplySingleStat(StatType.MaxMp, InnerArt * 0.8f);
+                ApplySingleStat(StatType.MaxHp, InnerArt * InnerArtRatio[0]);
+                ApplySingleStat(StatType.Defense, InnerArt * InnerArtRatio[1]);
+                ApplySingleStat(StatType.Attack, InnerArt * InnerArtRatio[2]);
+                ApplySingleStat(StatType.MaxMp, InnerArt * InnerArtRatio[3]);
                 break;
 
             case StatType.VitalStrikeRate:

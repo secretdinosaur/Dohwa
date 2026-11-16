@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b5ebcdbdb5dc684b998a47d2a54d33a, type: 3}
   m_Name: B2
   m_EditorClassIdentifier: Assembly-CSharp::SkillBookBase
-  SkillTreePrefab: {fileID: 7240090299500073382, guid: dadf38e865e80044eaeb62facc9b78e0, type: 3}
+  SkillTreePrefab: {fileID: 3525962802677540725, guid: dadf38e865e80044eaeb62facc9b78e0, type: 3}
   Localize_skillBookName:
     m_TableReference:
       m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023
@@ -165,6 +165,35 @@ MonoBehaviour:
     unlocked: 1
     prerequisiteIndices: 02000000
     isStartingNode: 0
+  - nodeType: 0
+    activeSkill: {fileID: 11400000, guid: 79bd4b90bb9b6a149aefe7e401c5028a, type: 2}
+    passiveSkill: {fileID: 11400000, guid: fd175e2e15cedc942aef0bd6d5d64c4b, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 5
+    useCondition: 0
+    autoUnlockOnCondition: 0
+    conditions: []
+    unlocked: 1
+    prerequisiteIndices: 01000000
+    isStartingNode: 0
   - nodeType: 1
     activeSkill: {fileID: 11400000, guid: c44d885bfee762544b92bf22d47ba1a0, type: 2}
     passiveSkill: {fileID: 11400000, guid: fd175e2e15cedc942aef0bd6d5d64c4b, type: 2}
@@ -187,12 +216,12 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 7
+    cost: 10
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
     unlocked: 1
-    prerequisiteIndices: 01000000
+    prerequisiteIndices: 0300000004000000
     isStartingNode: 0
   references:
     version: 2

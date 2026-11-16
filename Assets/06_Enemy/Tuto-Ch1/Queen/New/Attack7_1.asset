@@ -50,7 +50,7 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 15
+  - 30
   HitSound:
   - {fileID: 8300000, guid: 8eee2d16541c6744e83770776e156dfc, type: 3}
   HitEffects:
@@ -62,11 +62,14 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 2}
     boxSize: {x: 15, y: 2, z: 15}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 30
     knockbackForce: {x: 0, y: -15, z: 3}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -83,6 +86,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0.1
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

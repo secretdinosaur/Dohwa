@@ -4,37 +4,17 @@ using UnityEngine;
 
 public class MeleeEnemyAI : EnemyAIBase
 {
-    [Header("Melee Specific")]
-    [Tooltip("너무 가까울 때 공격 전 위치를 다시 잡을 확률 (0~100)")]
-    [Range(0f, 100f)] public float moveBeforeAttackChance = 50f;
-
-    [Tooltip("패링 당했을 때 뒤로 물러날 확률 (0~100)")]
-    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
-
-    [Tooltip("일반 공격 종료 후 뒤로 물러날 확률 (0~100)")]
-    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
-
-    public float backWalkTriggerFactor = 0.7f;
-
-    [Tooltip("위치 다시 잡기 발동 시, 뒤로 안 가고 옆(Strafe)으로 걸을 확률 (0~100)")]
-    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
-
-    private bool lastActionWasBackWalk = false;
-    private Action<float> currentAttackCompleteHandler;
-
     protected override void HandleBehaviorLogic(float dist)
     {
         if (core.IsDead) return;
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Attack) return;
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isDetectedPlayer || (core.currentState == EnemyState.Chase && dist <= chaseRange))
         {
             StopActionRoutine();
 
             if (selectedSkill == null)
-            {
                 selectedSkill = core.skillSelector.GetNextSkill(dist);
-            }
 
             if (selectedSkill == null)
             {
@@ -47,65 +27,49 @@ public class MeleeEnemyAI : EnemyAIBase
 
             bool canAttackGlobal = Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo;
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
-
-            // 💡 추가됨: 단순 거리 비교 대신 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
             bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
 
             if (isWithinAttackBox)
             {
-                // 타격 박스 안이지만, 플레이어가 너무 바짝 붙었을 경우 위치를 다시 잡을지 결정
-                if (dist < backWalkRange && !lastActionWasBackWalk && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
+                if (dist < backWalkRange && !lastActionWasEvasion && !core.skillSelector.HasPendingCombo && UnityEngine.Random.Range(0f, 100f) < moveBeforeAttackChance)
                 {
                     if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
-                    {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                    }
                     else
-                    {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                    }
-                    lastActionWasBackWalk = true;
+                    lastActionWasEvasion = true;
                 }
                 else if (canAttackGlobal && hasEnoughMP)
                 {
-                    actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
-                    lastActionWasBackWalk = false;
+                    actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
+                    lastActionWasEvasion = false;
                 }
                 else
                 {
-                    // 쿨타임/MP 대기 중
-                    float rand = UnityEngine.Random.Range(0f, 100f);
-
-                    if (rand < 60f)
-                    {
+                    if (UnityEngine.Random.Range(0f, 100f) < 60f)
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                    }
-
-                    lastActionWasBackWalk = false;
+                    lastActionWasEvasion = false;
                 }
             }
             else
             {
-                // 💡 추가됨: 타격 박스 밖에 있을 때의 유동적 위치 선정 로직
                 if (dist < backWalkRange)
                 {
-                    // 거리는 너무 가까운데 각도가 빗나간 경우 -> 회피기동이나 뒤로 물러나면서 각도를 잼
-                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasEvasion)
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        lastActionWasBackWalk = false;
+                        lastActionWasEvasion = false;
                     }
                     else
                     {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                        lastActionWasBackWalk = true;
+                        lastActionWasEvasion = true;
                     }
                 }
                 else
                 {
-                    // 멀리 있는 경우 추적하여 간격 좁히기
                     UpdateChaseTarget();
-                    lastActionWasBackWalk = false;
+                    lastActionWasEvasion = false;
                 }
             }
         }
@@ -113,56 +77,6 @@ public class MeleeEnemyAI : EnemyAIBase
         {
             core.ChangeState(EnemyState.Idle);
             StartWander();
-        }
-    }
-
-    protected override IEnumerator PerformAttackSequence(SkillBase skill)
-    {
-        isAttacking = true;
-        bool attackFinished = false;
-
-        currentAttackCompleteHandler = (nextTime) => {
-            nextAttackTime = Time.time + core.skillSelector.GetLastSkillDelay();
-            attackFinished = true;
-        };
-
-        core.OnAttackCompleted += currentAttackCompleteHandler;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        yield return new WaitUntil(() => attackFinished || core.wasParried || core.currentState == EnemyState.Stun || core.IsDead || core.skillSelector.isInstantComboTriggered);
-
-        if (currentAttackCompleteHandler != null)
-        {
-            core.OnAttackCompleted -= currentAttackCompleteHandler;
-            currentAttackCompleteHandler = null;
-        }
-
-        core.StopEffects(skill.name);
-
-        if (core.skillSelector.isInstantComboTriggered)
-        {
-            core.skillSelector.isInstantComboTriggered = false;
-            core.CmdCancelAttack?.Invoke();
-        }
-
-        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
-        core.wasParried = false;
-
-        if (UnityEngine.Random.Range(0f, 100f) < chance && !core.skillSelector.HasPendingCombo)
-        {
-            yield return StartCoroutine(BackWalkRoutine(backWalkDist));
-            lastActionWasBackWalk = true;
-        }
-
-        ChainNextAttackOrIdle();
-    }
-
-    protected void OnDisable()
-    {
-        if (currentAttackCompleteHandler != null && core != null)
-        {
-            core.OnAttackCompleted -= currentAttackCompleteHandler;
-            currentAttackCompleteHandler = null;
         }
     }
 }

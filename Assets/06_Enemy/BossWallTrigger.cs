@@ -11,6 +11,7 @@ public class BossWallTrigger : MonoBehaviour
             if (bossLogic != null && !bossLogic.fightStarted)
             {
                 bossLogic.StartBossFight();
+                bossLogic.GetComponent<EnemyCore>().CmdForceDetectPlayer?.Invoke();
             }
         }
     }

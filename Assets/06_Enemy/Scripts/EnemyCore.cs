@@ -12,9 +12,14 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     public EnemyState currentState = EnemyState.Idle;
     [HideInInspector] public Transform cameraTarget;
     public Item dropItem;
-
+    public float statpointGainChance = 0.1f;
+    public int statpointGainAmount = 3;
     public GameObject[] EnemyWeapons;
     public GameObject[] FakeWeapons;
+
+    [Header("One-Time Enemy Settings")]
+    public bool isOnetimeEnemy = false;
+    public string onetimeSaveKey = "";
 
     [Header("Core Settings")]
     public SkillBase ViewSkill;
@@ -69,6 +74,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     [HideInInspector] public bool isForceDetected = false;
     [HideInInspector] public bool isIgnoringPlayer = false;
     [HideInInspector] public bool isTakingDoT = false;
+    [HideInInspector] public bool isCulled;
 
     [HideInInspector] public SkillSelector skillSelector;
 
@@ -96,6 +102,9 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
 
     private Coroutine bleedCoroutine;
 
+    // 추가됨: 자식들의 SkinnedMeshRenderer 오리지널 바운딩 박스 저장용
+    private Dictionary<SkinnedMeshRenderer, Bounds> originalBoundsMap = new Dictionary<SkinnedMeshRenderer, Bounds>();
+
     protected virtual void Awake()
     {
         animator = GetComponent<Animator>();
@@ -105,6 +114,7 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         CreateCameraTarget();
         InitializeEffects();
         CacheAndUnifyMaterials();
+        CacheOriginalBounds(); // 렌더러들의 초기 바운딩 박스 캐싱
 
         GetComponent<Rigidbody>().linearDamping = 10f;
         GetComponent<Rigidbody>().isKinematic = true;
@@ -142,6 +152,19 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         }
 
         CmdSetIgnorePlayerCollision += HandleSetIgnorePlayerCollision;
+    }
+
+    private void Start()
+    {
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            if (DataManager.Instance.IsEventCleared(onetimeSaveKey))
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
+        }
     }
 
     private void OnDestroy()
@@ -216,7 +239,6 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         {
             float rotY = transform.eulerAngles.y;
             float rotX = dirIndex * 30f;
-            // 타격자 기준이 아닌 피격자 기준이므로 180도 뒤집어 -90f로 오프셋 적용
             return Quaternion.Euler(rotX, rotY - 90f, 0f);
         }
 
@@ -310,8 +332,49 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         OnParryDamageTaken?.Invoke(mpDamage);
     }
 
+    private void CacheOriginalBounds()
+    {
+        SkinnedMeshRenderer[] smrs = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        foreach (var smr in smrs)
+        {
+            if (smr != null)
+            {
+                originalBoundsMap[smr] = smr.localBounds;
+            }
+        }
+    }
+
+    private void ExpandBoundsForDeath()
+    {
+        foreach (var smr in originalBoundsMap.Keys)
+        {
+            if (smr != null)
+            {
+                // 컬링을 방지하기 위해 바운딩 박스를 넉넉하게 확장합니다.
+                smr.localBounds = new Bounds(Vector3.zero, new Vector3(10f, 10f, 10f));
+            }
+        }
+    }
+
+    private void RestoreOriginalBounds()
+    {
+        foreach (var kvp in originalBoundsMap)
+        {
+            if (kvp.Key != null)
+            {
+                kvp.Key.localBounds = kvp.Value;
+            }
+        }
+    }
+
     public void TriggerDeath()
     {
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            DataManager.Instance.SetEventCleared(onetimeSaveKey);
+        }
+        OnDeath?.Invoke();
+
         isForceDetected = false;
         SetPlayerDetection(false);
 
@@ -324,6 +387,9 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.Play(UnityEngine.Random.Range(0, 2) == 0 ? "Dead_1" : "Dead_2");
         StopAllEffects();
         GetComponent<Collider>().enabled = false;
+
+        // 추가됨: 사망 시 바운딩 박스 크기 확장
+        ExpandBoundsForDeath();
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;
@@ -367,7 +433,10 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
             dropItem.Interact(false);
             DOVirtual.DelayedCall(3f, () => { if (dropItem != null) dropItem.ShowItemGainPanel(); }).SetTarget(gameObject);
         }
-        OnDeath?.Invoke();
+
+        if (UnityEngine.Random.value < statpointGainChance)
+            StatManager.Instance.GetStatPoint(statpointGainAmount);
+
     }
 
     private IEnumerator AlignToGroundRotation()
@@ -417,6 +486,11 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
         animator.SetTrigger("Parried");
         OnParried?.Invoke();
         StopAllEffects();
+
+        if (skillSelector != null)
+        {
+            skillSelector.isInstantComboTriggered = false;
+        }
     }
 
     public void TriggerStun()
@@ -437,16 +511,31 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     {
         if (!IsDead)
         {
-            ChangeState(EnemyState.Idle);
-            wasParried = false;
-
             if (EnemyLockOnImage.Instance != null &&
                 EnemyLockOnImage.Instance.target != null &&
                 EnemyLockOnImage.Instance.target.IsChildOf(this.transform))
             {
                 EnemyLockOnImage.Instance.CancelStrongAttackEffect();
             }
+
+            StartCoroutine(StunEndDelayRoutine());
         }
+        else
+        {
+            OnStunEnd?.Invoke();
+        }
+    }
+
+    private IEnumerator StunEndDelayRoutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        if (!IsDead)
+        {
+            ChangeState(EnemyState.Idle);
+            wasParried = false;
+        }
+
         OnStunEnd?.Invoke();
     }
 
@@ -467,15 +556,29 @@ public class EnemyCore : MonoBehaviour, IDamageable, IBleedable
     public virtual void Revive()
     {
         StopAllCoroutines();
+
+        if (isOnetimeEnemy && !string.IsNullOrEmpty(onetimeSaveKey) && DataManager.Instance != null)
+        {
+            if (DataManager.Instance.IsEventCleared(onetimeSaveKey))
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
+        }
         if (!gameObject.activeSelf) gameObject.SetActive(true);
 
         isForceDetected = false;
+        isTakingDoT = false;
         SetPlayerDetection(false);
 
         ChangeState(EnemyState.Idle);
         wasParried = false;
         isGuarding = false;
         GetComponent<Collider>().enabled = true;
+
+        // 추가됨: 부활 시 바운딩 박스 원상 복구
+        RestoreOriginalBounds();
 
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = true;

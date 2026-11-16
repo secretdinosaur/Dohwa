@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 
 #region Hit Data Structure
@@ -77,7 +76,24 @@ public class Skill_Range : SkillBase
         RangeHitData hitData = hitDataList[hitIndex];
         Vector3 spawnPos = casterTransform.position + (casterTransform.rotation * hitData.spawnOffset);
 
+        // 💡 수정됨: 기본 방향은 정면이지만, 타겟이 있다면 타겟의 가슴(중심) 높이를 향하도록 상하 각도 보정
         Vector3 shootDirection = casterTransform.forward;
+
+        if (casterTransform.GetComponent<EnemyCore>() != null && Player.Instance != null)
+        {
+            // 적이 플레이어에게 쏠 때 (플레이어 중심점 Y 보정, 보통 1.0f 높이)
+            Vector3 targetPos = Player.Instance.transform.position + (Vector3.up * 1.0f);
+            shootDirection = (targetPos - spawnPos).normalized;
+        }
+        else if (casterTransform.GetComponent<Player>() != null)
+        {
+            // 플레이어가 적에게 쏠 때 (락온된 타겟이 있다면 그곳으로)
+            if (EnemyLockOnImage.Instance != null && EnemyLockOnImage.Instance.target != null)
+            {
+                shootDirection = (EnemyLockOnImage.Instance.target.position - spawnPos).normalized;
+            }
+        }
+
         float finalDamage = baseDamage * hitData.damageMultiplier;
 
         GameObject go = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(shootDirection));

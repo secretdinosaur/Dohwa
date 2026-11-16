@@ -20,6 +20,7 @@ public class PlayerMove : MonoBehaviour
     #region Movement Settings
     [Header("Movement Settings")]
     [SerializeField] private float dashForce = 10f;
+    [SerializeField] private float backDashMultiplier = 0.6f;
     [SerializeField] private float sprintMultiplier = 3f;
     [SerializeField] private float acceleration = 10f;
     [SerializeField] private float walkMultiplier = 0.5f;
@@ -58,10 +59,14 @@ public class PlayerMove : MonoBehaviour
     private bool _isDashing = false;
     private float sprintLockoutTimer = 0f;
     private RaycastHit slopeHit;
-    private float rotationSpeed = 10f;
+    private float rotationSpeed = 20f;
 
     private bool _isSprintBtnHeld = false;
     private float _sprintPressTime = 0f;
+
+    private SoundObject fallSoundInstance;
+    private bool isFallSoundPlaying = false;
+    private float fallSoundTimer = 0f;
     #endregion
 
     #region Tuning Settings
@@ -92,6 +97,7 @@ public class PlayerMove : MonoBehaviour
     private float slopeRaycastDistance = 0.5f;
 
     public float SprintMP;
+    public float DashMP = 10f;
     #endregion
 
     #region Constants
@@ -207,7 +213,8 @@ public class PlayerMove : MonoBehaviour
             {
                 if (!_isDashCooldown && isGrounded &&
                     Player.Instance.IsAlive && !Player.Instance.isCinematic &&
-                    !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp)
+                    !Player.Instance.IsStunned && !Player.Instance.isEating && !Player.Instance.isWakingUp &&
+                    !Player.Instance.isInvincible && Player.Instance.MP >= DashMP)
                 {
                     Player.Instance.CancelCurrentAction();
                     StartCoroutine(DashRoutine());
@@ -349,7 +356,8 @@ public class PlayerMove : MonoBehaviour
             targetAnimValue = AnimValueWalk;
         }
 
-        if (_isSprinting && !_isWalking) Player.Instance.MP -= Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP);
+        if (_isSprinting && !_isWalking)
+            Player.Instance.ConsumeMP(Time.fixedDeltaTime * (StatManager.Instance.MpRecoveryAmount + SprintMP));
 
         if (Player.Instance.MP <= 0f)
         {
@@ -448,11 +456,16 @@ public class PlayerMove : MonoBehaviour
     #region Jump & Fall Damage Logic
     private void CheckFallDamage()
     {
-        if (_rb == null || Player.Instance == null || !Player.Instance.IsAlive) return;
+        if (_rb == null || Player.Instance == null || !Player.Instance.IsAlive)
+        {
+            StopFallSound();
+            return;
+        }
 
         if (transform.position.y < deathYLevel)
         {
             Player.Instance.HP = 0;
+            StopFallSound();
             return;
         }
 
@@ -467,10 +480,42 @@ public class PlayerMove : MonoBehaviour
             {
                 _highestFallPoint = transform.position.y;
             }
+
+            float fallSpeed = Mathf.Abs(_rb.linearVelocity.y);
+            float checkDistance = fallSpeed * 3f;
+
+            bool isCloseToGround = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, checkDistance, groundLayer);
+
+            if (!isCloseToGround)
+            {
+                if (fallSoundTimer <= 0f)
+                {
+                    if (SoundManager.Instance != null && SoundManager.Instance.MovementSounds.Length > 17)
+                    {
+                        AudioClip fallClip = SoundManager.Instance.MovementSounds[17];
+                        if (fallClip != null)
+                        {
+                            fallSoundInstance = SoundManager.Instance.PlaySound(fallClip);
+                            fallSoundTimer = fallClip.length;
+                            isFallSoundPlaying = true;
+                        }
+                    }
+                }
+                else
+                {
+                    fallSoundTimer -= Time.deltaTime;
+                }
+            }
+            else
+            {
+                StopFallSound();
+            }
         }
         else if (_isFallingDown && _rb.linearVelocity.y >= fallStopVelocityThreshold)
         {
             _isFallingDown = false;
+            StopFallSound();
+
             float fallDistance = _highestFallPoint - transform.position.y;
 
             if (fallDistance > safeFallDistance)
@@ -487,10 +532,30 @@ public class PlayerMove : MonoBehaviour
                 Player.Instance.TakeFallDamage(fallDamage);
             }
         }
+        else if (isGrounded)
+        {
+            StopFallSound();
+        }
     }
+
+    private void StopFallSound()
+    {
+        if (isFallSoundPlaying && fallSoundInstance != null)
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopSound(fallSoundInstance);
+            }
+            fallSoundInstance = null;
+        }
+        isFallSoundPlaying = false;
+        fallSoundTimer = 0f;
+    }
+
     private void CheckLedgeFall()
     {
-        if (isGrounded && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
+        // 💡 [버그 수정 3] 대시 도중 바닥 요철 등으로 인해 점프 판정이 강제로 떠버려 애니메이션이 교체되는 문제 방지
+        if (isGrounded && !_isDashing && _rb != null && _rb.linearVelocity.y < fallVelocityThreshold && !isKnockedBack && !Player.Instance.IsStunned && !Player.Instance.isAirborne && !Player.Instance.isWakingUp)
         {
             int layerMask = ~LayerMask.GetMask("Player");
             Vector3 castOrigin = transform.position + Vector3.up * (sphereCastRadius + sphereCastHeightOffset);
@@ -592,7 +657,6 @@ public class PlayerMove : MonoBehaviour
         isKnockedBack = false;
         isKnockedDown = false;
 
-        // 💡 추가됨: 강제 넉백 종료 시 카메라도 즉시 원상 복구
         if (CameraController.Instance != null)
         {
             CameraController.Instance.SetKnockdownCamera(false);
@@ -624,6 +688,7 @@ public class PlayerMove : MonoBehaviour
             _rb.linearVelocity = Vector3.zero;
         }
     }
+
     private IEnumerator LookAtTargetOnKnockDown()
     {
         if (Player.Instance.PlayerAttack == null || !Player.Instance.PlayerAttack.isLockedOn || Player.Instance.PlayerAttack.currentTarget == null)
@@ -651,6 +716,7 @@ public class PlayerMove : MonoBehaviour
             yield return null;
         }
     }
+
     public void KnockBack(Vector3 force, int knockdownType = 0, float knockdownDuration = 1.5f)
     {
         if (force.magnitude == 0 && knockdownType == 0) return;
@@ -685,7 +751,6 @@ public class PlayerMove : MonoBehaviour
         if (knockdownType > 0 || becomeAirborne)
         {
             isKnockedDown = true;
-            // 💡 추가됨: 넉다운 되거나 에어본이 되면 카메라 전환
             if (CameraController.Instance != null)
             {
                 CameraController.Instance.SetKnockdownCamera(true);
@@ -777,7 +842,6 @@ public class PlayerMove : MonoBehaviour
         isKnockedBack = false;
         isKnockedDown = false;
 
-        // 💡 추가됨: 넉다운 상태가 끝나고 기상이 완료되면 원래 카메라로 복구
         if (CameraController.Instance != null)
         {
             CameraController.Instance.SetKnockdownCamera(false);
@@ -813,6 +877,8 @@ public class PlayerMove : MonoBehaviour
         _isDashing = true;
         Player.Instance.PreventAttack = true;
 
+        Player.Instance.ConsumeMP(DashMP);
+
         Vector3 dashDirection = Vector3.zero;
         bool isLockedOn = Player.Instance.PlayerAttack != null && Player.Instance.PlayerAttack.isLockedOn;
         Transform target = Player.Instance.PlayerAttack != null ? Player.Instance.PlayerAttack.currentTarget : null;
@@ -842,10 +908,25 @@ public class PlayerMove : MonoBehaviour
         if (dashDirection.sqrMagnitude < DirectionSqrMagnitudeMin) dashDirection = transform.forward;
         else dashDirection.Normalize();
 
+        float appliedDashForce = dashForce;
+        if (_inputMove.y < -0.1f)
+        {
+            appliedDashForce *= backDashMultiplier;
+        }
+
         if (_rb != null)
         {
             _rb.linearVelocity = Vector3.zero;
-            _rb.AddForce(dashDirection * dashForce, ForceMode.Impulse);
+            _rb.AddForce(dashDirection * appliedDashForce, ForceMode.Impulse);
+        }
+
+        // 💡 [버그 수정 1] 잔여 이동 속도로 인해 대시 애니메이션이 달리기(Locomotion)로 즉시 취소되는 문제 완벽 차단
+        _animSpeed = 0f;
+        if (Player.Instance.animator != null)
+        {
+            Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
+            // 💡 [버그 수정 2] 혹시 쌓여있던 다른 행동 트리거 리셋으로 꼬임 방지
+            Player.Instance.animator.ResetTrigger("isDash");
         }
 
         Player.Instance.Animator_SetTrigger("isDash");

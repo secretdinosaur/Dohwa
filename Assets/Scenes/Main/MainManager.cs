@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class MainManager : MonoBehaviour
 {
@@ -34,6 +36,8 @@ public class MainManager : MonoBehaviour
     {
         yield return UnityEngine.Localization.Settings.LocalizationSettings.InitializationOperation;
     }
+
+    // 시작 시 화면이 밝아지는 코루틴
     private IEnumerator FadePanel()
     {
         Image panelImage = StartPanel.GetComponent<Image>();
@@ -71,7 +75,7 @@ public class MainManager : MonoBehaviour
     }
 
     public void OnClickSettingGameSubTab()
-    { 
+    {
         SettingTab.gameObject.SetActive(true);
         if (SettingGameButton != null) SettingGameButton.gameObject.SetActive(true);
         if (SettingKeyButton != null) SettingKeyButton.gameObject.SetActive(true);
@@ -123,7 +127,7 @@ public class MainManager : MonoBehaviour
     public GameObject NewGamePanel;
     public void OnClickNewGameButton()
     {
-        if(PlayerPrefs.HasKey("Exp"))
+        if (DataManager.Instance != null && DataManager.Instance.HasSaveData())
         {
             NewGamePanel.SetActive(true);
         }
@@ -135,12 +139,42 @@ public class MainManager : MonoBehaviour
 
     public void CreateNewGame()
     {
-        DataManager.Instance.ResetData();
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+        StartCoroutine(FadeOutAndLoadScene("Game", () =>
+        {
+            DataManager.Instance.ResetData();
+        }));
     }
 
     public void OnContinuewGameButton()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+        StartCoroutine(FadeOutAndLoadScene("Game"));
+    }
+
+    // 씬 이동 시 화면이 암전되는 코루틴
+    private IEnumerator FadeOutAndLoadScene(string sceneName, Action beforeLoadAction = null)
+    {
+        Image panelImage = StartPanel.GetComponent<Image>();
+        StartPanel.SetActive(true);
+
+        Color color = panelImage.color;
+        color.a = 0f;
+        panelImage.color = color;
+
+        float duration = 1.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            color.a = Mathf.Lerp(0f, 1f, elapsed / duration);
+            panelImage.color = color;
+            yield return null;
+        }
+
+        color.a = 1f;
+        panelImage.color = color;
+
+        beforeLoadAction?.Invoke();
+        SceneManager.LoadScene(sceneName);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System;
 using System.Collections;
 
 [RequireComponent(typeof(EnemyCore))]
@@ -26,9 +27,28 @@ public abstract class EnemyAIBase : MonoBehaviour
     public float strafeMaxDuration = 5.0f;
 
     [Header("Combat Common")]
-    public float skillRangeMultiplier = 0.9f;
+    public const float skillRangeMultiplier = 0.75f;
     public float targetUpdateInterval = 0.2f;
     public float firstDetectionDelay = 1.0f;
+
+    [Header("Melee & Evasion Tactics (Common)")]
+    [Tooltip("너무 가까울 때 공격 전 위치를 다시 잡을 확률 (0~100)")]
+    [Range(0f, 100f)] public float moveBeforeAttackChance = 50f;
+    [Tooltip("패링 당했을 때 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float parriedBackWalkChance = 60f;
+    [Tooltip("일반 공격 종료 후 뒤로 물러날 확률 (0~100)")]
+    [Range(0f, 100f)] public float normalBackWalkChance = 20f;
+    [Tooltip("위치 다시 잡기 발동 시, 뒤로 안 가고 옆(Strafe)으로 걸을 확률 (0~100)")]
+    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
+    public float backWalkTriggerFactor = 0.7f;
+
+    [Header("Hit Reaction")]
+    [Tooltip("게걸음(Strafe)/뒷걸음(BackWalk) 도중 피격 시 즉각 반격할 확률")]
+    [Range(0f, 100f)] public float evasionCounterAttackChance = 60f;
+    [Tooltip("스턴 종료 후 즉시 반격할 확률")]
+    [Range(0f, 100f)] public float hitCounterAttackChance = 60f;
+    [Tooltip("스턴 종료 후 즉시 회피할 확률 (반격 안 할 때)")]
+    [Range(0f, 100f)] public float hitBackWalkChance = 40f;
 
     [Header("Predictive Chase (강강술래 방지)")]
     public float maxPredictionTime = 0.7f;
@@ -39,6 +59,10 @@ public abstract class EnemyAIBase : MonoBehaviour
     public bool isDetectedPlayer = false;
     public bool isMemorizingPlayer = false;
     protected bool isRunningForward = false;
+    protected bool isBoss = false; // 💡 컴포넌트 체크를 통해 자동으로 할당됨
+
+    protected bool lastActionWasEvasion = false;
+    protected Action<float> currentAttackCompleteHandler;
 
     protected float detectedPlayerTime = -1f;
     protected Coroutine actionCoroutine;
@@ -56,9 +80,18 @@ public abstract class EnemyAIBase : MonoBehaviour
     protected Animator animator;
     HpBarCanvas hpbar;
 
+    [Header("AI Behavior: Re-evaluate Skill")]
+    public float attackIdleReselectDelay = 3f;
+    public float reselectCooldown = 1f;
+
+    protected float lastCompletedAttackTime = -9999f;
+    protected float lastReselectTime = -9999f;
+
     protected virtual void Awake()
     {
         core = GetComponent<EnemyCore>();
+        isBoss = GetComponent<EnemyBossLogic>() != null; // 💡 Awake 시점에 보스 여부 판단 캐싱
+
         wallLayer = LayerMask.GetMask("Default", "Ground", "Wall");
 
         childRenderers = GetComponentsInChildren<Renderer>();
@@ -70,6 +103,8 @@ public abstract class EnemyAIBase : MonoBehaviour
         core.OnDeath += HandleDeath;
         core.OnRevived += HandleRevive;
         core.OnStunEnd += HandleStunEnd;
+        core.OnDamageTaken += HandleTakeDamage;
+        core.OnAttackCompleted += HandleOnAttackCompleted;
     }
 
     protected virtual void OnDestroy()
@@ -81,17 +116,58 @@ public abstract class EnemyAIBase : MonoBehaviour
             core.OnDeath -= HandleDeath;
             core.OnRevived -= HandleRevive;
             core.OnStunEnd -= HandleStunEnd;
+            core.OnAttackCompleted -= HandleOnAttackCompleted;
+            core.OnDamageTaken -= HandleTakeDamage;
+        }
+        ClearAttackHandler();
+    }
+
+    protected void ClearAttackHandler()
+    {
+        if (currentAttackCompleteHandler != null && core != null)
+        {
+            core.OnAttackCompleted -= currentAttackCompleteHandler;
+            currentAttackCompleteHandler = null;
         }
     }
 
-    void HandleStunEnd()
+    protected virtual void HandleStunEnd()
     {
         isAttacking = false;
+
+        // 💡 isBoss 플래그 확인으로 간소화
+        if (!core.IsDead && Player.Instance != null && Player.Instance.IsAlive && !isBoss)
+        {
+            float distToPlayer = Vector3.Distance(transform.position, Player.Instance.transform.position);
+
+            if (UnityEngine.Random.Range(0f, 100f) < hitCounterAttackChance)
+            {
+                if (core.skillSelector != null)
+                {
+                    SkillBase counterSkill = core.skillSelector.GetNextSkill(distToPlayer);
+                    if (counterSkill != null && (core.QueryHasEnoughMP?.Invoke(counterSkill.MP_cost) ?? false))
+                    {
+                        StopActionRoutine();
+                        nextAttackTime = Time.time;
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(counterSkill));
+                        return;
+                    }
+                }
+            }
+
+            if (UnityEngine.Random.Range(0f, 100f) < hitBackWalkChance)
+            {
+                StopActionRoutine();
+                actionCoroutine = StartCoroutine(ExecuteEvasionAfterAttack());
+            }
+        }
     }
 
     private void HandleInterrupt()
     {
         StopActionRoutine();
+        ClearAttackHandler();
+        selectedSkill = null;
         core.CmdStopMovement?.Invoke();
     }
 
@@ -105,8 +181,18 @@ public abstract class EnemyAIBase : MonoBehaviour
     {
         enabled = true;
         isDetectedPlayer = false;
+        isMemorizingPlayer = false;
         isRunningForward = false;
+        isAttacking = false;
+        selectedSkill = null;
+        nextAttackTime = 0f;
+
         core.CmdWarpToOriginal?.Invoke();
+    }
+
+    private void HandleOnAttackCompleted(float nextTime)
+    {
+        lastCompletedAttackTime = Time.time;
     }
 
     protected virtual void Update()
@@ -146,6 +232,8 @@ public abstract class EnemyAIBase : MonoBehaviour
             if (!isCulled)
             {
                 isCulled = true;
+                core.isCulled = true;
+
                 StopActionRoutine();
                 core.CmdStopMovement?.Invoke();
                 core.ChangeState(EnemyState.Idle);
@@ -157,17 +245,13 @@ public abstract class EnemyAIBase : MonoBehaviour
         if (isCulled)
         {
             isCulled = false;
+            core.isCulled = false;
             SetVisualsEnabled(true);
         }
 
         if (core.currentState == EnemyState.Attack) return;
 
         bool isCurrentlySeeing = core.isForceDetected || CheckForPlayer();
-
-        if (isCurrentlySeeing && core.isForceDetected && (isDetectedPlayer || isMemorizingPlayer))
-        {
-            core.isForceDetected = false;
-        }
 
         if (isCurrentlySeeing)
         {
@@ -196,31 +280,76 @@ public abstract class EnemyAIBase : MonoBehaviour
             isDetectedPlayer = false;
             core.SetPlayerDetection(false);
 
-            if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
+            if (core.isForceDetected)
+            {
+                isMemorizingPlayer = true;
+            }
+            else if (isMemorizingPlayer && (Time.time - detectedPlayerTime > detectionMemoryDuration))
             {
                 isMemorizingPlayer = false;
+            }
+        }
+
+        if (Player.Instance != null && isMemorizingPlayer && !isAttacking)
+        {
+            float timeSinceLastAttack = Time.time - lastCompletedAttackTime;
+            if (timeSinceLastAttack >= attackIdleReselectDelay && Time.time - lastReselectTime >= reselectCooldown)
+            {
+                float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
+                if (core != null && core.skillSelector != null)
+                {
+                    SkillBase newSkill = core.skillSelector.GetNextSkill(currentDist);
+                    if (newSkill != null && newSkill != selectedSkill)
+                    {
+                        selectedSkill = newSkill;
+                    }
+                }
+                lastReselectTime = Time.time;
+                lastCompletedAttackTime = Time.time;
             }
         }
 
         HandleBehaviorLogic(Vector3.Distance(transform.position, Player.Instance.transform.position));
     }
 
+    public virtual void HandleTakeDamage(float damage)
+    {
+        // 💡 isBoss 플래그 단일 확인으로 간소화
+        if (core.IsDead || core.currentState == EnemyState.Stun || isAttacking || isBoss) return;
+        if (Player.Instance == null || !Player.Instance.IsAlive) return;
+
+        if (core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.BackWalk)
+        {
+            if (UnityEngine.Random.Range(0f, 100f) < evasionCounterAttackChance)
+            {
+                float distToPlayer = Vector3.Distance(transform.position, Player.Instance.transform.position);
+
+                if (core.skillSelector != null)
+                {
+                    SkillBase counterSkill = core.skillSelector.GetNextSkill(distToPlayer);
+
+                    if (counterSkill != null && (core.QueryHasEnoughMP?.Invoke(counterSkill.MP_cost) ?? false))
+                    {
+                        StopActionRoutine();
+                        core.CmdStopMovement?.Invoke();
+
+                        nextAttackTime = Time.time;
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(counterSkill));
+                    }
+                }
+            }
+        }
+    }
+
     private void SetVisualsEnabled(bool state)
     {
-        if (animator != null)
-        {
-            animator.enabled = state;
-        }
+        if (animator != null) animator.enabled = state;
 
         for (int i = 0; i < childRenderers.Length; i++)
         {
-            if (childRenderers[i] != null)
-            {
-                childRenderers[i].enabled = state;
-            }
+            if (childRenderers[i] != null) childRenderers[i].enabled = state;
         }
-        if (hpbar)
-            hpbar.gameObject.SetActive(state);
+        if (hpbar) hpbar.gameObject.SetActive(state);
     }
 
     protected abstract void HandleBehaviorLogic(float distance);
@@ -277,7 +406,6 @@ public abstract class EnemyAIBase : MonoBehaviour
         }
     }
 
-    // 💡 수정됨: 뒤로 걷기 시 어는 버그 해결
     public IEnumerator BackWalkRoutine(float distance)
     {
         core.ChangeState(EnemyState.BackWalk);
@@ -296,15 +424,12 @@ public abstract class EnemyAIBase : MonoBehaviour
 
             bool isBlocked = false;
 
-            // 1. 내비메시 영역을 벗어나는지 체크
             if (NavMesh.Raycast(transform.position, transform.position + backDir * 0.5f, out NavMeshHit navHit, NavMesh.AllAreas))
             {
                 isBlocked = true;
             }
-            // 2. 물리적 벽인지 체크 (자기 자신을 때리지 않도록 시작점을 살짝 뒤로 뺌)
             else if (Physics.SphereCast(transform.position + Vector3.up * 0.5f + backDir * 0.3f, 0.2f, backDir, out RaycastHit hit, 0.2f, wallLayer))
             {
-                // 법선(normal.y)이 평탄하면 바닥으로 간주하여 무시
                 if (hit.normal.y < 0.5f) isBlocked = true;
             }
 
@@ -315,7 +440,7 @@ public abstract class EnemyAIBase : MonoBehaviour
             }
             else
             {
-                break; // 막혔으면 뒤로 걷기 중단
+                break;
             }
 
             if (Player.Instance != null)
@@ -392,7 +517,6 @@ public abstract class EnemyAIBase : MonoBehaviour
         return WalkStrafeRoutine(duration, run);
     }
 
-    // 💡 수정됨: 게걸음(Strafe) 시 어는 버그 해결
     protected IEnumerator WalkStrafeRoutine(float duration, float run)
     {
         core.ChangeState(EnemyState.CooldownWalk);
@@ -401,7 +525,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
         float elapsed = 0f;
         float dirSign = UnityEngine.Random.value > 0.5f ? 1f : -1f;
-        float flipCooldown = 0f; // ★ 덜덜거림 방지용 쿨다운
+        float flipCooldown = 0f;
 
         core.SetMoveAnimations(dirSign, 0f, run);
 
@@ -422,29 +546,24 @@ public abstract class EnemyAIBase : MonoBehaviour
 
                 bool isBlocked = false;
 
-                // 쿨다운이 없을 때만 벽 검사 수행
                 if (flipCooldown <= 0f)
                 {
-                    // 1. 내비메시 영역을 벗어나는지 체크
                     if (NavMesh.Raycast(transform.position, transform.position + orbitDir * 0.5f, out NavMeshHit navHit, NavMesh.AllAreas))
                     {
                         isBlocked = true;
                     }
-                    // 2. 물리적 벽인지 체크 (자기 자신을 때리지 않도록 시작점을 살짝 앞/위로 뺌)
                     else if (Physics.SphereCast(transform.position + Vector3.up * 0.5f + orbitDir * 0.3f, 0.2f, orbitDir, out RaycastHit hit, 0.2f, wallLayer))
                     {
                         if (hit.normal.y < 0.5f) isBlocked = true;
                     }
                 }
 
-                // 막히지 않았거나 방금 막 방향을 꺾었을 경우(쿨다운 중) 해당 방향으로 이동
                 if (!isBlocked || flipCooldown > 0f)
                 {
                     core.CmdMoveDirection?.Invoke(orbitDir, SpeedMultiplier);
                 }
                 else
                 {
-                    // 막혔을 경우 방향을 전환하고 쿨다운 0.5초 부여 (무한 덜덜거림 방지)
                     dirSign *= -1f;
                     core.SetMoveAnimations(dirSign, 0f, run);
                     flipCooldown = 0.5f;
@@ -520,8 +639,83 @@ public abstract class EnemyAIBase : MonoBehaviour
         core.ChangeState(EnemyState.Idle);
     }
 
-    protected void ChainNextAttackOrIdle()
+    protected IEnumerator ExecuteSkillAndChain(SkillBase skill)
     {
+        yield return RouteAndExecuteSkill(skill);
+        ChainNextAttackOrIdle();
+    }
+
+    protected virtual IEnumerator RouteAndExecuteSkill(SkillBase skill)
+    {
+        yield return PerformAttackSequence(skill);
+    }
+
+    protected virtual IEnumerator PerformAttackSequence(SkillBase skill)
+    {
+        isAttacking = true;
+        core.CmdStopMovement?.Invoke();
+        core.ChangeState(EnemyState.Attack);
+        isRunningForward = false;
+
+        bool attackFinished = false;
+
+        currentAttackCompleteHandler = (nextTime) => {
+            nextAttackTime = Time.time + (core.skillSelector != null ? core.skillSelector.GetLastSkillDelay() : 0f);
+            attackFinished = true;
+        };
+
+        core.OnAttackCompleted += currentAttackCompleteHandler;
+
+        try
+        {
+            core.CmdPerformAttack?.Invoke(skill);
+
+            yield return new WaitUntil(() =>
+                attackFinished ||
+                core.wasParried ||
+                core.currentState != EnemyState.Attack ||
+                (core.skillSelector != null && core.skillSelector.isInstantComboTriggered)
+            );
+        }
+        finally
+        {
+            ClearAttackHandler();
+        }
+
+        if (core.IsDead) yield break;
+
+        StopAttackEffects(skill);
+
+        if (core.skillSelector != null && core.skillSelector.isInstantComboTriggered)
+        {
+            core.skillSelector.isInstantComboTriggered = false;
+            core.CmdCancelAttack?.Invoke();
+        }
+
+        float chance = core.wasParried ? parriedBackWalkChance : normalBackWalkChance;
+        core.wasParried = false;
+
+        if (UnityEngine.Random.Range(0f, 100f) < chance && (core.skillSelector == null || !core.skillSelector.HasPendingCombo))
+        {
+            yield return ExecuteEvasionAfterAttack();
+        }
+    }
+
+    protected virtual void StopAttackEffects(SkillBase skill)
+    {
+        core.StopEffects(skill.name);
+    }
+
+    protected virtual IEnumerator ExecuteEvasionAfterAttack()
+    {
+        yield return BackWalkRoutine(backWalkDist);
+        lastActionWasEvasion = true;
+    }
+
+    protected virtual void ChainNextAttackOrIdle()
+    {
+        if (core.IsDead) return;
+
         if (core.skillSelector != null && core.skillSelector.HasPendingCombo)
         {
             float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
@@ -529,7 +723,7 @@ public abstract class EnemyAIBase : MonoBehaviour
 
             if (selectedSkill != null)
             {
-                actionCoroutine = StartCoroutine(PerformAttackSequence(selectedSkill));
+                actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
                 return;
             }
         }
@@ -544,10 +738,5 @@ public abstract class EnemyAIBase : MonoBehaviour
         core.ChangeState(EnemyState.Idle);
         core.SetMoveAnimations(0f, 0f, 0f);
         actionCoroutine = null;
-    }
-
-    protected virtual IEnumerator PerformAttackSequence(SkillBase skill)
-    {
-        yield break;
     }
 }

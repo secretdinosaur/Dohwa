@@ -24,12 +24,15 @@ public class PlayerAttack : MonoBehaviour
     public bool isArmed = false;
     public bool isSwordMoving = false;
     [HideInInspector] public bool canComboInput = false;
+    [HideInInspector] public bool canGuardCancel = false; // 가드 캔슬 가능 여부 플래그
 
     [Header("Combat Targets & Skills")]
     public Transform currentTarget;
     public List<SkillBase> acquiredSkills = new List<SkillBase>();
     public SkillBase ViewSkill;
     public SkillBase strongAttackSkill;
+
+    private EnemyCore currentStrongAttackTarget;
 
     SkillEffect CurrentEffect;
     [HideInInspector] public float lastAttackTime = 0f;
@@ -49,9 +52,10 @@ public class PlayerAttack : MonoBehaviour
     private Coroutine currentAttackRoutine;
 
     private List<SkillBase.Command> commandBuffer = new List<SkillBase.Command>();
+    public List<SkillBase.Command> GetCommanBuffer() { return commandBuffer; }
     private HashSet<int> processedHitIndices = new HashSet<int>();
     private Dictionary<string, GameObject> _skillEffects = new Dictionary<string, GameObject>();
-    private SkillBase lastActivatedSkill = null;
+    public SkillBase lastActivatedSkill = null;
     #endregion
 
     #region Combat & Tuning Settings
@@ -66,6 +70,9 @@ public class PlayerAttack : MonoBehaviour
     private float autoAimAngle = 22.5f;
 
     [Header("Timing Settings")]
+    [SerializeField] private float comboCancelOffset = 0.2f; // 콤보 연계 오프셋 (기존 하드코딩 수치 분리)
+    [SerializeField] private float guardCancelOffset = 1f; // 가드 캔슬 허용 오프셋
+
     private float guardCooldown = 0.3f;
     private float attackComboThreshold = 0.125f;
     private float autoSheathDelay = 20f;
@@ -79,7 +86,6 @@ public class PlayerAttack : MonoBehaviour
     private const float LockOnBreakMultiplier = 1.5f;
     #endregion
 
-    #region Unity Lifecycle
     private void Awake()
     {
         isAttacking = false;
@@ -99,6 +105,8 @@ public class PlayerAttack : MonoBehaviour
                 DisableLockOn();
             }
         }
+        if (commandBuffer.Count > 0)
+            UpdateCommandUI();
     }
 
     private void OnDrawGizmos()
@@ -108,7 +116,6 @@ public class PlayerAttack : MonoBehaviour
             slashSkill.DrawSkillGizmos(transform);
         }
     }
-    #endregion
 
     #region Command System
     public void OnCommandW(InputAction.CallbackContext context) { if (context.started && !Player.Instance.isCinematic) AddCommand(SkillBase.Command.W); }
@@ -197,11 +204,21 @@ public class PlayerAttack : MonoBehaviour
             if (match && cmdLength > bestLength)
             {
                 bestLength = cmdLength;
-                bestMatch = targetSkill.skillName;
+                bool hasEnoughMp = Player.Instance != null && Player.Instance.MP >= targetSkill.MP_cost;
+
+                if (hasEnoughMp)
+                {
+                    bestMatch = targetSkill.skillName;
+                }
+                else
+                {
+                    bestMatch = $"<color=#808080B3>{targetSkill.skillName}</color>";
+                }
             }
         }
 
         if (bestMatch != null) result.Add(bestMatch);
+
         return result;
     }
 
@@ -232,21 +249,30 @@ public class PlayerAttack : MonoBehaviour
 
     public void PlayEffects(string skillPrefix) => SetActiveEffects(skillPrefix, true);
     public void StopEffects(string skillPrefix) => SetActiveEffects(skillPrefix, false);
+
     public void OnAttack(InputAction.CallbackContext context)
     {
-        if (!context.started || DialogueManager.Instance.IsDialogueActive) return;
-        if (Player.Instance == null || !Player.Instance.CanAttack()) return;
+        if (!context.started) return;
 
-        if (isSwordMoving || DrawRoutine != null) return;
-        if (isAttacking && !canComboInput) return;
-        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) return;
+        if (DialogueManager.Instance.IsDialogueActive) { return; }
+        if (Player.Instance == null || !Player.Instance.CanAttack()) { return; }
+        if (isSwordMoving || DrawRoutine != null) { return; }
 
         EnemyCore targetEnemy = GetClosestStunnedEnemy();
         if (targetEnemy != null && strongAttackSkill != null)
         {
+
+            if (isAttacking && lastActivatedSkill == strongAttackSkill)
+            {
+                return;
+            }
+
             ExecuteStrongAttack(targetEnemy);
             return;
         }
+
+        if (isAttacking && !canComboInput) { return; }
+        if (!isAttacking && Time.time - lastAttackEndTime < attackComboThreshold) { return; }
 
         StartCoroutine(AttackRoutine());
     }
@@ -254,48 +280,29 @@ public class PlayerAttack : MonoBehaviour
     private EnemyCore GetClosestStunnedEnemy(float searchRadius = 5f)
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius, enemyLayer);
+
         EnemyCore closestEnemy = null;
         float minDistance = float.MaxValue;
 
         foreach (Collider hit in hits)
         {
             EnemyCore enemy = hit.GetComponent<EnemyCore>();
-            if (enemy != null && enemy.currentState == EnemyState.Stun && !enemy.IsDead)
+            if (enemy != null)
             {
                 float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                if (dist < minDistance)
+
+                if (enemy.currentState == EnemyState.Stun && !enemy.IsDead)
                 {
-                    minDistance = dist;
-                    closestEnemy = enemy;
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        closestEnemy = enemy;
+                    }
                 }
             }
         }
+
         return closestEnemy;
-    }
-
-    private void ExecuteStrongAttack(EnemyCore targetEnemy)
-    {
-        ClearCommandBuffer();
-        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
-        CancelCurrentSkill();
-
-        Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
-        direction.y = 0f;
-        if (direction != Vector3.zero)
-        {
-            if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
-            else transform.rotation = Quaternion.LookRotation(direction);
-        }
-
-
-        if (!isArmed)
-        {
-            if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
-        }
-        else
-        {
-            Attack(strongAttackSkill);
-        }
     }
 
     private IEnumerator DrawSwordImmediateAndAttack(SkillBase skillToUse)
@@ -354,7 +361,6 @@ public class PlayerAttack : MonoBehaviour
 
         if (skillToUse.MP_cost > Player.Instance.MP)
         {
-            ClearCommandBuffer();
             UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
             yield break;
         }
@@ -366,16 +372,29 @@ public class PlayerAttack : MonoBehaviour
     }
 
     private SoundObject currentSkillSound;
+
     public void Attack(SkillBase skillToUse)
     {
         if (currentAttackRoutine != null) StopCoroutine(currentAttackRoutine);
+
+        if (skillToUse != strongAttackSkill)
+        {
+            if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
+            {
+                Player.Instance.isInvincible = false;
+                currentStrongAttackTarget = null;
+            }
+        }
+
         if (lastActivatedSkill != null) StopEffects(lastActivatedSkill.name);
+
         Player.Instance.Animator_SetFloat("MoveSpeed", 0f);
         ClearCommandBuffer();
         UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
 
         isAttacking = true;
         canComboInput = false;
+        canGuardCancel = false;
         lastAttackTime = Time.time;
         lastActivatedSkill = skillToUse;
 
@@ -398,24 +417,29 @@ public class PlayerAttack : MonoBehaviour
         currentAttackID++;
         processedHitIndices.Clear();
         CameraController.Instance.OnSkillStarted();
-        CurrentEffect = skillToUse.Activate(Player.Instance.transform);
-        currentSkillSound = SoundManager.Instance.PlaySound(skillToUse.sound);
 
-        PlayEffects(skillToUse.name);
-        Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
+        if (skillToUse != null)
+        {
+            CurrentEffect = skillToUse.Activate(Player.Instance.transform);
+            currentSkillSound = SoundManager.Instance.PlaySound(skillToUse.sound);
 
-        Player.Instance.MP -= skillToUse.MP_cost;
-        GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
+            PlayEffects(skillToUse.name);
+            Player.Instance.Animator_PlaySkill(skillToUse, 0.1f);
+            Player.Instance.ConsumeMP(skillToUse.MP_cost);
+            GradeManager.Instance.GetExp(GradeManager.ExpGainBehavior.UseSKill);
 
-        currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
+            currentAttackRoutine = StartCoroutine(AttackLifecycleRoutine(skillToUse));
+        }
     }
 
+    // 공격 사이클 내에서 지정된 오프셋 이후 콤보 연계 및 가드 캔슬 허용
     private IEnumerator AttackLifecycleRoutine(SkillBase skillToUse)
     {
         Player.Instance.Animator_SetFloat("motiontimeforskill", 0f);
 
-        float clipLength = skillToUse.clip.length;
-        float cancelTime = clipLength;
+        float clipLength = skillToUse.clip != null ? skillToUse.clip.length : 2f;
+        float comboCancelTime = clipLength;
+        float guardCancelTime = clipLength;
 
         if (skillToUse.clip != null)
         {
@@ -426,14 +450,15 @@ public class PlayerAttack : MonoBehaviour
                 {
                     if (animEvent.time > lastHitEventTime)
                     {
-                        lastHitEventTime = animEvent.time + 0.2f;
+                        lastHitEventTime = animEvent.time;
                     }
                 }
             }
 
             if (lastHitEventTime >= 0f)
             {
-                cancelTime = lastHitEventTime;
+                comboCancelTime = lastHitEventTime + comboCancelOffset;
+                guardCancelTime = lastHitEventTime + guardCancelOffset;
             }
         }
 
@@ -444,9 +469,14 @@ public class PlayerAttack : MonoBehaviour
             elapsedTime += Time.deltaTime;
             Player.Instance.Animator_SetFloat("motiontimeforskill", Mathf.Clamp01(elapsedTime / clipLength));
 
-            if (elapsedTime >= cancelTime && !canComboInput)
+            if (elapsedTime >= comboCancelTime && !canComboInput)
             {
                 canComboInput = true;
+            }
+
+            if (elapsedTime >= guardCancelTime && !canGuardCancel)
+            {
+                canGuardCancel = true;
             }
 
             yield return null;
@@ -459,6 +489,14 @@ public class PlayerAttack : MonoBehaviour
     {
         isAttacking = false;
         canComboInput = false;
+        canGuardCancel = false;
+
+        if (skillToUse == strongAttackSkill)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
+
         lastActivatedSkill = null;
         StopEffects(skillToUse.name);
         CameraController.Instance.OnSkillEnd();
@@ -506,15 +544,23 @@ public class PlayerAttack : MonoBehaviour
             currentAttackRoutine = null;
         }
 
+        if (lastActivatedSkill == strongAttackSkill || currentStrongAttackTarget != null)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
+
         if (lastActivatedSkill != null)
         {
             StopEffects(lastActivatedSkill.name);
             SkillEffectManager.Instance.ReturnSkillEffect(CurrentEffect, lastActivatedSkill.name);
             lastActivatedSkill = null;
+            CameraController.Instance?.OnSkillEnd(); // 스킬이 끊겨도 카메라를 기본 프레이밍으로 복귀
         }
 
         isAttacking = false;
         canComboInput = false;
+        canGuardCancel = false;
     }
 
     public void CancelDrawSword()
@@ -525,6 +571,12 @@ public class PlayerAttack : MonoBehaviour
             DrawRoutine = null;
         }
         isSwordMoving = false;
+
+        if (currentStrongAttackTarget != null)
+        {
+            Player.Instance.isInvincible = false;
+            currentStrongAttackTarget = null;
+        }
     }
 
     public void OnAttackHitEvent(int HitIndex)
@@ -533,7 +585,128 @@ public class PlayerAttack : MonoBehaviour
 
         processedHitIndices.Add(HitIndex);
         float baseDamage = StatManager.Instance.AttackPower / 100f;
+
+        if (lastActivatedSkill == strongAttackSkill)
+        {
+            if (currentStrongAttackTarget == null || currentStrongAttackTarget.gameObject == null)
+            {
+                currentStrongAttackTarget = GetClosestStunnedEnemy();
+            }
+
+            if (currentStrongAttackTarget != null && !currentStrongAttackTarget.IsDead)
+            {
+                HitEffectData hitEffectData = null;
+                if (lastActivatedSkill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > HitIndex)
+                {
+                    hitEffectData = meleeSkill.hitDataList[HitIndex].playerHitEffect;
+                }
+                else if (lastActivatedSkill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > HitIndex)
+                {
+                    hitEffectData = rangeSkill.hitDataList[HitIndex].playerHitEffect;
+                }
+
+                bool isGuarding = currentStrongAttackTarget.isGuarding;
+                Vector3 hitPoint = currentStrongAttackTarget.transform.position;
+                Quaternion effectRot = Quaternion.identity;
+
+                bool isCriticalChecked = false;
+                bool isCriticalHit = false;
+                bool isCasterPlayer = true;
+
+                float finalDamage = lastActivatedSkill.ProcessCriticalHit(
+                    ref isCriticalChecked, ref isCriticalHit, isCasterPlayer,
+                    currentStrongAttackTarget.gameObject, hitPoint, effectRot,
+                    baseDamage, lastActivatedSkill.damageMultipliers[HitIndex], isGuarding, HitIndex);
+
+                currentStrongAttackTarget.TakeDamage(finalDamage, lastActivatedSkill, Player.Instance.transform, hitEffectData, HitIndex);
+
+                if (lastActivatedSkill.HitSound != null && lastActivatedSkill.HitSound.Length > HitIndex && lastActivatedSkill.HitSound[HitIndex] != null)
+                {
+                    SoundManager.Instance.PlaySound(lastActivatedSkill.HitSound[HitIndex]);
+                }
+            }
+            return;
+        }
+
         lastActivatedSkill.ExecuteHitCheck(Player.Instance.transform, baseDamage, HitIndex);
+    }
+
+    [SerializeField] private Vector3 strongAttackOffset = new Vector3(0f, 0f, 1.5f);
+
+    private void ExecuteStrongAttack(EnemyCore targetEnemy)
+    {
+        ClearCommandBuffer();
+        UIManager.Instance?.UpdateCommandUI(CommandsToString(commandBuffer), FindAvailableCommands().ToArray());
+        CancelCurrentSkill();
+
+        currentStrongAttackTarget = targetEnemy;
+        Player.Instance.isInvincible = true;
+
+        Vector3 targetIdealPos = targetEnemy.transform.TransformPoint(strongAttackOffset);
+        Vector3 safePosition = GetSafeStrongAttackPosition(targetEnemy.transform.position, targetIdealPos);
+
+        if (Player.Instance.PlayerMove != null && Player.Instance.PlayerMove._rb != null)
+        {
+            Player.Instance.PlayerMove._rb.MovePosition(safePosition);
+        }
+        else
+        {
+            transform.position = safePosition;
+        }
+
+        Vector3 direction = (targetEnemy.transform.position - transform.position).normalized;
+        direction.y = 0f;
+        if (direction != Vector3.zero)
+        {
+            if (Player.Instance.PlayerMove != null) Player.Instance.PlayerMove.SetLookRotationImmediate(direction);
+            else transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+        if (!isArmed)
+        {
+            if (DrawRoutine == null) DrawRoutine = StartCoroutine(DrawSwordImmediateAndAttack(strongAttackSkill));
+        }
+        else
+        {
+            Attack(strongAttackSkill);
+        }
+    }
+
+    private Vector3 GetSafeStrongAttackPosition(Vector3 enemyPos, Vector3 idealPos)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 dirToIdeal = idealPos - startPos;
+        float totalDist = dirToIdeal.magnitude;
+
+        LayerMask obstacleLayer = LayerMask.GetMask("Wall") | LayerMask.GetMask("Ground");
+
+        if (Physics.CapsuleCast(startPos + Vector3.up * 0.5f, startPos + Vector3.up * 1.5f, 0.4f, dirToIdeal.normalized, out RaycastHit hit, totalDist, obstacleLayer))
+        {
+            float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
+            if (hitAngle > 45f)
+            {
+                Vector3 safeMove = startPos + dirToIdeal.normalized * Mathf.Max(0f, hit.distance - 0.5f);
+                return GetValidNavMeshPosition(safeMove, enemyPos);
+            }
+        }
+
+        return GetValidNavMeshPosition(idealPos, enemyPos);
+    }
+
+    private Vector3 GetValidNavMeshPosition(Vector3 targetPos, Vector3 enemyPos)
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            return navHit.position;
+        }
+
+        Vector3 rayOrigin = targetPos + Vector3.up * 2.0f;
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 5.0f, LayerMask.GetMask("Ground")))
+        {
+            return groundHit.point;
+        }
+
+        return transform.position;
     }
     #endregion
 
@@ -542,7 +715,17 @@ public class PlayerAttack : MonoBehaviour
     {
         if (context.started)
         {
-            if (Player.Instance == null || !Player.Instance.CanGuard() || Time.time - lastGuardTime < guardCooldown) return;
+            if (Player.Instance == null || Time.time - lastGuardTime < guardCooldown) return;
+
+            // 공격 중이더라도 가드 캔슬 타이밍을 넘겼다면 스킬을 취소하고 가드 발동
+            if (isAttacking && canGuardCancel)
+            {
+                CancelCurrentSkill();
+            }
+            else if (!Player.Instance.CanGuard())
+            {
+                return;
+            }
 
             isGuardPressed = true;
             if (GuardRoutine == null)
@@ -667,7 +850,7 @@ public class PlayerAttack : MonoBehaviour
             yield return new WaitUntil(() => Player.Instance.PlayerMove.isGrounded);
         }
 
-        if (isArmed && !isSwordMoving && !isLockedOn)
+        if (isArmed && !isSwordMoving && !isLockedOn && Player.Instance.HP >= 0)
         {
             StartCoroutine(SheathSword());
         }
@@ -710,6 +893,7 @@ public class PlayerAttack : MonoBehaviour
         yield return new WaitForSeconds(sheathPostDelay);
         isSwordMoving = false;
     }
+
     public void ForceUnarmed()
     {
         CancelDrawSword();

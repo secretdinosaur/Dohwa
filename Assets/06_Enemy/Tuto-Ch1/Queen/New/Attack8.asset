@@ -50,21 +50,21 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 10
-  - 10
   - 5
   - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 15
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 20
   HitSound:
   - {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
   - {fileID: 8300000, guid: e1d90e07e8b23f448b570ec4d188a603, type: 3}
@@ -104,11 +104,14 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1, y: 2, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -125,16 +128,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 10
+    damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -151,16 +157,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -177,16 +186,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -203,16 +215,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -229,6 +244,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -238,7 +256,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1, z: 2}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -255,6 +273,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -264,7 +285,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 1, z: 2}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -281,16 +302,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -307,16 +331,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -333,16 +360,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -359,16 +389,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -385,16 +418,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -411,16 +447,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -437,16 +476,19 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
     areaDuration: 6
     areaTickInterval: 1
     areaDamageMultiplier: 1
-  - centerOffset: {x: 0, y: 1, z: 2}
+  - centerOffset: {x: 0, y: 1, z: 1.5}
     boxSize: {x: 1.5, y: 2, z: 4}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 5
+    damageMultiplier: 1
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -463,6 +505,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -472,7 +517,7 @@ MonoBehaviour:
   - centerOffset: {x: 0.25, y: 1, z: 1}
     boxSize: {x: 1.25, y: 2, z: 2}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 20
     knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -489,6 +534,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

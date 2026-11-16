@@ -50,15 +50,15 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 25
+  - 0
   - 25
   HitSound:
-  - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
+  - {fileID: 0}
   - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
   HitEffects:
+  - {fileID: 0}
   - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-  - {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-  enemyHitEffectDirections: 0700000007000000
+  enemyHitEffectDirections: 0000000007000000
   isSpecialSkill: 0
   triggerType: 0
   triggerThreshold: 0.5
@@ -69,14 +69,14 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 2, z: 8}
     boxSize: {x: 2, y: 3, z: 18}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 25
-    knockbackForce: {x: 0, y: 0, z: 5}
+    damageMultiplier: 0
+    knockbackForce: {x: 0, y: 0, z: 0}
     knockdownType: 0
     knockdownDuration: 1.5
-    hitSound: {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
-    effectDirection: 7
-    playerHitEffect: {fileID: 11400000, guid: e6eaa80d237ee5e43a1eabba94874cd3, type: 2}
-    useGuardSettings: 1
+    hitSound: {fileID: 0}
+    effectDirection: 0
+    playerHitEffect: {fileID: 0}
+    useGuardSettings: 0
     useStunSettings: 0
     guardData:
       guardable: 0
@@ -86,6 +86,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -112,6 +115,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

@@ -73,6 +73,30 @@ MonoBehaviour:
             m_StringArgument: 4a9a5dcc-df4c-4f47-940d-04d12d054268
             m_BoolArgument: 0
           m_CallState: 2
+        - m_Target: {fileID: 7049019215116687560, guid: 8d6c66aae6c4c6445ad8f91bde43bcc1, type: 3}
+          m_TargetAssemblyTypeName: DialogueCommandSet, Assembly-CSharp
+          m_MethodName: GetItem
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 3abef340-ac0e-4538-9727-e386d2ef4e53
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7049019215116687560, guid: 8d6c66aae6c4c6445ad8f91bde43bcc1, type: 3}
+          m_TargetAssemblyTypeName: DialogueCommandSet, Assembly-CSharp
+          m_MethodName: ForceStartTutorial
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: GameGoal
+            m_BoolArgument: 0
+          m_CallState: 2
   isChoiceNode: 0
   choiceOptions: []
   NextMainDialogue: {fileID: 0}

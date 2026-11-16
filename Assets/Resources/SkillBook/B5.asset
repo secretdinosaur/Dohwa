@@ -47,7 +47,7 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
-    - statType: 0
+    - statType: 8
       statValue: 8
     - statType: 10
       statValue: 0.05
@@ -73,7 +73,7 @@ MonoBehaviour:
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 
     isStartingNode: 0
   - nodeType: 2
@@ -102,11 +102,11 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 10
+    cost: 5
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 
     isStartingNode: 0
   - nodeType: 0
@@ -133,11 +133,11 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 10
+    cost: 7
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 0000000001000000
     isStartingNode: 0
   - nodeType: 1
@@ -164,11 +164,11 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 3
+    cost: 5
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
-    unlocked: 0
+    unlocked: 1
     prerequisiteIndices: 02000000
     isStartingNode: 0
   - nodeType: 0
@@ -222,7 +222,7 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 3
+    cost: 5
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []

@@ -59,33 +59,17 @@ public class EnemyBossHealth : MonoBehaviour
 
     private void Update()
     {
+        if (core.isCulled) return;
         if (!core.IsDead && core.currentState != EnemyState.Stun && currentMp < maxMP && !isTransitioningPhase)
             UpdateMP(currentMp + (mpRecoveryPerSecond * Time.deltaTime));
 
         if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
         {
-            // 페이즈 전환 중이거나 죽었을 때는 무조건 숨김
-            if (isTransitioningPhase || core.IsDead)
+            // 💡 페이즈 전환 중이 아닐 때, 완전히 죽은 경우에만 숨김 (전환 중 강제 숨김 해제)
+            if (core.IsDead && !isTransitioningPhase)
             {
                 if (UIManager.Instance.BossStatus.gameObject.activeSelf)
                     UIManager.Instance.BossStatus.gameObject.SetActive(false);
-            }
-            else
-            {
-                bool isLockedOn = EnemyLockOnImage.Instance != null &&
-                                  EnemyLockOnImage.Instance.target != null &&
-                                  EnemyLockOnImage.Instance.target.IsChildOf(transform);
-
-                if (isLockedOn || currentHp < maxHP)
-                {
-                    if (!UIManager.Instance.BossStatus.gameObject.activeSelf)
-                        UIManager.Instance.BossStatus.gameObject.SetActive(true);
-                }
-                else
-                {
-                    if (UIManager.Instance.BossStatus.gameObject.activeSelf)
-                        UIManager.Instance.BossStatus.gameObject.SetActive(false);
-                }
             }
         }
     }
@@ -173,10 +157,22 @@ public class EnemyBossHealth : MonoBehaviour
         hasTriggered66 = false;
         hasTriggered33 = false;
 
+        // 💡 전환 애니메이션이 시작될 때 체력바 숨김
+        if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
+        {
+            UIManager.Instance.BossStatus.gameObject.SetActive(false);
+        }
+
         core.TriggerPhaseTransitionStart(currentPhase);
         OnPhaseChanged(currentPhase);
 
         yield return new WaitForSeconds(phaseTransitionDelay);
+
+        // 💡 체력 회복 애니메이션(RecoverStatusRoutine) 직전에 UI를 다시 켜서 차오르는 연출 표시
+        if (UIManager.Instance != null && UIManager.Instance.BossStatus != null)
+        {
+            UIManager.Instance.BossStatus.gameObject.SetActive(true);
+        }
 
         yield return StartCoroutine(RecoverStatusRoutine(maxHP, maxMP, phaseTransitionHealDuration));
         yield return new WaitForSeconds(0.2f);

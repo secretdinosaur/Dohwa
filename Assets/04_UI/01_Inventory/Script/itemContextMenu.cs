@@ -13,11 +13,8 @@ public class itemContextMenu : MonoBehaviour
     [Header("Equipment")]
     public GameObject EquipmentContextMenu;
 
-    [Header("Consumable")]
-    public GameObject ConsumableContextMenu;
-
-    [Header("Nonconsumable")]
-    public GameObject NonConsumableContextMenu;
+    [Header("Item")]
+    public GameObject ItemContextMenu;
 
     [Header("QuickSlot")]
     public GameObject QuickSlotContextMenu;
@@ -25,29 +22,19 @@ public class itemContextMenu : MonoBehaviour
     public void OnEquipmentContextMenu()
     {
         if (EquipmentContextMenu != null) EquipmentContextMenu.SetActive(true);
-        if (ConsumableContextMenu != null) ConsumableContextMenu.SetActive(false);
-        if (NonConsumableContextMenu != null) NonConsumableContextMenu.SetActive(false);
+        if (ItemContextMenu != null) ItemContextMenu.SetActive(false);
         if (QuickSlotContextMenu != null) QuickSlotContextMenu.SetActive(false);
     }
-    public void OnConsumableContextMenu()
+    public void OnItemContextMenu()
     {
         if (EquipmentContextMenu != null) EquipmentContextMenu.SetActive(false);
-        if (ConsumableContextMenu != null) ConsumableContextMenu.SetActive(true);
-        if (NonConsumableContextMenu != null) NonConsumableContextMenu.SetActive(false);
-        if (QuickSlotContextMenu != null) QuickSlotContextMenu.SetActive(false);
-    }
-    public void OnNonConsumableContextMenu()
-    {
-        if (EquipmentContextMenu != null) EquipmentContextMenu.SetActive(false);
-        if (ConsumableContextMenu != null) ConsumableContextMenu.SetActive(false);
-        if (NonConsumableContextMenu != null) NonConsumableContextMenu.SetActive(true);
+        if (ItemContextMenu != null) ItemContextMenu.SetActive(true);
         if (QuickSlotContextMenu != null) QuickSlotContextMenu.SetActive(false);
     }
     public void OnQuickSlotContextMenu()
     {
         if (EquipmentContextMenu != null) EquipmentContextMenu.SetActive(false);
-        if (ConsumableContextMenu != null) ConsumableContextMenu.SetActive(false);
-        if (NonConsumableContextMenu != null) NonConsumableContextMenu.SetActive(false);
+        if (ItemContextMenu != null) ItemContextMenu.SetActive(false);
         if (QuickSlotContextMenu != null) QuickSlotContextMenu.SetActive(true);
     }
 
@@ -74,7 +61,15 @@ public class itemContextMenu : MonoBehaviour
 
     public void OnSetQuickSlot()
     {
+        var selectedItem = InventoryManager.Instance.selectedItem.item;
         QuickSlot slot = null;
+        if (selectedItem.nonConsumable != null)
+            if (!selectedItem.nonConsumable.isQuickSlotEquipable)
+            {
+                ShowCantMessagePanel(InventoryManager.Instance.CantAssignMessagePanel);
+                return;
+            }
+
         for(int i = 0; i < UIManager.Instance.GameQuickSlots.Length; i++)
         {
             if (UIManager.Instance.GameQuickSlots[i].item.consumable == null &&
@@ -86,16 +81,17 @@ public class itemContextMenu : MonoBehaviour
         }
         if (slot != null)
         {
-            var selectedItem = InventoryManager.Instance.selectedItem.item;
             if (selectedItem.consumable != null)
             {
                 slot.item.SetItem(selectedItem.consumable);
                 slot.item.Count = selectedItem.Count;
+                slot.quickSlotItemID = selectedItem.consumable.Id;
             }
             else if (selectedItem.nonConsumable != null)
             {
                 slot.item.SetItem(selectedItem.nonConsumable);
                 slot.item.Count = selectedItem.Count;
+                slot.quickSlotItemID = selectedItem.nonConsumable.Id;
             }
             selectedItem.Count = 0;
             InventoryManager.Instance.RemoveNullSlots(InventoryManager.InventoryType.Item);
@@ -109,6 +105,7 @@ public class itemContextMenu : MonoBehaviour
     public void OnRemoveQuickSlot()
     {
         var selectedItem = InventoryManager.Instance.selectedItem.GetComponent<QuickSlot>().OriginalSlot.GetComponent<QuickSlot>();
+        selectedItem.quickSlotItemID = "";
         if (selectedItem.item.consumable != null)
         {
             Consumable item = selectedItem.item.consumable;
@@ -178,15 +175,15 @@ public class itemContextMenu : MonoBehaviour
             || (slot.item.consumable != null && !slot.item.consumable.isDeletable)
             || (slot.item.nonConsumable != null && !slot.item.nonConsumable.isDeletable))
         {
-            ShowCantDeleteMessagePanel();
+            ShowCantMessagePanel(InventoryManager.Instance.CantDeleteMessagePanel);
         }
     }
 
-    private void ShowCantDeleteMessagePanel()
+    private void ShowCantMessagePanel(GameObject panel)
     {
-        CanvasGroup canvasGroup = InventoryManager.Instance.CantDeleteMessagePanel.GetComponent<CanvasGroup>();
+        CanvasGroup canvasGroup = panel.GetComponent<CanvasGroup>();
         canvasGroup.DOKill();
-        InventoryManager.Instance.CantDeleteMessagePanel.SetActive(true);
+        panel.SetActive(true);
         canvasGroup.alpha = 0f;
 
         Sequence fadeSequence = DOTween.Sequence();
@@ -196,7 +193,7 @@ public class itemContextMenu : MonoBehaviour
             .AppendInterval(2f)
             .Append(canvasGroup.DOFade(0f, 0.2f))
             .OnComplete(() => {
-                InventoryManager.Instance.CantDeleteMessagePanel.SetActive(false);
+                panel.SetActive(false);
             }).SetUpdate(true);
 
     }

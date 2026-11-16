@@ -1,5 +1,4 @@
-using NUnit.Framework.Interfaces;
-using System.Collections;
+ï»¿using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,7 +16,7 @@ public class ItemEntry
     public bool IsEmpty =>
         Weapon == null && Armor == null && Consumable == null && NonConsumable == null && SkillBook == null;
 
-    // ÇÑ Entry¿¡ ¿©·¯ Å¸ÀÔÀÌ µé¾îÀÖÀ¸¸é ¿ì¼±¼øÀ§´ë·Î ÇÑ °¡Áö¸¸ ³²±é´Ï´Ù (Weapon, Armor, Food, SkillBook, Important)
+    // í•œ Entryì— ì—¬ëŸ¬ íƒ€ì…ì´ ë“¤ì–´ìˆìœ¼ë©´ ìš°ì„ ìˆœìœ„ëŒ€ë¡œ í•œ ê°€ì§€ë§Œ ë‚¨ê¹ë‹ˆë‹¤ (Weapon, Armor, Food, SkillBook, Important)
     public void Normalize()
     {
         if (Weapon != null)
@@ -71,7 +70,15 @@ public class Item : InteractableObj
 {
     public override int Type => 2;
 
-    // ¿©·¯ ¾ÆÀÌÅÛÀ» ÀÔ·Â¹Ş´Â ¹è¿­
+    #region [ ê³ ìœ  ì‹ë³„ì (GUID) ]
+    // ğŸ’¡ ì—ë””í„°ì—ì„œ ì”¬ì— ë°°ì¹˜ë  ë•Œ ìë™ìœ¼ë¡œ ìƒì„±ë˜ì–´ ì €ì¥ë˜ëŠ” ê³ ìœ  IDì…ë‹ˆë‹¤.
+    [SerializeField, HideInInspector]
+    private string uniqueId;
+
+    public string UniqueID => uniqueId;
+    #endregion
+
+    // ì—¬ëŸ¬ ì•„ì´í…œì„ ì…ë ¥ë°›ëŠ” ë°°ì—´
     public ItemEntry[] Items = new ItemEntry[0];
 
     [Header("Execution Function After Obtained This Item")]
@@ -79,20 +86,41 @@ public class Item : InteractableObj
 
     private void OnValidate()
     {
-        if (Items == null) return;
-
-        // °¢ ¿£Æ®¸® ³»ºÎ¿¡¼­ Áßº¹ Å¸ÀÔÀ» Á¤¸®
-        for (int i = 0; i < Items.Length; i++)
+        if (Items != null)
         {
-            if (Items[i] == null) Items[i] = new ItemEntry();
-            Items[i].Normalize();
+            // ê° ì—”íŠ¸ë¦¬ ë‚´ë¶€ì—ì„œ ì¤‘ë³µ íƒ€ì…ì„ ì •ë¦¬
+            for (int i = 0; i < Items.Length; i++)
+            {
+                if (Items[i] == null) Items[i] = new ItemEntry();
+                Items[i].Normalize();
+            }
         }
+
+#if UNITY_EDITOR
+        // ê³ ìœ  IDê°€ ë¹„ì–´ìˆë‹¤ë©´ ìƒˆë¡œ ë°œê¸‰í•©ë‹ˆë‹¤.
+        if (string.IsNullOrEmpty(uniqueId))
+        {
+            uniqueId = System.Guid.NewGuid().ToString();
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+#endif
     }
+
+#if UNITY_EDITOR
+    // ğŸ’¡ ì”¬ì—ì„œ ë³µì œ(Ctrl+D)í•œ ê²½ìš° IDê°€ ì¤‘ë³µë˜ë¯€ë¡œ ì´ ë©”ë‰´ë¥¼ ëˆŒëŸ¬ IDë¥¼ ê°±ì‹ í•´ì•¼ í•©ë‹ˆë‹¤.
+    [ContextMenu("Generate New Unique ID")]
+    private void GenerateNewID()
+    {
+        uniqueId = System.Guid.NewGuid().ToString();
+        UnityEditor.EditorUtility.SetDirty(this);
+        Debug.Log($"[{gameObject.name}] ìƒˆë¡œìš´ ê³ ìœ  IDê°€ ë°œê¸‰ë˜ì—ˆìŠµë‹ˆë‹¤: {uniqueId}");
+    }
+#endif
 
     public override void Interact(bool ShowPanelImmediately = true, bool LookPlayer = true)
     {
         base.Interact();
-        // ¸ğµç ¿£Æ®¸®ÀÇ ¾ÆÀÌÅÛÀ» ÀÎº¥Åä¸®¿¡ Ãß°¡
+        // ëª¨ë“  ì—”íŠ¸ë¦¬ì˜ ì•„ì´í…œì„ ì¸ë²¤í† ë¦¬ì— ì¶”ê°€
         foreach (var entry in Items)
         {
             if (entry == null) continue;
@@ -148,7 +176,13 @@ public class Item : InteractableObj
         }
 
         UIManager.Instance.StartGainRoutine(texts, sprites, ExecutionFunctionSet);
-        ItemDropManager.Instance.RegisterItemObtained(this);
+
+        // ğŸ’¡ íšë“ ì‹œ ItemDropManagerì— ê³ ìœ  IDë¥¼ ì „ë‹¬í•˜ì—¬ ì˜êµ¬ ì €ì¥
+        if (ItemDropManager.Instance != null)
+        {
+            ItemDropManager.Instance.RegisterItemObtained(this);
+        }
+
         Destroy(gameObject);
     }
 }

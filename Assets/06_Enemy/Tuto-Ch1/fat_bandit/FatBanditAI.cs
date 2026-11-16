@@ -10,24 +10,17 @@ public class FatBanditAI : EnemyAIBase
     [Range(0f, 1f)] public float walkApproachChance = 0.2f;
     private bool isChoosingWalkApproach = false;
 
-    [Header("Strafe & Evasion Specific")]
-    public float backWalkTriggerFactor = 0.7f;
-    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
-    private bool lastActionWasBackWalk = false;
-
     [Header("Run Attack Specific")]
     public SkillBase runAttackSkill;
     public Collider runAttackCollider;
     public float runAttackChancePerSec = 15f;
     public float runAttackCooldown = 8f;
 
-    private SkillSelector skillSelector;
     private float lastRunAttackTime = -9999f;
 
     protected override void Awake()
     {
         base.Awake();
-        skillSelector = GetComponent<SkillSelector>();
 
         if (runAttackCollider != null) runAttackCollider.enabled = false;
 
@@ -54,8 +47,8 @@ public class FatBanditAI : EnemyAIBase
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+        if (isAttacking || actionCoroutine != null) return;
 
         if (isMemorizingPlayer)
         {
@@ -63,7 +56,7 @@ public class FatBanditAI : EnemyAIBase
 
             if (selectedSkill == null)
             {
-                selectedSkill = skillSelector.GetNextSkill(distToLastPos);
+                selectedSkill = core.skillSelector.GetNextSkill(distToLastPos);
             }
 
             if (selectedSkill == null)
@@ -82,10 +75,10 @@ public class FatBanditAI : EnemyAIBase
             float executeRange = GetSkillRange(selectedSkill) * skillRangeMultiplier;
             float backWalkRange = executeRange * backWalkTriggerFactor;
 
-            bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
+            bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || core.skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
 
-            // 💡 돌진 공격: 거리가 멀 때 확률적으로 발동하는 특수 패턴 (기존 로직 유지)
+            // 💡 돌진 공격: 거리가 멀 때 확률적으로 발동하는 특수 패턴
             if (canAttackGlobal && distToLastPos > executeRange)
             {
                 bool canRunAttack = runAttackSkill != null && Time.time >= lastRunAttackTime + runAttackCooldown;
@@ -96,13 +89,13 @@ public class FatBanditAI : EnemyAIBase
                     if (UnityEngine.Random.Range(0f, 100f) < runAttackChancePerSec * Time.deltaTime)
                     {
                         lastRunAttackTime = Time.time;
-                        actionCoroutine = StartCoroutine(RunAttackSequence(runAttackSkill));
+                        // 💡 라우팅 통합 메서드 사용
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(runAttackSkill));
                         return;
                     }
                 }
             }
 
-            // 💡 추가됨: 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
             bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
 
             // 타격 박스 안일 때
@@ -110,46 +103,44 @@ public class FatBanditAI : EnemyAIBase
             {
                 if (canAttackGlobal && hasEnoughMP)
                 {
-                    actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-                    lastActionWasBackWalk = false;
+                    // 💡 통합 공격/체인 메서드 호출
+                    actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
+                    lastActionWasEvasion = false;
                 }
                 else
                 {
                     // 쿨타임 대기 중
-                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk && !skillSelector.HasPendingCombo)
+                    if (distToLastPos < backWalkRange && !lastActionWasEvasion && !core.skillSelector.HasPendingCombo)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
-                        {
                             actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        }
                         else
-                        {
                             actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                        }
-                        lastActionWasBackWalk = true;
+
+                        lastActionWasEvasion = true;
                     }
                     else
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        lastActionWasBackWalk = false;
+                        lastActionWasEvasion = false;
                     }
                 }
             }
-            // 💡 추가됨: 타격 박스 밖일 때의 유동적 위치 선정 로직
+            // 타격 박스 밖일 때
             else
             {
                 if (distToLastPos < backWalkRange)
                 {
                     // 거리는 너무 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
-                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasEvasion)
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        lastActionWasBackWalk = false;
+                        lastActionWasEvasion = false;
                     }
                     else
                     {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                        lastActionWasBackWalk = true;
+                        lastActionWasEvasion = true;
                     }
                 }
                 else
@@ -165,15 +156,11 @@ public class FatBanditAI : EnemyAIBase
                     else
                     {
                         if (distToLastPos > executeRange * walkApproachFactor)
-                        {
                             HandleDistantApproach(executeRange);
-                        }
                         else
-                        {
                             actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        }
                     }
-                    lastActionWasBackWalk = false;
+                    lastActionWasEvasion = false;
                 }
             }
         }
@@ -210,89 +197,26 @@ public class FatBanditAI : EnemyAIBase
         }
     }
 
-    private void ChainNextAttackOrIdle()
-    {
-        if (skillSelector.HasPendingCombo)
-        {
-            float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
-            selectedSkill = skillSelector.GetNextSkill(currentDist);
+    // =========================================================================
+    // 💡 2번, 3번 개선점: 스킬 라우팅 및 RunAttack 로직 래핑
+    // =========================================================================
 
-            if (selectedSkill == runAttackSkill)
-            {
-                actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
-            }
-            else
-            {
-                actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-            }
-        }
-        else
-        {
-            isAttacking = false;
-            selectedSkill = null;
-            core.ChangeState(EnemyState.Idle);
-            actionCoroutine = null;
-        }
+    protected override IEnumerator RouteAndExecuteSkill(SkillBase skill)
+    {
+        if (skill == runAttackSkill) yield return RunAttackSequence(skill);
+        else yield return base.RouteAndExecuteSkill(skill);
     }
 
     private IEnumerator RunAttackSequence(SkillBase skill)
     {
-        isAttacking = true;
-        core.CmdStopMovement?.Invoke();
-        core.ChangeState(EnemyState.Attack);
-
-        if (runAttackCollider != null) runAttackCollider.enabled = true;
-
-        bool attackFinished = false;
-
-        Action<float> onComplete = (nextTime) => {
-            nextAttackTime = Time.time + 1f;
-            attackFinished = true;
-        };
-
-        core.OnAttackCompleted += onComplete;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered);
-
-        core.OnAttackCompleted -= onComplete;
-
-        if (runAttackCollider != null) runAttackCollider.enabled = false;
-
-        if (skillSelector.isInstantComboTriggered)
+        try
         {
-            skillSelector.isInstantComboTriggered = false;
+            if (runAttackCollider != null) runAttackCollider.enabled = true;
+            yield return base.PerformAttackSequence(skill);
         }
-
-        ChainNextAttackOrIdle();
-    }
-
-    private IEnumerator AttackSequence(SkillBase skill)
-    {
-        isAttacking = true;
-        core.CmdStopMovement?.Invoke();
-        core.ChangeState(EnemyState.Attack);
-
-        bool attackFinished = false;
-
-        Action<float> onComplete = (nextTime) => {
-            float delay = skillSelector.GetLastSkillDelay();
-            nextAttackTime = Time.time + delay;
-            attackFinished = true;
-        };
-
-        core.OnAttackCompleted += onComplete;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered);
-
-        core.OnAttackCompleted -= onComplete;
-
-        if (skillSelector.isInstantComboTriggered)
+        finally
         {
-            skillSelector.isInstantComboTriggered = false;
+            if (runAttackCollider != null) runAttackCollider.enabled = false;
         }
-
-        ChainNextAttackOrIdle();
     }
 }

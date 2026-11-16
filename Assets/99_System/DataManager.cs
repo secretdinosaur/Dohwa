@@ -34,6 +34,7 @@ public class DataManager : MonoBehaviour
 
     private void Awake()
     {
+
         if (Instance == null)
         {
             Instance = this;
@@ -189,7 +190,7 @@ public class DataManager : MonoBehaviour
           .Append(backup_ResolutionIndex).Append("/")
           .Append(backup_ScreenModeIndex);
 
-        File.WriteAllText(path, sb.ToString());
+        SafeWriteAllText(path, sb.ToString());
     }
 
     void ResetScriptableObjects()
@@ -217,17 +218,33 @@ public class DataManager : MonoBehaviour
             yield break;
         }
 
-        LoadStatData();
+        // 세이브 파일이 손상되어 예외가 나도 로딩이 멈추지 않도록 단계별로 보호
+        TryLoad(LoadStatData);
 
-        LoadInventoryData();
+        TryLoad(LoadInventoryData);
 
-        CheckAndGiveStartingSkillBook();
+        TryLoad(CheckAndGiveStartingSkillBook);
 
-        LoadSkillBookData();
+        TryLoad(LoadSkillBookData);
 
         IsLoading = false; // 로딩 완전 종료
 
         StartCoroutine(SaveRoutine());
+    }
+
+    private static void TryLoad(Action load)
+    {
+        try { load(); }
+        catch (Exception e) { Debug.LogException(e); }
+    }
+
+    // 임시 파일에 먼저 쓰고 교체해서, 저장 도중 종료되어도 기존 세이브가 깨지지 않게 한다
+    private static void SafeWriteAllText(string path, string contents)
+    {
+        string tmp = path + ".tmp";
+        File.WriteAllText(tmp, contents);
+        if (File.Exists(path)) File.Replace(tmp, path, null);
+        else File.Move(tmp, path);
     }
 
     private void CheckAndGiveStartingSkillBook()
@@ -300,7 +317,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {
@@ -409,7 +426,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {
@@ -477,7 +494,7 @@ public class DataManager : MonoBehaviour
     {
         if (UIManager.Instance == null || UIManager.Instance.Inventory == null || InventoryManager.Instance == null)
             return;
-
+        InventoryManager.Instance.ClearAllSlots();
         string path = Path.Combine(Application.persistentDataPath, "Inventory.data");
         if (!File.Exists(path))
         {
@@ -675,7 +692,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
             Debug.Log($"데이터 저장 완료: {path}");
         }
         catch (Exception e)
@@ -800,7 +817,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {
@@ -854,22 +871,6 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
-    }
-
-    private void OnDisable()
-    {
-        LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
-    }
-
-    private void OnLocaleChanged(Locale newLocale)
-    {
-        Debug.Log($"[Localization] 언어 변경됨: {newLocale.LocaleName}");
-        Debug.Log($"[Localization] 호출 스택:\n{System.Environment.StackTrace}");
-    }
-
     public bool IsQuestAccepted(string eventKey)
     {
         return PlayerPrefs.GetInt(eventKey, 0) == 1;
@@ -894,14 +895,14 @@ public class DataManager : MonoBehaviour
 
     private HashSet<string> obtainedOneTimeItems = new HashSet<string>();
 
-    public bool IsItemObtained(int itemIndex)
+    public bool IsItemObtained(string itemId)
     {
-        return PlayerPrefs.GetInt("OneTimeItem_" + itemIndex, 0) == 1;
+        return PlayerPrefs.GetInt("OneTimeItem_" + itemId, 0) == 1;
     }
 
-    public void MarkItemAsObtained(int itemIndex)
+    public void MarkItemAsObtained(string itemId)
     {
-        PlayerPrefs.SetInt("OneTimeItem_" + itemIndex, 1);
+        PlayerPrefs.SetInt("OneTimeItem_" + itemId, 1);
         PlayerPrefs.Save();
     }
     public bool IsCutscenePlayed(string cutsceneId)
@@ -913,6 +914,23 @@ public class DataManager : MonoBehaviour
     {
         PlayerPrefs.SetInt($"CutscenePlayed_{cutsceneId}", 1);
         PlayerPrefs.Save();
+    }
+
+    // 실제 게임 세이브 파일이 존재하는지 확인하는 메서드 추가
+    public bool HasSaveData()
+    {
+        // Settings.data는 환경설정이므로 제외하고 실제 게임 데이터 파일만 검사합니다.
+        string[] gameDataFiles = { "Stats.data", "SkillBook.data", "Inventory.data" };
+
+        foreach (string fileName in gameDataFiles)
+        {
+            string path = Path.Combine(Application.persistentDataPath, fileName);
+            if (File.Exists(path))
+            {
+                return true; // 하나라도 존재하면 세이브가 있는 것으로 간주
+            }
+        }
+        return false;
     }
 }
 class SaveItemData

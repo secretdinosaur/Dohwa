@@ -4,6 +4,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyMovement : MonoBehaviour
 {
+    private System.Action snapHandler; // 람다는 같은 인스턴스로만 구독 해제가 되므로 보관
     public float baseMoveSpeed = 3f;
     public float rotationSpeed = 10f;
 
@@ -48,7 +49,8 @@ public class EnemyMovement : MonoBehaviour
         core.CmdLookAt += LookAtTarget;
         core.CmdMoveDirection += MoveDirection;
         core.CmdWarpToOriginal += WarpToOriginal;
-        core.CmdTrySnapToNavMesh += () => TrySnapToNavMesh();
+        snapHandler ??= () => TrySnapToNavMesh();
+        core.CmdTrySnapToNavMesh += snapHandler;
         core.CmdFastLookAt += FastLookAtTarget;
         core.OnDeath += StopMovement;
         core.QueryIsPathPending = IsPathPendingOrMoving;
@@ -63,7 +65,7 @@ public class EnemyMovement : MonoBehaviour
         core.CmdLookAt -= LookAtTarget;
         core.CmdMoveDirection -= MoveDirection;
         core.CmdWarpToOriginal -= WarpToOriginal;
-        core.CmdTrySnapToNavMesh -= () => TrySnapToNavMesh();
+        core.CmdTrySnapToNavMesh -= snapHandler;
         core.CmdFastLookAt -= FastLookAtTarget;
         core.OnDeath -= StopMovement;
         core.QueryIsPathPending = null;

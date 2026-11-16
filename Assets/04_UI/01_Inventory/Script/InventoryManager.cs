@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using static InventoryManager;
 using static SkillBookBase;
-using TMPro;
 
 public class InventoryManager : MonoBehaviour
 {
@@ -88,6 +90,9 @@ public class InventoryManager : MonoBehaviour
     public itemContextMenu ItemContextMenu;
     public GameObject CheckDeleteItemPenel;
     public GameObject CantDeleteMessagePanel;
+    public GameObject CantAssignMessagePanel;
+    public GameObject StatToolTip;
+    Coroutine StatToolTipRoutine;
 
     [Header("Setting UI")]
     public GameObject SettingTab;
@@ -140,15 +145,23 @@ public class InventoryManager : MonoBehaviour
         {
             Player.Instance.UnequipWeapon();
         }
+
         if (slot != null)
         {
             if (EquippedWeapon.item.weapon != null)
             {
-                slot.item.SetItem(EquippedWeapon.item.weapon);
+                // 기존 장착 무기가 있으면 서로 스왑(교체)
+                Weapon oldWeapon = EquippedWeapon.item.weapon;
+                slot.item.SetItem(oldWeapon);
                 EquippedWeapon.item.SetItem(weapon);
             }
+            else
+            {
+                EquippedWeapon.item.SetItem(weapon);
+                slot.item.Clear(); // 💡 버그 수정: 슬롯을 비워주지 않으면 복사/증발 발생
+            }
         }
-        Player.Instance.equippedWeapon = weapon;
+
         Player.Instance.EquipWeapon(weapon);
         SetInfoPanel(0);
     }
@@ -157,23 +170,28 @@ public class InventoryManager : MonoBehaviour
     {
         InventorySlot EquippedArmor = EquippedArmorSlot.GetComponent<InventorySlot>();
         if (Player.Instance.equippedArmor == armor) return;
+
         if (Player.Instance.equippedArmor != null)
         {
             Player.Instance.UnequipArmor();
         }
+
         if (slot != null)
         {
             if (EquippedArmor.item.armor != null)
             {
-                slot.item.SetItem(EquippedArmor.item.armor);
+                // 기존 장착 방어구가 있으면 서로 스왑(교체)
+                Armor oldArmor = EquippedArmor.item.armor;
+                slot.item.SetItem(oldArmor);
                 EquippedArmor.item.SetItem(armor);
             }
             else
             {
                 EquippedArmor.item.SetItem(armor);
+                slot.item.Clear(); // 💡 버그 수정: 방어구 복사 방지
             }
         }
-        Player.Instance.equippedArmor = armor;
+
         Player.Instance.EquipArmor(armor);
         SetInfoPanel(1);
     }
@@ -440,15 +458,31 @@ public class InventoryManager : MonoBehaviour
 
         if (existingSlot != null)
         {
+            Debug.Log(1);
             existingSlot.item.Count++;
             UIManager.Instance.SyncGameQuickSlots();
 
             return;
         }
-        InventorySlot slot = GetEmptySlot(InventoryType.Item);
-        slot.item.SetItem(consumable);
-        UpdateSlots(InventoryType.Item);
-
+        else
+        {
+            InventorySlot beforeEquippedSlot = GetQuickSlotForEquippedItemBefore(InventoryType.Item, consumable);
+            if(beforeEquippedSlot != null)
+            {
+                Debug.Log(2);
+                Debug.Log(consumable);
+                beforeEquippedSlot.item.SetItem(consumable);
+                Debug.Log(beforeEquippedSlot.gameObject.name);
+                UpdateSlots(InventoryType.Item);
+            }
+            else
+            {
+                Debug.Log(3);
+                InventorySlot slot = GetEmptySlot(InventoryType.Item);
+                slot.item.SetItem(consumable);
+                UpdateSlots(InventoryType.Item);
+            }
+        }
         UIManager.Instance.SyncGameQuickSlots();
     }
 
@@ -461,9 +495,22 @@ public class InventoryManager : MonoBehaviour
             existingSlot.item.Count++;
             return;
         }
-        InventorySlot slot = GetEmptySlot(InventoryType.Item);
-        slot.item.SetItem(nonConsumable);
-        UpdateSlots(InventoryType.Item);
+        else
+        {
+            InventorySlot beforeEquippedSlot = GetQuickSlotForEquippedItemBefore(InventoryType.Item, nonConsumable);
+            if (beforeEquippedSlot != null)
+            {
+                beforeEquippedSlot.item.SetItem(nonConsumable);
+                UpdateSlots(InventoryType.Item);
+            }
+            else
+            {
+                InventorySlot slot = GetEmptySlot(InventoryType.Item);
+                slot.item.SetItem(nonConsumable);
+                UpdateSlots(InventoryType.Item);
+            }
+        }
+        UIManager.Instance.SyncGameQuickSlots();
     }
 
     private InventorySlot GetEmptySlot(InventoryType type)
@@ -568,6 +615,21 @@ public class InventoryManager : MonoBehaviour
         return null;
     }
 
+    InventorySlot GetQuickSlotForEquippedItemBefore(InventoryType type, Consumable consumable)
+    {
+        foreach (QuickSlot slot in UIManager.Instance.GameQuickSlots)
+        {
+            if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
+            {
+                if (slot.item.consumable == null && slot.quickSlotItemID == consumable.Id)
+                {
+                    return slot;
+                }
+            }
+        }
+        return null;
+    }
+
     InventorySlot GetSlotWithSameItem(InventoryType type, NonConsumable nonConsumable)
     {
         InventorySlot[] NonConsumableSlots = ItemSlotContainer.GetComponentsInChildren<InventorySlot>();
@@ -586,6 +648,21 @@ public class InventoryManager : MonoBehaviour
             if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
             {
                 if (slot.item.nonConsumable != null && slot.item.nonConsumable.Id == nonConsumable.Id)
+                {
+                    return slot;
+                }
+            }
+        }
+        return null;
+    }
+
+    InventorySlot GetQuickSlotForEquippedItemBefore(InventoryType type, NonConsumable nonConsumable)
+    {
+        foreach (QuickSlot slot in UIManager.Instance.GameQuickSlots)
+        {
+            if (slot != null && slot.slotMode == SlotType.Normal && slot.item != null && slot.item.itemType == type)
+            {
+                if (slot.item.nonConsumable == null && slot.quickSlotItemID == nonConsumable.Id)
                 {
                     return slot;
                 }
@@ -619,6 +696,13 @@ public class InventoryManager : MonoBehaviour
                     .FirstOrDefault(slot =>
                         slot.item.consumable?.Id == id ||
                         slot.item.nonConsumable?.Id == id);
+
+                if (FoundedSlot == null && UIManager.Instance != null && UIManager.Instance.GameQuickSlots != null)
+                {
+                    FoundedSlot = UIManager.Instance.GameQuickSlots
+                        .FirstOrDefault(slot => slot != null && slot.item != null &&
+                            (slot.item.consumable?.Id == id || slot.item.nonConsumable?.Id == id));
+                }
                 break;
             default:
                 FoundedSlot = null;
@@ -646,7 +730,12 @@ public class InventoryManager : MonoBehaviour
 
     public void ShowItemTooltip(InventoryItem item)
     {
-        if (isItemEmpty(item)) return;
+        if (isItemEmpty(item))
+        {
+            MouseItemInfoBackground.SetActive(false);
+            NormalItemInfoPanel.gameObject.SetActive(false);
+            return;
+        }
         if (item.itemType == InventoryType.Weapon)
         {
             NormalItemInfoPanel.ItemIcon.sprite = item.weapon.icon;
@@ -839,8 +928,7 @@ public class InventoryManager : MonoBehaviour
         if (selectedItem.item.weapon != null || selectedItem.item.armor != null)
         { ItemContextMenu.OnEquipmentContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.isQuickSlot) { ItemContextMenu.OnQuickSlotContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
-        else if (selectedItem.item.consumable != null) { ItemContextMenu.OnConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
-        else if (selectedItem.item.nonConsumable != null) { ItemContextMenu.OnNonConsumableContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
+        else if (selectedItem.item.consumable != null || selectedItem.item.nonConsumable != null) { ItemContextMenu.OnItemContextMenu(); selectedItem.canvasGroup.blocksRaycasts = false; ItemContextMenu.slot = selectedItem; }
         else if (selectedItem.item.skillBook != null) { HideItemContextMenu(); ShowSkillBookDetail(selectedItem.item.skillBook); }
         else { return; }
     }
@@ -850,6 +938,45 @@ public class InventoryManager : MonoBehaviour
         if (selectedItem != null)
             selectedItem.canvasGroup.blocksRaycasts = true;
         ItemContextMenu.gameObject.SetActive(false);
+    }
+
+    public void StartShowStatToolTip(string tooltip, RectTransform targetRect)
+    {
+        StatToolTipRoutine = StartCoroutine(ShowStatToolTip(tooltip, targetRect));
+
+        TextMeshProUGUI text = StatToolTip.GetComponentInChildren<TextMeshProUGUI>();
+        text.text = tooltip;
+
+        if (targetRect != null)
+        {
+            StatToolTip.GetComponent<RectTransform>().position = targetRect.position;
+        }
+
+        StatToolTip.SetActive(true);
+    }
+
+    IEnumerator ShowStatToolTip(string tooltip, RectTransform targetRect)
+    {
+        yield return new WaitForSeconds(1f);
+        TextMeshProUGUI text = StatToolTip.GetComponentInChildren<TextMeshProUGUI>();
+        text.text = tooltip;
+
+        if (targetRect != null)
+        {
+            StatToolTip.GetComponent<RectTransform>().position = targetRect.position + new Vector3(0f, 10f);
+        }
+
+        StatToolTip.SetActive(true);
+    }
+
+    public void HideStatToolTip()
+    {
+        if (StatToolTipRoutine != null)
+        {
+            StopCoroutine(StatToolTipRoutine);
+            StatToolTipRoutine = null;
+        }
+        StatToolTip.SetActive(false);
     }
 
     GameObject LastSkillTree;
@@ -950,6 +1077,7 @@ public class InventoryManager : MonoBehaviour
         SettingTab.gameObject.SetActive(false);
         QuickSlot.SetActive(false);
         CantDeleteMessagePanel.SetActive(false);
+        StatToolTip.SetActive(false);
         UIManager.Instance.GameQuickSlot.SetActive(false);
         UIManager.Instance.InteractPanel.SetActive(false);
 
@@ -1296,5 +1424,44 @@ public class InventoryManager : MonoBehaviour
             item.nonConsumable == null)
             return true;
         return false;
+    }
+
+    public void ClearAllSlots()
+    {
+        List<InventorySlot> AllSlots = new List<InventorySlot>();
+        if (WeaponSlots != null) AllSlots.AddRange(WeaponSlots);
+        if (ArmorSlots != null) AllSlots.AddRange(ArmorSlots);
+        if (SkillBookSlots != null) AllSlots.AddRange(SkillBookSlots);
+        if (ItemSlots != null) AllSlots.AddRange(ItemSlots);
+
+        foreach (var slot in AllSlots)
+        {
+            if (slot != null && slot.item != null)
+                slot.item.Clear();
+        }
+
+        if (EquippedWeaponSlot != null && EquippedWeaponSlot.item != null)
+        {
+            EquippedWeaponSlot.item.Clear();
+            if (Player.Instance != null) Player.Instance.UnequipWeapon();
+        }
+
+        if (EquippedArmorSlot != null && EquippedArmorSlot.item != null)
+        {
+            EquippedArmorSlot.item.Clear();
+            if (Player.Instance != null) Player.Instance.UnequipArmor();
+        }
+
+        // 장착 정보 패널 초기화 갱신
+        SetInfoPanel(0);
+        SetInfoPanel(1);
+
+        if (UIManager.Instance != null && UIManager.Instance.GameQuickSlots != null)
+        {
+            foreach (var qs in UIManager.Instance.GameQuickSlots)
+            {
+                if (qs != null && qs.item != null) qs.item.Clear();
+            }
+        }
     }
 }

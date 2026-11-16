@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class Player : MonoBehaviour, IDamageable, IBleedable
 {
@@ -43,6 +45,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public bool isDeathPanelOn = false;
     public bool isAirborne = false;
     public bool isWakingUp = false;
+    public bool isInvincible = false;
 
     [HideInInspector] public bool isTakingDoT = false;
 
@@ -82,7 +85,6 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             }
 
             if (hp <= 0 && DeathRoutine == null) DeathRoutine = StartCoroutine(PlayerDead());
-            UIManager.Instance.HpText.text = StatManager.Instance.MaxHp.ToString();
         }
     }
 
@@ -94,8 +96,51 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             mp = Mathf.Clamp(value, 0, StatManager.Instance.MaxMp);
             UIManager.Instance.UpdateMpUI(mp / StatManager.Instance.MaxMp);
-            UIManager.Instance.MpText.text = StatManager.Instance.MaxMp.ToString();
+
+            List<SkillBase.Command> commandBuffer = PlayerAttack.GetCommanBuffer();
+            SkillBase matched = null;
+            int matchedLen = 0;
+
+            for (int i = 0; i < PlayerAttack.acquiredSkills.Count; i++)
+            {
+                var skill = PlayerAttack.acquiredSkills[i];
+                if (skill == null) continue;
+
+                while (skill != null && skill.UpgradedSkill != null && skill.isUpgraded) skill = skill.UpgradedSkill;
+
+                if (skill.isSpecialSkill || skill.commands == null || skill.commands.Length == 0) continue;
+
+                int m = skill.commands.Length;
+                if (commandBuffer.Count < m) continue;
+
+                bool match = true;
+                for (int j = 0; j < m; j++)
+                {
+                    if (commandBuffer[commandBuffer.Count - m + j] != skill.commands[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match && m > matchedLen)
+                {
+                    matched = skill;
+                    matchedLen = m;
+                }
+            }
+            if(matched != null)
+            {
+                if (matched.MP_cost > mp)
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(109, 109, 109, 255);
+                else
+                    UIManager.Instance.AvailableCommandsText.color = new Color32(255, 255, 255, 255);
+            }
         }
+    }
+
+    public void ConsumeMP(float amount)
+    {
+        MP -= amount * (1 - StatManager.Instance.MpConsumptionReduction);
     }
 
     public bool IsGrabbed => currentStunRoutine != null && currentStunType == StunType.Grabbed;
@@ -104,14 +149,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public bool isEating => animator.GetCurrentAnimatorStateInfo(1).IsTag("Eat");
     public bool isDashingAnim => animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash");
 
-    public bool CanMove() => IsAlive && !isCinematic && !PreventMove && !IsStunned && !PlayerAttack.isAttacking && !isWakingUp && !isAirborne && !PlayerMove.isKnockedBack;
-    public bool CanAttack() => IsAlive && !isCinematic && !PreventAttack && !IsStunned && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isWakingUp;
-    public bool CanGuard() => IsAlive && !isCinematic && !IsStunned && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isWakingUp;
-    public bool CanLockOn() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isWakingUp;
-    public bool CanDash() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isEating && !isWakingUp;
-    public bool CanJump() => CanMove() && !isCinematic && !PlayerAttack.isAttacking && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving && !isWakingUp;
-    public bool CanInteract() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !isEating && !isWakingUp;
-    public bool CanUseQuickSlot() => IsAlive && !isCinematic && !IsStunned && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isWakingUp;
+    private bool CanActBase => IsAlive && !isCinematic && !IsStunned && !isWakingUp;
+
+    public bool CanMove() => CanActBase && !PreventMove && !PlayerAttack.isAttacking && !isAirborne && !PlayerMove.isKnockedBack;
+
+    public bool CanAttack() => CanActBase && !PreventAttack && !isInteracting && !isGuarding && !PlayerAttack.isSwordMoving && !isEating && !isDashingAnim && (!PlayerAttack.isAttacking || PlayerAttack.canComboInput) && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanGuard() => CanActBase && !PreventAttack && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && PlayerAttack.isArmed && !isEating && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanLockOn() => CanActBase && !PlayerAttack.isAttacking && !PlayerAttack.isSwordMoving && !isGuarding && !isParrying && !isEating && !isAirborne && !PlayerMove.isKnockedDown;
+
+    public bool CanDash() => CanMove() && !isGuarding && !isEating;
+
+    public bool CanJump() => CanMove() && !isGuarding && !isInteracting && !isEating && !PlayerAttack.isSwordMoving;
+
+    public bool CanInteract() => CanActBase && !PlayerAttack.isAttacking && !isInteracting && !isEating;
+
+    public bool CanUseQuickSlot() => CanActBase && !PlayerAttack.isAttacking && !isInteracting && !PlayerAttack.isSwordMoving && !isParrying && !isGuarding && !isAirborne && !PlayerMove.isKnockedDown;
     #endregion
 
     #region Combat & Tuning Settings
@@ -132,11 +186,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     #endregion
 
     #region Constants
-    private const float ArmorReductionFactor = 0.06f;
+    public const float ArmorReductionFactor = 0.005f;
     private const float FootstepCooldown = 0.2f;
     private const float GuardAngleThreshold = 0.7f;
-    private const float WallCheckRadius = 0.3f;
-    private const float WallCheckSkinWidth = 0.2f;
+    public float WallCheckRadius = 0.3f;
+    public float WallCheckSkinWidth = 0.2f;
     private const float WallCheckHeightMin = 0.5f;
     private const float WallCheckHeightMax = 1.5f;
     #endregion
@@ -160,6 +214,12 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private int currentSkillStateIndex = 1;
 
     private int lastStunFrame = -1;
+
+    private float savedInputX;
+    private float savedInputY;
+    private float savedMoveSpeed;
+    private float savedIsArmed;
+    private bool isGrabStateSaved = false;
     #endregion
 
     #region Unity Lifecycle
@@ -204,7 +264,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private IEnumerator InitialAttackPreventRoutine()
     {
         PreventAttack = true;
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
         PreventAttack = false;
     }
 
@@ -244,7 +304,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         equippedWeapon = w;
         if (w != null)
         {
-            StatManager.Instance.AttackPower += w.attack * 2;
+            StatManager.Instance.AttackPower += w.attack;
             w.equipPassive?.skillLogic.Apply();
         }
     }
@@ -261,12 +321,14 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     {
         if (equippedArmor != null)
         {
-            StatManager.Instance.Armor -= equippedArmor.defense * 2;
+            StatManager.Instance.Armor -= equippedArmor.defense;
+            StatManager.Instance.MaxHp -= equippedArmor.hp;
             equippedArmor.equipPassive?.skillLogic.Remove();
         }
         equippedArmor = a;
         if (a != null)
         {
+            StatManager.Instance.MaxHp += a.hp;
             StatManager.Instance.Armor += a.defense;
             a.equipPassive?.skillLogic.Apply();
         }
@@ -275,6 +337,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void UnequipArmor()
     {
         if (equippedArmor == null) return;
+        StatManager.Instance.MaxHp -= equippedArmor.hp;
         StatManager.Instance.Armor -= equippedArmor.defense;
         equippedArmor.equipPassive?.skillLogic.Remove();
         equippedArmor = null;
@@ -293,11 +356,25 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     public void TakeDamage(float damage, SkillBase skill, Transform caster, HitEffectData hitEffect = null, int hitIndex = 0)
     {
-        if (!IsAlive) return;
+        if (!IsAlive || isInvincible) return;
 
-        if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
+        bool currentIsUnstoppable = false;
+        bool currentIsSuperUnstoppable = false; // 💡 추가됨
+        float currentDamageReduction = 0f;
+
+        if (PlayerAttack != null && PlayerAttack.isAttacking && PlayerAttack.lastActivatedSkill != null)
         {
-            DialogueManager.Instance.StopShowDialogue();
+            currentIsUnstoppable = PlayerAttack.lastActivatedSkill.isUnstoppable;
+            currentIsSuperUnstoppable = PlayerAttack.lastActivatedSkill.isSuperUnstoppable;
+            currentDamageReduction = PlayerAttack.lastActivatedSkill.damageReductionDuringCast;
+        }
+
+        // 💡 슈퍼 아머나 하이퍼 아머 상태가 아닐 때만 캔슬
+        if (!isTakingDoT && !currentIsUnstoppable && !currentIsSuperUnstoppable)
+        {
+            if (PlayerAttack != null) PlayerAttack.CancelCurrentSkill();
+            if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
+                DialogueManager.Instance.StopShowDialogue();
         }
 
         GuardableData gData = skill.GetGuardData(hitIndex);
@@ -313,6 +390,9 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         else if (damage >= (hp * 0.7f)) ShakePower = 20f;
 
         float actualDamage = isTakingDoT ? damage : ApplyArmorReduction(damage);
+
+        // 방해불가/슈퍼방해불가 데미지 감소 적용
+        actualDamage *= (1f - currentDamageReduction);
 
         bool willDie = (HP - actualDamage) <= 0;
 
@@ -353,13 +433,19 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             ShakePower = 2f;
             if (skill.SpecialGuardEffect) SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, skill.SpecialGuardEffect.name);
             else SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, "GuardEffect");
+
             float RemainingDamage = 0;
-            if (MP > StatManager.Instance.GuardSuccessCostMpMult * damage)
-                MP -= StatManager.Instance.GuardSuccessCostMpMult * damage;
+            // MP 소모 감소를 반영한 실제 소모율. 부족할 때는 MP를 정확히 0으로 만들어 가드 브레이크가 일어나게 한다.
+            // (기존에는 ConsumeMP(MP)에 감소율이 적용되어 MP가 0이 되지 않아 가드가 깨지지 않았음)
+            float mpCostRate = StatManager.Instance.GuardSuccessCostMpMult * (1f - StatManager.Instance.MpConsumptionReduction);
+            float mpCost = mpCostRate * damage;
+
+            if (MP > mpCost)
+                MP -= mpCost;
             else
             {
-                RemainingDamage = damage - MP / StatManager.Instance.GuardSuccessCostMpMult;
-                MP = 0;
+                RemainingDamage = mpCostRate > 0f ? damage - MP / mpCostRate : 0f;
+                MP = 0f;
             }
 
             if (MP <= 0)
@@ -390,13 +476,17 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         }
 
         bool hasKnockback = false;
+        Vector3 knockbackForce = Vector3.zero;
+
         if (skill is Skill_Melee meleeSkill && meleeSkill.hitDataList != null && meleeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
-            hasKnockback = meleeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+            knockbackForce = meleeSkill.hitDataList[hitIndex].knockbackForce;
+            hasKnockback = knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
         else if (skill is Skill_Range rangeSkill && rangeSkill.hitDataList != null && rangeSkill.hitDataList.Count > hitIndex && !isTakingDoT)
         {
-            hasKnockback = rangeSkill.hitDataList[hitIndex].knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
+            knockbackForce = rangeSkill.hitDataList[hitIndex].knockbackForce;
+            hasKnockback = knockbackForce.magnitude > PlayerMove.knockbackForceThreshold;
         }
 
         bool isStunApplied = false;
@@ -405,31 +495,65 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             StunEffectData stunData = skill.GetStunData(hitIndex);
             if (stunData != null && stunData.stunDuration > 0 && !willDie)
             {
-                if (!hasKnockback && PlayerMove != null)
-                    PlayerMove.CancelKnockBack();
-
-                Transform grabTarget = null;
-                if (stunData.stunType == StunType.Grabbed)
+                // 💡 [SuperUnstoppable 1] 슈퍼 방해불가 상태면 하드 CC(스턴, 잡기)를 무시함
+                if (!currentIsSuperUnstoppable)
                 {
-                    grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    if (!hasKnockback && PlayerMove != null)
+                        PlayerMove.CancelKnockBack();
+
+                    Transform grabTarget = null;
+                    if (stunData.stunType == StunType.Grabbed)
+                    {
+                        grabTarget = FindChildRecursive(caster, "GrabPosition_" + skill.name) ?? caster;
+                    }
+
+                    ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
+                    ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
+                    isStunApplied = true;
                 }
-                ApplyStun(stunData.stunDuration, stunData.stunType, grabTarget, stunData.offset, stunData.isRealtimeFollow);
-                ShakePower = ShakePower < 20 ? ShakePower + 5f : 20f;
-                isStunApplied = true;
             }
         }
 
-        if (!isStunApplied && !willDie && !hasKnockback && !isTakingDoT)
+        // 3. 일반 피격 및 넉백 분기 처리
+        if (!isStunApplied && !isTakingDoT) // (수정됨) willDie 조건 제거: 죽을 때도 넉백되도록 허용
         {
-            CancelCurrentAction();
-            ClearStun();
-            if (PlayerMove != null) PlayerMove.CancelKnockBack();
-
-            if (animator != null)
+            if (hasKnockback)
             {
-                animator.ResetTrigger("Hitted1");
-                animator.ResetTrigger("Hitted2");
-                Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                // [SuperUnstoppable 2] 슈퍼 방해불가 상태면 넉백, 에어본도 무시함
+                if (!currentIsSuperUnstoppable)
+                {
+                    CancelCurrentAction();
+                    ClearStun();
+
+                    if (knockbackForce.y > 0)
+                    {
+                        isAirborne = true;
+                        if (animator != null) Animator_SetTrigger("Airborne");
+                    }
+                    else
+                    {
+                        if (PlayerMove != null) PlayerMove.isKnockedDown = true;
+                        if (animator != null) Animator_SetTrigger("KnockDown");
+                    }
+                }
+            }
+            else if (!willDie) // 💡 (추가됨) 넉백 없는 일반 공격에 맞아 죽을 때는 경직 모션 없이 바로 죽음 처리
+            {
+                // 일반 경직 피격일 때
+                if (!currentIsUnstoppable && !currentIsSuperUnstoppable)
+                {
+                    CancelCurrentAction();
+                    ClearStun();
+
+                    if (PlayerMove != null) PlayerMove.CancelKnockBack();
+
+                    if (animator != null)
+                    {
+                        animator.ResetTrigger("Hitted1");
+                        animator.ResetTrigger("Hitted2");
+                        Animator_SetTrigger("Hitted" + UnityEngine.Random.Range(1, 3));
+                    }
+                }
             }
         }
 
@@ -472,8 +596,19 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     public void ClearStun()
     {
         if (Time.frameCount == lastStunFrame) return;
-
         ForceClearStun();
+    }
+
+    private void RestoreGrabState()
+    {
+        if (isGrabStateSaved)
+        {
+            Animator_SetFloat("inputX", savedInputX);
+            Animator_SetFloat("inputY", savedInputY);
+            Animator_SetFloat("MoveSpeed", savedMoveSpeed);
+            Animator_SetFloat("isArmed", savedIsArmed);
+            isGrabStateSaved = false;
+        }
     }
 
     private void ForceClearStun()
@@ -483,6 +618,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             StopCoroutine(currentStunRoutine);
             currentStunRoutine = null;
         }
+
+        RestoreGrabState();
 
         currentStunType = StunType.Stagger;
         animator.SetBool("isGrabbed", false);
@@ -527,7 +664,23 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             case StunType.Stagger: Animator_SetTrigger("Stagger"); break;
             case StunType.Stun: Animator_SetTrigger("Stagger"); break;
-            case StunType.Grabbed: Animator_SetBool("isGrabbed", true); break;
+            case StunType.Grabbed:
+                if (!isGrabStateSaved)
+                {
+                    savedInputX = animator.GetFloat("inputX");
+                    savedInputY = animator.GetFloat("inputY");
+                    savedMoveSpeed = animator.GetFloat("MoveSpeed");
+                    savedIsArmed = animator.GetFloat("isArmed");
+                    isGrabStateSaved = true;
+                }
+                Animator_SetFloat("inputX", 0f);
+                Animator_SetFloat("inputY", 0f);
+                Animator_SetFloat("MoveSpeed", 0f);
+                Animator_SetFloat("isArmed", 0f);
+
+                Animator_Play("MoveTree");
+                Animator_SetBool("isGrabbed", true);
+                break;
         }
 
         float elapsed = 0f;
@@ -557,7 +710,10 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             case StunType.Stagger: Animator_SetTrigger("StaggerEnd"); break;
             case StunType.Stun: Animator_SetTrigger("StaggerEnd"); break;
-            case StunType.Grabbed: Animator_SetBool("isGrabbed", false); break;
+            case StunType.Grabbed:
+                Animator_SetBool("isGrabbed", false);
+                RestoreGrabState();
+                break;
         }
 
         currentStunRoutine = null;
@@ -602,7 +758,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private float mpRecoveryDelay;
     public void mpRecoveryDelayStart()
     {
-        mpRecoveryDelay = 1f;
+        mpRecoveryDelay = 0.8f;
     }
     IEnumerator RecoveryRoutine()
     {
@@ -626,7 +782,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
     private float ApplyArmorReduction(float incoming)
     {
         if (StatManager.Instance.Armor <= 0f) return incoming;
-        float reduction = (StatManager.Instance.Armor * ArmorReductionFactor) / (1f + ArmorReductionFactor * StatManager.Instance.Armor);
+
+        float reduction = 0.15f * Mathf.Log(1f + 0.01f * StatManager.Instance.Armor);
+
+        reduction = Mathf.Min(reduction, 0.8f);
+
         return incoming * (1f - reduction);
     }
 
@@ -636,8 +796,11 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             PlayerAttack.isAttacking = false;
             PlayerAttack.isSwordMoving = false;
+            PlayerAttack.CancelDrawSword();
             PlayerAttack.CancelCurrentSkill();
         }
+
+        isInvincible = false;
     }
 
     public IEnumerator HpRecoveryRoutine()
@@ -842,6 +1005,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         if (isActive)
         {
+            CancelCurrentAction();
+
             if (PlayerMove != null && PlayerMove._rb != null)
             {
                 PlayerMove._rb.linearVelocity = Vector3.zero;
@@ -889,16 +1054,57 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
     IEnumerator PlayerDead()
     {
+        // 💡 넉백/에어본 상태에서 죽었다면 땅에 떨어져 뒹굴 때까지 대기
+        if (isAirborne || (PlayerMove != null && (PlayerMove.isKnockedBack || PlayerMove.isKnockedDown)))
+        {
+            while (true)
+            {
+                if (PlayerMove == null) break;
+                if (PlayerMove.isGrounded) break;
+
+                // 물리적으로 바닥에 닿았는지 자체 레이캐스트로 확실히 체크
+                if (PlayerMove._rb != null && PlayerMove._rb.linearVelocity.y <= 0.1f)
+                {
+                    if (Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, 0.8f, PlayerMove.groundLayer))
+                    {
+                        break;
+                    }
+                }
+                yield return null;
+            }
+
+            // 바닥에 떨어지고 나서 쓰러진 모션을 잠깐(0.5초) 유지한 후 사망
+            yield return new WaitForSeconds(0.5f);
+        }
+
         CancelCurrentAction();
+        ForceClearStun();
+
+        // 💡 넉백 대기로 인해 남아있는 기상(WakeUp) 관련 찌꺼기 코루틴 완벽 차단
+        if (PlayerMove != null) PlayerMove.CancelKnockBack();
+
+        if (animator != null)
+        {
+            animator.ResetTrigger("Hitted1");
+            animator.ResetTrigger("Hitted2");
+            animator.ResetTrigger("Stagger");
+            animator.ResetTrigger("Airborne");
+            animator.ResetTrigger("KnockDown");
+        }
 
         PreventMove = true;
         PreventAttack = true;
         if (PlayerAttack != null) PlayerAttack.DisableLockOn();
+
         Animator_SetTrigger("isDead");
+
         InkBrushEffectManager.Instance.PlayDeathEffect();
         SettingManager.Instance.SetSensitivityZero();
         SoundManager.Instance.PlaySound(DeathSound);
-
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.MuffleBGMOnDeath();
+        }
         yield return new WaitForSeconds(deathUIWaitTime);
         UIManager.Instance.DeathPanel.SetActive(true);
 
@@ -914,7 +1120,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         if (RespawnCheckpoint) RespawnToCheckpoint();
         DungeonManager.Instance.ReviveAllEnemies();
-
+        MapDecalManager.Instance.ClearAllDecals();
         decalGenerator?.ClearDecals();
         hasTriggered66 = false;
         hasTriggered33 = false;
@@ -928,6 +1134,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         isParrying = false;
         isAirborne = false;
         isWakingUp = false;
+        isInvincible = false;
+
         if (PlayerMove != null)
         {
             PlayerMove.isKnockedBack = false;
@@ -951,6 +1159,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         isDeathPanelOn = false;
         DeathRoutine = null;
         SoundManager.Instance.PlaySound(RespawnSound);
+        SoundManager.Instance.RestoreBGMOnRespawn();
         SettingManager.Instance.RestoreSensitivity();
 
         StartCoroutine(InitialAttackPreventRoutine());
@@ -995,6 +1204,9 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         {
             return;
         }
+        if (item.nonConsumable != null && item.nonConsumable.isStackable)
+            if (item.nonConsumable.LeftAmount <= 0)
+                return;
         if ((item.consumable != null && item.consumable.isEatable) || (item.nonConsumable != null && item.nonConsumable.isEatable))
             EatRoutine = StartCoroutine(UseItemRoutine(Slot));
     }
@@ -1007,13 +1219,14 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         yield return new WaitForSeconds(1.16f);
 
         InventoryItem item = Slot.item;
-        // 아이템 사용
         if (item.consumable != null)
+        {
             item.consumable.Use();
+            item.Count--;
+        }
         else if (item.nonConsumable != null)
             item.nonConsumable.Use();
-        item.Count--;
-        if(Slot.GetComponent<QuickSlot>() != null)
+        if (Slot.GetComponent<QuickSlot>() != null)
         {
             Slot.GetComponent<QuickSlot>().OriginalSlot.item.Count--;
             UIManager.Instance.SyncGameQuickSlots();
@@ -1114,29 +1327,56 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
 
         Vector3 delta = animator.deltaPosition;
         if (delta.AlmostZero()) return;
+
         Vector3 horizontalDelta = new Vector3(delta.x, 0f, delta.z);
         float distance = horizontalDelta.magnitude;
 
         if (distance > 0.0001f)
         {
             Vector3 dir = horizontalDelta.normalized;
-            Vector3 point1 = transform.position + Vector3.up * WallCheckHeightMin;
-            Vector3 point2 = transform.position + Vector3.up * WallCheckHeightMax;
 
-            if (Physics.CapsuleCast(point1, point2, WallCheckRadius, dir, out RaycastHit hit, distance + WallCheckSkinWidth, wallLayer))
+            float pullBackDist = 1.0f;
+            float checkRadius = 0.8f;
+
+            Vector3 origin = transform.position - (dir * pullBackDist);
+            Vector3 point1 = origin + Vector3.up * 0.1f;
+            Vector3 point2 = origin + Vector3.up * 2.0f;
+
+            LayerMask obstacleLayer = wallLayer | LayerMask.GetMask("Ground");
+
+            if (Physics.CapsuleCast(point1, point2, checkRadius, dir, out RaycastHit hit, distance + pullBackDist + WallCheckSkinWidth, obstacleLayer))
             {
-                float safeDistance = Mathf.Max(0f, hit.distance - WallCheckSkinWidth);
-                Vector3 safeMove = dir * safeDistance;
-                Vector3 remainingMove = dir * (distance - safeDistance);
-                Vector3 slideMove = Vector3.ProjectOnPlane(remainingMove, hit.normal);
-                slideMove.y = 0f;
-
-                horizontalDelta = safeMove + slideMove;
+                float hitAngle = Vector3.Angle(Vector3.up, hit.normal);
+                if (hitAngle > 65)
+                {
+                    return;
+                }
             }
-            delta = new Vector3(horizontalDelta.x, delta.y, horizontalDelta.z);
         }
 
-        PlayerMove._rb.MovePosition(PlayerMove._rb.position + delta);
+        Vector3 finalDelta = new Vector3(horizontalDelta.x, delta.y, horizontalDelta.z);
+        Vector3 targetPosition = PlayerMove._rb.position + finalDelta;
+
+        Vector3 rayOrigin = transform.position + Vector3.up * 2.0f + horizontalDelta;
+
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 5.0f, LayerMask.GetMask("Ground")))
+        {
+            float slopeAngle = Vector3.Angle(Vector3.up, groundHit.normal);
+            if (slopeAngle <= 45f)
+            {
+                targetPosition.y = groundHit.point.y;
+            }
+            else
+            {
+                return;
+            }
+        }
+        else
+        {
+            targetPosition.y = PlayerMove._rb.position.y;
+        }
+
+        PlayerMove._rb.MovePosition(targetPosition);
         PlayerMove._rb.MoveRotation(PlayerMove._rb.rotation * animator.deltaRotation);
     }
 

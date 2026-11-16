@@ -66,6 +66,11 @@ public abstract class SkillBase : ScriptableObject
     [Range(0f, 1f)] public float triggerChance = 1f;
     public int triggerMaxUsesPerCaster = 0;
 
+    [Header("Cast Properties")]
+    public bool isUnstoppable = false;
+    public bool isSuperUnstoppable = false;
+    [Range(0f, 1f)] public float damageReductionDuringCast = 0f;
+
     #region Public Methods
     public virtual void OnTriggered(Transform caster)
     {
@@ -82,7 +87,7 @@ public abstract class SkillBase : ScriptableObject
     {
     }
 
-    protected float ProcessCriticalHit(ref bool isCriticalChecked, ref bool isCriticalHit, bool isCasterPlayer, GameObject targetObj, Vector3 hitPoint, Quaternion effectRotation, float baseDamage, float damageMultiplier, bool isGuarding, int hitIndex)
+    public float ProcessCriticalHit(ref bool isCriticalChecked, ref bool isCriticalHit, bool isCasterPlayer, GameObject targetObj, Vector3 hitPoint, Quaternion effectRotation, float baseDamage, float damageMultiplier, bool isGuarding, int hitIndex)
     {
         if (!isCriticalChecked)
         {

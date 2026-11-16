@@ -16,10 +16,10 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
-  MP_cost: 0
+  MP_cost: 5
   clip: {fileID: 7400000, guid: ab1b989cea2f1254ebd6510e5d48fbab, type: 2}
   icon: {fileID: 0}
-  sound: {fileID: 0}
+  sound: {fileID: 8300000, guid: b1117201796945e4c98eeb2697dd073f, type: 3}
   effect: {fileID: 0}
   SpecialGuardEffect: {fileID: 0}
   Localize_skillName:
@@ -83,6 +83,9 @@ MonoBehaviour:
       offset: {x: 0, y: -1.5, z: 0}
       isRealtimeFollow: 1
       stunDuration: 1.25
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

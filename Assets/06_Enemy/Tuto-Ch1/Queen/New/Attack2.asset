@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
-  MP_cost: 15
+  MP_cost: 10
   clip: {fileID: 7400000, guid: 0868d20011b6aa64fa338a7ad20ccae9, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 30f710045b3cfc644aad85984e621d4c, type: 3}
@@ -51,12 +51,12 @@ MonoBehaviour:
     m_LocalVariables: []
   damageMultipliers:
   - 0
-  - 15
+  - 5
   HitSound:
   - {fileID: 0}
   - {fileID: 8300000, guid: 6559181d0b29bd14daed06942a1f4469, type: 3}
   HitEffects:
-  - {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: aac9f90b993c26043ba7652b070df88b, type: 2}
   enemyHitEffectDirections: 000000000e000000
   isSpecialSkill: 0
@@ -65,6 +65,9 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0, y: 1.5, z: 3}
     boxSize: {x: 2, y: 2, z: 4}
@@ -75,7 +78,7 @@ MonoBehaviour:
     knockdownDuration: 1.5
     hitSound: {fileID: 0}
     effectDirection: 0
-    playerHitEffect: {fileID: 11400000, guid: 8aac6584f9493ce40b7c4ee3a7f8fec5, type: 2}
+    playerHitEffect: {fileID: 0}
     useGuardSettings: 0
     useStunSettings: 0
     guardData:
@@ -86,6 +89,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -93,9 +99,9 @@ MonoBehaviour:
     areaTickInterval: 1
     areaDamageMultiplier: 1
   - centerOffset: {x: 0, y: 1.5, z: 1.25}
-    boxSize: {x: 1.5, y: 2, z: 2.5}
+    boxSize: {x: 1.5, y: 2, z: 3}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 15
+    damageMultiplier: 5
     knockbackForce: {x: 0, y: 0, z: 15}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -112,6 +118,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

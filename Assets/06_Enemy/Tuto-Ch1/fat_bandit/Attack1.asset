@@ -50,8 +50,8 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 7
-  - 7
+  - 12
+  - 12
   HitSound:
   - {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
   - {fileID: 8300000, guid: 95b9f9a21ba62104d858d393fe3d553c, type: 3}
@@ -65,11 +65,14 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0.51, y: 2, z: 1.5}
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 7
+    damageMultiplier: 12
     knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -86,6 +89,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}
@@ -95,7 +101,7 @@ MonoBehaviour:
   - centerOffset: {x: 0, y: 2, z: 1.5}
     boxSize: {x: 5, y: 2, z: 3.5}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 7
+    damageMultiplier: 12
     knockbackForce: {x: 0, y: 0, z: 5}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -112,6 +118,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 0
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

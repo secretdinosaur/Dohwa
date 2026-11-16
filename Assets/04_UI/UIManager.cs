@@ -162,17 +162,25 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
             Player.Instance.PreventAttack = false;
             Player.Instance.PreventMove = false;
             Camera.main.GetComponent<CameraController>().SetCameraInput(true);
+
+            StartCoroutine(DelayCursorLock());
         }
     }
+
+    private IEnumerator DelayCursorLock()
+    {
+        yield return null;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
     float HPtemp = 1f;
 
     // =======================================================
-    // 일반 인벤토리 열기 (기존)
+    // UI 토글 (인벤토리)
     // =======================================================
     public void OpenInventory(InputAction.CallbackContext context)
     {
@@ -182,51 +190,20 @@ public class UIManager : MonoBehaviour
 
     public void ToggleInventory()
     {
-        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim)
+        if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
+
+        if (InventoryManager.Instance.isInventoryOpen)
         {
-            return;
+            CloseUI(); // 이미 열려있다면 닫기
         }
-
-        bool nextState = !InventoryManager.Instance.isInventoryOpen;
-
-        if (nextState && !Player.Instance.CanAttack())
+        else if (Player.Instance.CanAttack())
         {
-            return;
+            OpenUI(true); // 닫혀있다면 인벤토리 탭으로 열기
         }
-
-
-        InventoryManager.Instance.uiMap.SetActive(nextState);
-        PreventCameraMoveAndClick(nextState);
-        GameQuickSlot.SetActive(!nextState);
-        InventoryManager.Instance.isInventoryOpen = nextState;
-        TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
-
-        if (nextState) // 열 때
-        {
-            InkBrushEffectManager.Instance.ClearHitEffects();
-            InventoryManager.Instance.OnClickInfoTab();
-            Inventory.SetActive(true);
-
-            SoundManager.Instance.PlayUISound(2);
-
-            HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
-            Player.Instance.LowHPMat.SetFloat("_HP", 1f);
-
-            InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
-        }
-        else // 닫을 때
-        {
-            Inventory.SetActive(false);
-            SoundManager.Instance.PlayUISound(3);
-
-            Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
-        }
-
-        Time.timeScale = nextState ? 0f : 1f;
     }
 
     // =======================================================
-    // 💡 추가됨: 세팅창 다이렉트 오픈 (ESC 메뉴 등)
+    // UI 토글 (세팅)
     // =======================================================
     public void OpenSetting(InputAction.CallbackContext context)
     {
@@ -238,73 +215,66 @@ public class UIManager : MonoBehaviour
     {
         if (FadePanel.isFadePanelOn || TutorialManager.instance.isOngoingTutorial || GradeManager.Instance.IsPlayingUpgradeAnim) return;
 
-        bool nextState = !InventoryManager.Instance.isInventoryOpen;
-
-        if (Player.Instance.CanAttack())
+        if (InventoryManager.Instance.isInventoryOpen)
         {
-            InkBrushEffectManager.Instance.ClearHitEffects();
-            Time.timeScale = nextState ? 0f : 1f;
-            InventoryManager.Instance.uiMap.SetActive(nextState);
-
-            if (nextState)
-            {
-                InventoryManager.Instance.ResetTabState();
-                InventoryManager.Instance.OnClickSettingTab();
-                // 💡 핵심: 세팅 UI가 Inventory 하위에 있고, OnClickSettingTab 내부의 
-                // HideAllTabs()가 Inventory를 강제로 끄기 때문에 마지막에 다시 활성화 해줍니다.
-                Inventory.SetActive(true);
-            }
-            else
-            {
-                Inventory.SetActive(false);
-            }
-
-            PreventCameraMoveAndClick(nextState);
-            GameQuickSlot.SetActive(!nextState);
-            InventoryManager.Instance.isInventoryOpen = nextState;
-
-            if (nextState)
-            {
-                SoundManager.Instance.PlayUISound(3);
-                Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
-            }
-            else
-            {
-                SoundManager.Instance.PlayUISound(2);
-                HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
-                Player.Instance.LowHPMat.SetFloat("_HP", 1f);
-                InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
-            }
+            CloseUI(); // 이미 열려있다면 닫기
         }
-        else if (InventoryManager.Instance.isInventoryOpen) // 닫기 로직
+        else if (Player.Instance.CanAttack())
         {
-            InventoryManager.Instance.uiMap.SetActive(nextState);
-
-            if (nextState)
-            {
-                InventoryManager.Instance.ResetTabState();
-                InventoryManager.Instance.OnClickSettingTab();
-                Inventory.SetActive(true);
-            }
-            else
-            {
-                Inventory.SetActive(false);
-            }
-
-            PreventCameraMoveAndClick(nextState);
-            GameQuickSlot.SetActive(!nextState);
-            InventoryManager.Instance.isInventoryOpen = nextState;
-
-            if (nextState)
-            {
-                SoundManager.Instance.PlayUISound(2);
-            }
-            else
-            {
-                SoundManager.Instance.PlayUISound(3);
-            }
-            Time.timeScale = nextState ? 0f : 1f;
+            OpenUI(false); // 닫혀있다면 세팅 탭으로 열기
         }
+    }
+
+    // =======================================================
+    // UI 상태 통합 제어 메서드
+    // =======================================================
+    private void OpenUI(bool isInventoryTab)
+    {
+        InventoryManager.Instance.isInventoryOpen = true;
+        Time.timeScale = 0f;
+
+        InventoryManager.Instance.uiMap.SetActive(true);
+        PreventCameraMoveAndClick(true); // 마우스 커서 표시 및 시점 고정
+        GameQuickSlot.SetActive(false);
+
+        InkBrushEffectManager.Instance.ClearHitEffects();
+
+        // HP 이펙트 임시 저장 후 가리기
+        HPtemp = Player.Instance.LowHPMat.GetFloat("_HP");
+        Player.Instance.LowHPMat.SetFloat("_HP", 1f);
+
+        if (isInventoryTab)
+        {
+            InventoryManager.Instance.OnClickInfoTab();
+            InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
+            TutorialManager.instance.CheckTutorial(TutorialType.Inventory);
+        }
+        else
+        {
+            InventoryManager.Instance.ResetTabState();
+            InventoryManager.Instance.OnClickSettingTab();
+        }
+
+        Inventory.SetActive(true);
+        SoundManager.Instance.PlayUISound(2); // 열기 사운드
+    }
+
+    private void CloseUI()
+    {
+        InventoryManager.Instance.isInventoryOpen = false;
+        Time.timeScale = 1f;
+
+        InventoryManager.Instance.uiMap.SetActive(false);
+        Inventory.SetActive(false);
+        GameQuickSlot.SetActive(true);
+
+        PreventCameraMoveAndClick(false); // 마우스 커서 숨김 및 시점 복구
+
+        SoundManager.Instance.PlayUISound(3); // 닫기 사운드
+
+        // HP 이펙트 복구 및 스킬북 처리
+        Player.Instance.LowHPMat.SetFloat("_HP", HPtemp);
+        InventoryManager.Instance.CheckAllSkillBooksAutoUnlocksFromSlots();
     }
 
     public void UpdateCommandUI(string currentCommands, string[] availableCommands)
@@ -334,7 +304,6 @@ public class UIManager : MonoBehaviour
                 switch (Type)
                 {
                     case 0:
-
                         finalizedText = TextTagParser.Parse(InteractType[1].GetLocalizedString());
                         break;
                     case 1:
@@ -404,6 +373,7 @@ public class UIManager : MonoBehaviour
             gameQuickSlot.SetSlot();
         }
     }
+
     public void OnMoveQuickSlotNext(InputAction.CallbackContext context)
     {
         if (context.performed)
@@ -569,11 +539,11 @@ public class UIManager : MonoBehaviour
         });
         yield return null;
     }
+
     public void StartMessageRoutine(string text)
     {
         MessageRoutine = StartCoroutine(ShowMessage(text));
     }
-
 
     public IEnumerator ShowMessage(string txt)
     {

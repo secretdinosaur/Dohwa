@@ -52,6 +52,14 @@ public class DialogueCommandSet : MonoBehaviour
             Player.Instance.TakeArbitraryDamage(damage);
     }
 
+    public void ForceStartTutorial(string type)
+    {
+        if (TutorialManager.instance != null)
+        {
+            TutorialManager.instance.ForceStartTutorial(type);
+        }
+    }
+
     public void GetItem(string Id)
     {
         if(InventoryManager.Instance != null && DataManager.Instance != null)

@@ -1,5 +1,4 @@
-using UnityEngine;
-using System.Collections.Generic;
+ï»¿using UnityEngine;
 
 public class ItemDropManager : MonoBehaviour
 {
@@ -14,7 +13,6 @@ public class ItemDropManager : MonoBehaviour
     {
         CheckAllItems();
     }
-    public Item[] OneTimeItems;
 
     public void CheckAllItems()
     {
@@ -22,21 +20,17 @@ public class ItemDropManager : MonoBehaviour
 
         foreach (var pickup in pickups)
         {
-            int index = System.Array.IndexOf(OneTimeItems, pickup);
-            if (index >= 0 && DataManager.Instance.IsItemObtained(index))
+            // ğŸ’¡ ê³ ìœ  GUIDë¥¼ í†µí•´ ê²€ì¦
+            if (DataManager.Instance.IsItemObtained(pickup.UniqueID))
             {
                 Destroy(pickup.gameObject);
             }
         }
     }
 
-    // ¾ÆÀÌÅÛÀÌ È¹µæµÇ¾úÀ» ¶§ È£ÃâµÇ´Â ¸Ş¼­µå
     public void RegisterItemObtained(Item item)
     {
-        int index = System.Array.IndexOf(OneTimeItems, item);
-        if (index >= 0)
-        {
-            DataManager.Instance.MarkItemAsObtained(index);
-        }
+        // ğŸ’¡ ê³ ìœ  GUIDë¥¼ ì„¸ì´ë¸Œ ë°ì´í„°ì— ë“±ë¡
+        DataManager.Instance.MarkItemAsObtained(item.UniqueID);
     }
 }

@@ -18,7 +18,7 @@ public class InformationTabManager : MonoBehaviour
         }
 
         float contentTotalHeight = 0f;
-        float spacing = 25f; // 항목 간 간격
+        float spacing = 0f; // 항목 간 간격
 
         foreach (var skillBook in InventoryManager.Instance.MySkillBooks)
         {
@@ -34,6 +34,6 @@ public class InformationTabManager : MonoBehaviour
             contentTotalHeight += infoPanel.panelHeight + spacing;
         }
 
-        AcquiredSkillContent.GetComponent<RectTransform>().sizeDelta = new Vector2(800, contentTotalHeight);
+        AcquiredSkillContent.GetComponent<RectTransform>().sizeDelta = new Vector2(650, contentTotalHeight);
     }
 }

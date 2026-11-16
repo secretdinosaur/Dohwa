@@ -313,6 +313,7 @@ Transform:
   - {fileID: 5133567238774841217}
   - {fileID: 3687424558148356909}
   - {fileID: 1096127343279140929}
+  - {fileID: 358684255405621218}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &887303981805832213
@@ -352,10 +353,14 @@ MonoBehaviour:
   currentState: 0
   cameraTarget: {fileID: 0}
   dropItem: {fileID: 0}
+  statpointGainChance: 0.15
+  statpointGainAmount: 3
   EnemyWeapons:
   - {fileID: 7496724541213852462}
   FakeWeapons:
   - {fileID: 2432055006253458239}
+  isOnetimeEnemy: 0
+  onetimeSaveKey: 
   ViewSkill: {fileID: 11400000, guid: e63a34cf104a9a04187b770379c863ba, type: 2}
   animator: {fileID: 0}
   wasParried: 0
@@ -364,6 +369,8 @@ MonoBehaviour:
   isDetectingPlayer: 0
   isForceDetected: 0
   isIgnoringPlayer: 0
+  isTakingDoT: 0
+  isCulled: 0
   skillSelector: {fileID: 0}
   HittedSkill: {fileID: 0}
   HitIndex: 0
@@ -383,7 +390,7 @@ MonoBehaviour:
   detectionRange: 20
   detectionRangeWithoutWatch: 10
   detectionMemoryDuration: 10
-  chaseRange: 50
+  chaseRange: 35
   wanderSearchRadius: 15
   fieldOfView: 75
   chaseSpeedMultiplier: 2.25
@@ -396,14 +403,19 @@ MonoBehaviour:
   skillRangeMultiplier: 0.9
   targetUpdateInterval: 0.2
   firstDetectionDelay: 1
+  moveBeforeAttackChance: 15
+  parriedBackWalkChance: 60
+  normalBackWalkChance: 15
+  strafeOnCloseChance: 30
+  backWalkTriggerFactor: 0.7
+  evasionCounterAttackChance: 60
+  hitCounterAttackChance: 60
+  hitBackWalkChance: 40
   maxPredictionTime: 0.7
   isDetectedPlayer: 0
   isMemorizingPlayer: 0
-  moveBeforeAttackChance: 50
-  parriedBackWalkChance: 60
-  normalBackWalkChance: 15
-  backWalkTriggerFactor: 0.7
-  strafeOnCloseChance: 50
+  attackIdleReselectDelay: 3
+  reselectCooldown: 1
 --- !u!114 &488358157802232839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -416,8 +428,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78841b4a45c586542ab726d5138f8829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHP: 100
-  maxMP: 100
+  maxHP: 60
+  maxMP: 60
   mpRecoveryPerSecond: 5
   stunDuration: 3
 --- !u!114 &2706620447711206371
@@ -945,7 +957,7 @@ MonoBehaviour:
     rotationRange: {x: -120, y: -90}
     offsetMin: {x: -0.01, y: -0.005, z: -0.02}
     offsetMax: {x: -0.01, y: 0.01, z: 0.02}
-  maxDecals: 20
+  maxDecals: 15
   depth: 0.3
   fadeDuration: 0.2
 --- !u!114 &3440617908012287119
@@ -2042,6 +2054,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7719970536055591346}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2838387426778400932
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 358684255405621218}
+  m_Layer: 0
+  m_Name: CameraTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &358684255405621218
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2838387426778400932}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.756872, z: -0, w: 0.6535632}
+  m_LocalPosition: {x: 0, y: 9, z: 0}
+  m_LocalScale: {x: 7.4074087, y: 7.407407, z: 7.4074087}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2178093052061256794}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2945923310370760544
 GameObject:

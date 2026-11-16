@@ -21,8 +21,6 @@ public class SoundManager : MonoBehaviour
     [Range(0f, 1f)] public float bgmVolume = 0.5f;
 
     private List<SoundObject> activeSFXList = new List<SoundObject>();
-
-    // 💡 적(EnemySound)들의 AudioSource를 추적하기 위한 리스트 추가
     private List<AudioSource> enemyAudioSources = new List<AudioSource>();
 
     private AudioClip lastPlayedBGM;
@@ -30,9 +28,11 @@ public class SoundManager : MonoBehaviour
     private float idleTimer = 0f;
     private float autoPlayInterval = 120f;
 
-    // 특별 BGM 종료 예약을 추적하기 위한 변수
     private bool isStoppingSpecialBGM = false;
 
+    // 사망 시 BGM 먹먹해짐(희미해짐) 처리를 위한 변수
+    private bool isDeadMuffled = false;
+    private Coroutine muffleCoroutine;
 
     public Button[] NotUseDefaultSoundButton;
 
@@ -56,14 +56,12 @@ public class SoundManager : MonoBehaviour
 
     private void Update()
     {
-        // bgm이 꺼져있을 때만 타이머를 돌려 자동 재생
         if (!bgmSource.isPlaying)
         {
-            // 루프 해제로 특별 BGM이 자연스럽게 끝났을 때를 대비해 상태 초기화
             if (isStoppingSpecialBGM)
             {
                 isStoppingSpecialBGM = false;
-                idleTimer = 0f; // BGM이 끝나자마자 다음 자동재생 타이머 시작
+                idleTimer = 0f;
             }
 
             idleTimer += Time.deltaTime;
@@ -80,13 +78,15 @@ public class SoundManager : MonoBehaviour
 
     public void PlayTeacherSound()
     {
-        PlaySound(teacherSound);
+        if (teacherSound != null)
+            PlaySound(teacherSound);
     }
 
     public void PlayCriticalSound()
     {
-               PlaySound(CriticalSound);
+        PlaySound(CriticalSound);
     }
+
     public void SetMasterVolume(float volume)
     {
         masterVolume = volume;
@@ -110,13 +110,15 @@ public class SoundManager : MonoBehaviour
     {
         if (bgmSource != null)
         {
-            bgmSource.volume = masterVolume * bgmVolume;
+            // 💡 사망 상태일 경우 BGM 볼륨을 20%로 강제 축소
+            float targetVol = masterVolume * bgmVolume;
+            if (isDeadMuffled) targetVol *= 0.2f;
+            bgmSource.volume = targetVol;
         }
     }
 
     private void UpdateSFXVolume()
     {
-        // 1. 기존 사운드 풀 객체들 볼륨 조절
         for (int i = 0; i < activeSFXList.Count; i++)
         {
             if (activeSFXList[i] != null && activeSFXList[i].audioSource != null)
@@ -125,12 +127,10 @@ public class SoundManager : MonoBehaviour
             }
         }
 
-        // 2. 💡 맵에 존재하는 모든 Enemy의 AudioSource 볼륨 조절
         for (int i = enemyAudioSources.Count - 1; i >= 0; i--)
         {
             if (enemyAudioSources[i] == null)
             {
-                // 적이 파괴되었을 경우 리스트에서 자동 정리
                 enemyAudioSources.RemoveAt(i);
             }
             else
@@ -140,13 +140,12 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    // ====== 💡 EnemySound에서 직접 호출할 등록/해제 함수 ======
     public void RegisterEnemyAudioSource(AudioSource source)
     {
         if (source != null && !enemyAudioSources.Contains(source))
         {
             enemyAudioSources.Add(source);
-            source.volume = masterVolume * sfxVolume; // 등록되는 즉시 현재 설정된 볼륨 적용
+            source.volume = masterVolume * sfxVolume;
         }
     }
 
@@ -157,7 +156,6 @@ public class SoundManager : MonoBehaviour
             enemyAudioSources.Remove(source);
         }
     }
-    // ==========================================================
 
     private void SetNextAutoPlayInterval()
     {
@@ -183,11 +181,10 @@ public class SoundManager : MonoBehaviour
 
         lastPlayedBGM = nextClip;
         isStoppingSpecialBGM = false;
-        PlayBGMCore(nextClip, false); // 랜덤 BGM은 루프 안 함
+        PlayBGMCore(nextClip, false);
         SetNextAutoPlayInterval();
     }
 
-    // 외부에서 특정 클립을 재생시킬 때 사용
     public void PlaySpecialBGM(AudioClip specialClip)
     {
         if (fadeCoroutine != null)
@@ -198,12 +195,10 @@ public class SoundManager : MonoBehaviour
         fadeCoroutine = StartCoroutine(FadeOutAndPlay(specialClip));
     }
 
-    // 특별 BGM 종료 예약을 추적하기 위한 변수
     public void StopSpecialBGMSequence()
     {
         if (bgmSource != null && bgmSource.isPlaying && bgmSource.loop)
         {
-            // 즉시 끄지 않고 반복만 풀어줌 -> 현재 재생 중인 클립이 끝까지 재생된 후 멈춤
             bgmSource.loop = false;
             isStoppingSpecialBGM = true;
         }
@@ -211,7 +206,7 @@ public class SoundManager : MonoBehaviour
 
     private IEnumerator FadeOutAndPlay(AudioClip newClip)
     {
-        float fadeSpeed = bgmSource.volume / 1f; // 1초 동안 페이드아웃
+        float fadeSpeed = bgmSource.volume / 1f;
 
         while (bgmSource.volume > 0)
         {
@@ -222,7 +217,6 @@ public class SoundManager : MonoBehaviour
         bgmSource.Stop();
         lastPlayedBGM = null;
 
-        // 특별 BGM은 기본적으로 무한 반복(loop: true)
         PlayBGMCore(newClip, true);
     }
 
@@ -236,7 +230,11 @@ public class SoundManager : MonoBehaviour
     {
         if (bgmSource == null) return;
         bgmSource.clip = clip;
+
+        // 피치 저하 삭제, 1.0 고정
+        bgmSource.pitch = 1.0f;
         UpdateBGMVolume();
+
         bgmSource.loop = loop;
         bgmSource.Play();
     }
@@ -251,9 +249,7 @@ public class SoundManager : MonoBehaviour
     {
         SoundObject sound = poolManager.GetFromPool<SoundObject>();
         sound.audioSource.pitch = pitch;
-
         sound.audioSource.volume = masterVolume * sfxVolume;
-
         sound.audioSource.clip = clip;
         sound.audioSource.Play();
 
@@ -263,7 +259,6 @@ public class SoundManager : MonoBehaviour
         }
 
         StartCoroutine(ReturnRoutine(sound));
-
         return sound;
     }
 
@@ -302,7 +297,7 @@ public class SoundManager : MonoBehaviour
                 StopCoroutine(fadeCoroutine);
             }
 
-            isStoppingSpecialBGM = false; // 자연 종료 예약을 취소하고 강제 종료로 전환
+            isStoppingSpecialBGM = false;
             fadeCoroutine = StartCoroutine(FadeOutAndStopRoutine());
         }
     }
@@ -318,7 +313,7 @@ public class SoundManager : MonoBehaviour
 
     private IEnumerator FadeOutAndStopRoutine()
     {
-        float fadeSpeed = bgmSource.volume / 1f; // 1초 동안 페이드아웃
+        float fadeSpeed = bgmSource.volume / 1f;
 
         while (bgmSource.volume > 0)
         {
@@ -329,13 +324,13 @@ public class SoundManager : MonoBehaviour
         bgmSource.Stop();
         lastPlayedBGM = null;
 
-        // 다음번에 재생될 곡(자동 랜덤 BGM 등)이 소리가 0으로 나오지 않도록 볼륨을 원상 복구해 둡니다.
+        bgmSource.pitch = 1.0f; // 초기화
         UpdateBGMVolume();
     }
 
     public IEnumerator FadeOutAndStopSpecificRoutine(SoundObject obj)
     {
-        float fadeSpeed = obj.audioSource.volume / 3f; // 1초 동안 페이드아웃
+        float fadeSpeed = obj.audioSource.volume / 3f;
 
         while (obj.audioSource.volume > 0)
         {
@@ -362,5 +357,42 @@ public class SoundManager : MonoBehaviour
         {
             PlaySound(UIsounds[index]);
         }
+    }
+
+    public void MuffleBGMOnDeath()
+    {
+        if (bgmSource == null || !bgmSource.isPlaying) return;
+        if (muffleCoroutine != null) StopCoroutine(muffleCoroutine);
+        muffleCoroutine = StartCoroutine(MuffleBGMRoutine(true));
+    }
+
+    public void RestoreBGMOnRespawn()
+    {
+        if (bgmSource == null) return;
+        if (muffleCoroutine != null) StopCoroutine(muffleCoroutine);
+        muffleCoroutine = StartCoroutine(MuffleBGMRoutine(false));
+    }
+
+    private IEnumerator MuffleBGMRoutine(bool isMuffling)
+    {
+        isDeadMuffled = isMuffling;
+
+        float startVolume = bgmSource.volume;
+        float targetVolume = isMuffling ? (masterVolume * bgmVolume * 0.2f) : (masterVolume * bgmVolume);
+
+        float elapsed = 0f;
+        float duration = 1.5f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            // 볼륨만 조절
+            bgmSource.volume = Mathf.Lerp(startVolume, targetVolume, t);
+            yield return null;
+        }
+
+        bgmSource.volume = targetVolume;
     }
 }

@@ -10,11 +10,6 @@ public class Bandit5AI : EnemyAIBase
     [Range(0f, 1f)] public float walkApproachChance = 0.2f;
     private bool isChoosingWalkApproach = false;
 
-    [Header("Strafe & Evasion Specific")]
-    public float backWalkTriggerFactor = 0.7f;
-    [Range(0f, 100f)] public float strafeOnCloseChance = 30f;
-    private bool lastActionWasBackWalk = false;
-
     [Header("Run Attack Specific")]
     public SkillBase runAttackSkill;
     public float runDuration = 0.6f;
@@ -30,7 +25,7 @@ public class Bandit5AI : EnemyAIBase
     [Header("Weapon Decal Specific (무기 흔적)")]
     public GameObject currentWeapon;
     public Material[] customDecalMaterials;
-    public Vector2 customDecalSize = new Vector2(0.8f, 2.5f); // 데칼의 기본 가로세로 크기
+    public Vector2 customDecalSize = new Vector2(0.8f, 2.5f);
 
     private SkillSelector skillSelector;
 
@@ -38,32 +33,41 @@ public class Bandit5AI : EnemyAIBase
     {
         base.Awake();
         skillSelector = GetComponent<SkillSelector>();
+
+        // 💡 [버그 픽스 1] 플레이어를 발견하는 즉시 배회(Wander) 코루틴을 끊어내기 위한 이벤트 구독
+        core.OnPlayerDetected += HandlePlayerDetected;
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        if (core != null)
+        {
+            core.OnPlayerDetected -= HandlePlayerDetected;
+        }
+    }
+
+    private void HandlePlayerDetected()
+    {
+        StopActionRoutine(); // 플레이어를 발견한 첫 순간에만 하던 행동을 정지합니다.
     }
 
     protected override void HandleBehaviorLogic(float distToLastPos)
     {
-        if (isAttacking || core.currentState == EnemyState.BackWalk || core.currentState == EnemyState.CooldownWalk || core.currentState == EnemyState.Dead) return;
         if (core.IsDead) return;
+        if (isAttacking || actionCoroutine != null) return;
 
-        if (isMemorizingPlayer)
+        if (isDetectedPlayer || isMemorizingPlayer)
         {
-            StopActionRoutine();
+            // 🚨 [핵심 버그 픽스 2] 매 프레임마다 AI의 이동을 강제로 멈추게 만들던 StopActionRoutine(); 삭제!
 
             if (selectedSkill == null)
-            {
                 selectedSkill = skillSelector.GetNextSkill(distToLastPos);
-            }
 
             if (selectedSkill == null)
             {
-                if (distToLastPos > 2.5f)
-                {
-                    UpdateChaseTarget();
-                }
-                else
-                {
-                    actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                }
+                if (distToLastPos > 2.5f) UpdateChaseTarget();
+                else actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
                 return;
             }
 
@@ -72,8 +76,6 @@ public class Bandit5AI : EnemyAIBase
 
             bool canAttackGlobal = isDetectedPlayer && (Time.time >= nextAttackTime || skillSelector.isNextSkillCombo);
             bool hasEnoughMP = core.QueryHasEnoughMP?.Invoke(selectedSkill.MP_cost) ?? false;
-
-            // 💡 추가됨: 단순 거리 비교 대신 실제 스킬의 타격 박스(또는 범위) 내에 있는지 확인
             bool isWithinAttackBox = IsPlayerInSkillBox(selectedSkill, skillRangeMultiplier);
 
             if (isWithinAttackBox)
@@ -82,98 +84,74 @@ public class Bandit5AI : EnemyAIBase
                 {
                     if (selectedSkill == jumpAttackSkill)
                     {
-                        actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
-                        lastActionWasBackWalk = false;
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
+                        lastActionWasEvasion = false;
                     }
                     else if (selectedSkill == runAttackSkill)
                     {
-                        // 돌진 공격은 추적 상태에서 앞을 향해 달리고 있을 때만 발동
                         if (core.currentState == EnemyState.Chase && isRunningForward)
                         {
-                            actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
-                            lastActionWasBackWalk = false;
+                            actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
+                            lastActionWasEvasion = false;
                         }
                         else
                         {
                             UpdateChaseTarget();
-                            lastActionWasBackWalk = false;
+                            lastActionWasEvasion = false;
                         }
                     }
                     else
                     {
-                        actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-                        lastActionWasBackWalk = false;
+                        actionCoroutine = StartCoroutine(ExecuteSkillAndChain(selectedSkill));
+                        lastActionWasEvasion = false;
                     }
                 }
                 else
                 {
-                    // 박스 안이지만 공격 쿨타임 대기 중일 때
-                    if (distToLastPos < backWalkRange && !lastActionWasBackWalk && !skillSelector.HasPendingCombo)
+                    if (distToLastPos < backWalkRange && !lastActionWasEvasion && !skillSelector.HasPendingCombo)
                     {
                         if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance)
-                        {
                             actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        }
                         else
-                        {
                             actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                        }
-                        lastActionWasBackWalk = true;
+                        lastActionWasEvasion = true;
                     }
                     else
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        lastActionWasBackWalk = false;
+                        lastActionWasEvasion = false;
                     }
                 }
             }
             else
             {
-                // 💡 추가됨: 타격 박스 밖에 있을 때의 유동적 위치 선정 로직
                 if (distToLastPos < backWalkRange)
                 {
-                    // 거리는 가까운데 각도가 빗나간 경우 -> 너무 가까우니 회피기동이나 뒤로 물러나면서 각도를 잼
-                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasBackWalk)
+                    if (UnityEngine.Random.Range(0f, 100f) < strafeOnCloseChance || lastActionWasEvasion)
                     {
                         actionCoroutine = StartCoroutine(StrafeRoutine(UnityEngine.Random.Range(strafeMinDuration, strafeMaxDuration)));
-                        lastActionWasBackWalk = false;
+                        lastActionWasEvasion = false;
                     }
                     else
                     {
                         actionCoroutine = StartCoroutine(BackWalkRoutine(backWalkDist));
-                        lastActionWasBackWalk = true;
+                        lastActionWasEvasion = true;
                     }
                 }
                 else
                 {
-                    // 거리가 멀거나 각도가 빗나간 경우 스킬별 접근 방식 적용
                     if (canAttackGlobal && hasEnoughMP)
                     {
-                        if (selectedSkill == jumpAttackSkill)
-                        {
-                            HandleDistantApproach(executeRange);
-                        }
-                        else if (selectedSkill == runAttackSkill)
-                        {
-                            UpdateChaseTarget();
-                        }
+                        if (selectedSkill == jumpAttackSkill) HandleDistantApproach(executeRange);
+                        else if (selectedSkill == runAttackSkill) UpdateChaseTarget();
                         else
                         {
-                            if (distToLastPos <= executeRange * walkApproachFactor)
-                            {
-                                UpdateWalkApproachTarget();
-                            }
-                            else
-                            {
-                                HandleDistantApproach(executeRange);
-                            }
+                            if (distToLastPos <= executeRange * walkApproachFactor) UpdateWalkApproachTarget();
+                            else HandleDistantApproach(executeRange);
                         }
                     }
-                    else
-                    {
-                        HandleDistantApproach(executeRange);
-                    }
-                    lastActionWasBackWalk = false;
+                    else HandleDistantApproach(executeRange);
+                    lastActionWasEvasion = false;
                 }
             }
         }
@@ -191,52 +169,20 @@ public class Bandit5AI : EnemyAIBase
         if (Time.time >= nextTargetUpdateTime)
         {
             if (currentDist > executeRange * walkApproachFactor * 1.5f)
-            {
                 isChoosingWalkApproach = UnityEngine.Random.value < walkApproachChance;
-            }
             else
-            {
                 isChoosingWalkApproach = true;
-            }
         }
 
-        if (isChoosingWalkApproach)
-        {
-            UpdateWalkApproachTarget();
-        }
-        else
-        {
-            UpdateChaseTarget();
-        }
+        if (isChoosingWalkApproach) UpdateWalkApproachTarget();
+        else UpdateChaseTarget();
     }
 
-    private void ChainNextAttackOrIdle()
+    protected override IEnumerator RouteAndExecuteSkill(SkillBase skill)
     {
-        if (skillSelector.HasPendingCombo)
-        {
-            float currentDist = Vector3.Distance(transform.position, Player.Instance.transform.position);
-            selectedSkill = skillSelector.GetNextSkill(currentDist);
-
-            if (selectedSkill == jumpAttackSkill)
-            {
-                actionCoroutine = StartCoroutine(JumpAttackSequence(selectedSkill));
-            }
-            else if (selectedSkill == runAttackSkill)
-            {
-                actionCoroutine = StartCoroutine(RunAttackSequence(selectedSkill));
-            }
-            else
-            {
-                actionCoroutine = StartCoroutine(AttackSequence(selectedSkill));
-            }
-        }
-        else
-        {
-            isAttacking = false;
-            selectedSkill = null;
-            core.ChangeState(EnemyState.Idle);
-            actionCoroutine = null;
-        }
+        if (skill == jumpAttackSkill) yield return StartCoroutine(JumpAttackSequence(skill));
+        else if (skill == runAttackSkill) yield return StartCoroutine(RunAttackSequence(skill));
+        else yield return StartCoroutine(base.RouteAndExecuteSkill(skill));
     }
 
     private IEnumerator JumpAttackSequence(SkillBase skill)
@@ -245,69 +191,68 @@ public class Bandit5AI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
         isRunningForward = false;
-
         bool attackFinished = false;
 
-        Action<float> onComplete = (nextTime) => {
+        currentAttackCompleteHandler = (nextTime) => {
             float delay = skillSelector.GetLastSkillDelay();
             nextAttackTime = Time.time + delay;
             attackFinished = true;
         };
+        core.OnAttackCompleted += currentAttackCompleteHandler;
 
-        core.OnAttackCompleted += onComplete;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        float prepTime = 0f;
-        while (prepTime < jumpDuration * 0.3f)
+        try
         {
-            if (skillSelector.isInstantComboTriggered) break;
-            prepTime += Time.deltaTime;
-            yield return null;
+            core.CmdPerformAttack?.Invoke(skill);
+
+            float prepTime = 0f;
+            while (prepTime < jumpDuration * 0.3f)
+            {
+                if (skillSelector.isInstantComboTriggered) break;
+                prepTime += Time.deltaTime;
+                yield return null;
+            }
+
+            Vector3 startPos = transform.position;
+            Vector3 playerPos = Player.Instance.transform.position;
+            Vector3 dirToPlayer = (playerPos - startPos).normalized;
+            dirToPlayer.y = 0f;
+
+            Vector3 targetPos = playerPos - (dirToPlayer * jumpLandingOffset);
+            targetPos.y = startPos.y;
+
+            float elapsed = 0f;
+            float moveDuration = jumpDuration * (0.7916f - 0.3f);
+
+            while (elapsed < moveDuration)
+            {
+                if (skillSelector.isInstantComboTriggered) break;
+                float t = elapsed / moveDuration;
+                Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
+                currentPos.y += jumpCurve.Evaluate(t) * jumpHeight;
+                transform.position = currentPos;
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (!skillSelector.isInstantComboTriggered)
+            {
+                core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+                transform.position = targetPos;
+                core.CmdTrySnapToNavMesh?.Invoke();
+            }
+
+            yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState != EnemyState.Attack || core.IsDead);
+        }
+        finally
+        {
+            ClearAttackHandler();
+            // 💡 [핵심 버그 픽스 3] 공격 로직이 정상 종료되든, 스턴에 걸려 강제 종료되든 무조건 행동 잠금을 해제합니다.
+            isAttacking = false;
+            actionCoroutine = null;
         }
 
-        Vector3 startPos = transform.position;
-        Vector3 playerPos = Player.Instance.transform.position;
-
-        Vector3 dirToPlayer = (playerPos - startPos).normalized;
-        dirToPlayer.y = 0f;
-
-        Vector3 targetPos = playerPos - (dirToPlayer * jumpLandingOffset);
-        targetPos.y = startPos.y;
-
-        float elapsed = 0f;
-        float moveDuration = jumpDuration * (0.7916f - 0.3f);
-
-        while (elapsed < moveDuration)
-        {
-            if (skillSelector.isInstantComboTriggered) break;
-
-            float t = elapsed / moveDuration;
-            Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
-            currentPos.y += jumpCurve.Evaluate(t) * jumpHeight;
-            transform.position = currentPos;
-            elapsed += Time.deltaTime;
-
-            yield return null;
-        }
-
-        if (!skillSelector.isInstantComboTriggered)
-        {
-            core.CmdLookAt?.Invoke(Player.Instance.transform.position);
-            transform.position = targetPos;
-            core.CmdTrySnapToNavMesh?.Invoke();
-        }
-
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered);
-
-        core.OnAttackCompleted -= onComplete;
-
-        if (skillSelector.isInstantComboTriggered)
-        {
-            skillSelector.isInstantComboTriggered = false;
-        }
-        core.StopEffects(skill.name);
-
-        ChainNextAttackOrIdle();
+        if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
+        StopAttackEffects(skill);
     }
 
     private IEnumerator RunAttackSequence(SkillBase skill)
@@ -316,96 +261,62 @@ public class Bandit5AI : EnemyAIBase
         core.CmdStopMovement?.Invoke();
         core.ChangeState(EnemyState.Attack);
         isRunningForward = false;
-
         bool attackFinished = false;
 
-        Action<float> onComplete = (nextTime) => {
+        currentAttackCompleteHandler = (nextTime) => {
             float delay = skillSelector.GetLastSkillDelay();
             nextAttackTime = Time.time + delay;
             attackFinished = true;
         };
+        core.OnAttackCompleted += currentAttackCompleteHandler;
 
-        core.OnAttackCompleted += onComplete;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        float elapsed = 0f;
-        yield return new WaitForSeconds(2.8f);
-
-        Vector3 startPos = transform.position;
-
-        while (elapsed < runDuration)
+        try
         {
-            if (skillSelector.isInstantComboTriggered) break;
+            core.CmdPerformAttack?.Invoke(skill);
 
-            Vector3 currentPlayerPos = Player.Instance.transform.position;
-            Vector3 dirToPlayer = (currentPlayerPos - startPos).normalized;
-            dirToPlayer.y = 0f;
+            float elapsed = 0f;
+            yield return new WaitForSeconds(2f);
 
-            Vector3 targetPos = currentPlayerPos - (dirToPlayer * runStopOffset);
-            targetPos.y = startPos.y;
+            Vector3 startPos = transform.position;
 
-            float t = elapsed / runDuration;
-            transform.position = Vector3.Lerp(startPos, targetPos, t);
-            core.CmdLookAt?.Invoke(currentPlayerPos);
+            while (elapsed < runDuration)
+            {
+                if (skillSelector.isInstantComboTriggered) break;
+                Vector3 currentPlayerPos = Player.Instance.transform.position;
+                Vector3 dirToPlayer = (currentPlayerPos - startPos).normalized;
+                dirToPlayer.y = 0f;
 
-            elapsed += Time.deltaTime;
-            yield return null;
+                Vector3 targetPos = currentPlayerPos - (dirToPlayer * runStopOffset);
+                targetPos.y = startPos.y;
+
+                float t = elapsed / runDuration;
+                transform.position = Vector3.Lerp(startPos, targetPos, t);
+                core.CmdLookAt?.Invoke(currentPlayerPos);
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (!skillSelector.isInstantComboTriggered)
+            {
+                core.CmdLookAt?.Invoke(Player.Instance.transform.position);
+                core.CmdTrySnapToNavMesh?.Invoke();
+            }
+
+            yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered || core.wasParried || core.currentState != EnemyState.Attack || core.IsDead);
+        }
+        finally
+        {
+            ClearAttackHandler();
+            // 💡 [핵심 버그 픽스 3] 여기도 마찬가지로 잠금을 해제해줍니다.
+            isAttacking = false;
+            actionCoroutine = null;
         }
 
-        if (!skillSelector.isInstantComboTriggered)
-        {
-            core.CmdLookAt?.Invoke(Player.Instance.transform.position);
-            core.CmdTrySnapToNavMesh?.Invoke();
-        }
-
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered);
-
-        core.OnAttackCompleted -= onComplete;
-
-        if (skillSelector.isInstantComboTriggered)
-        {
-            skillSelector.isInstantComboTriggered = false;
-        }
-
-        core.StopEffects(skill.name);
-
-        ChainNextAttackOrIdle();
+        if (skillSelector.isInstantComboTriggered) skillSelector.isInstantComboTriggered = false;
+        StopAttackEffects(skill);
     }
 
-    private IEnumerator AttackSequence(SkillBase skill)
-    {
-        isAttacking = true;
-        core.CmdStopMovement?.Invoke();
-        core.ChangeState(EnemyState.Attack);
-        isRunningForward = false;
-
-        bool attackFinished = false;
-
-        Action<float> onComplete = (nextTime) => {
-            float delay = skillSelector.GetLastSkillDelay();
-            nextAttackTime = Time.time + delay;
-            attackFinished = true;
-        };
-
-        core.OnAttackCompleted += onComplete;
-        core.CmdPerformAttack?.Invoke(skill);
-
-        yield return new WaitUntil(() => attackFinished || skillSelector.isInstantComboTriggered);
-
-        core.OnAttackCompleted -= onComplete;
-
-        if (skillSelector.isInstantComboTriggered)
-        {
-            skillSelector.isInstantComboTriggered = false;
-        }
-        core.StopEffects(skill.name);
-
-        ChainNextAttackOrIdle();
-    }
-
-    // ============================================================
-    // 무기 데칼 생성 함수 (애니메이션 이벤트 등에서 호출)
-    // ============================================================
     public void SpawnWeaponGroundDecal()
     {
         if (currentWeapon == null || customDecalMaterials == null || customDecalMaterials.Length == 0) return;
@@ -417,12 +328,8 @@ public class Bandit5AI : EnemyAIBase
         if (Physics.Raycast(rayStart + Vector3.up, Vector3.down, out RaycastHit hit, 15.0f, groundLayer))
         {
             Material selectedMat = customDecalMaterials[UnityEngine.Random.Range(0, customDecalMaterials.Length)];
-
             MapDecalManager.Instance.SpawnCustomDecal(
-                hit.point,
-                hit.normal,
-                transform.forward,
-                selectedMat,
+                hit.point, hit.normal, transform.forward, selectedMat,
                 customDecalSize.x * UnityEngine.Random.Range(0.8f, 1.25f),
                 customDecalSize.y * UnityEngine.Random.Range(0.8f, 1.25f)
             );

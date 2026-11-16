@@ -16,7 +16,7 @@ MonoBehaviour:
   isUpgraded: 0
   UpgradedSkill: {fileID: 0}
   commands: 
-  MP_cost: 20
+  MP_cost: 25
   clip: {fileID: 7400000, guid: 49044a24ecb0b5942be2161796a443dd, type: 2}
   icon: {fileID: 0}
   sound: {fileID: 8300000, guid: 7132f64d2d5c9214bae664b80ffc8e5b, type: 3}
@@ -50,7 +50,7 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   damageMultipliers:
-  - 12
+  - 25
   HitSound:
   - {fileID: 8300000, guid: bd9c168522f0e054abb43ab0a4623361, type: 3}
   HitEffects:
@@ -62,11 +62,14 @@ MonoBehaviour:
   triggerCooldown: 5
   triggerChance: 1
   triggerMaxUsesPerCaster: 0
+  isUnstoppable: 0
+  isSuperUnstoppable: 0
+  damageReductionDuringCast: 0
   hitDataList:
   - centerOffset: {x: 0.5, y: 2, z: 2}
     boxSize: {x: 5, y: 3, z: 3}
     boxRotation: {x: 0, y: 0, z: 0}
-    damageMultiplier: 12
+    damageMultiplier: 25
     knockbackForce: {x: 0, y: 0, z: 12}
     knockdownType: 0
     knockdownDuration: 1.5
@@ -83,6 +86,9 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       isRealtimeFollow: 0
       stunDuration: 5
+    useDebuffEffect: 0
+    debuffType: 0
+    debuffChance: 0.5
     useAreaSpawn: 0
     areaPrefab: {fileID: 0}
     areaOffset: {x: 0, y: 0, z: 0}

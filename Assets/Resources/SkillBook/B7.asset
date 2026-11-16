@@ -98,7 +98,7 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 10
+    cost: 5
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
@@ -129,7 +129,7 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 10
+    cost: 5
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
@@ -160,7 +160,7 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 5
+    cost: 10
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
@@ -191,7 +191,7 @@ MonoBehaviour:
       m_FallbackState: 0
       m_WaitForCompletion: 0
       m_LocalVariables: []
-    cost: 5
+    cost: 10
     useCondition: 0
     autoUnlockOnCondition: 0
     conditions: []
@@ -202,12 +202,12 @@ MonoBehaviour:
     activeSkill: {fileID: 0}
     passiveSkill: {fileID: 0}
     statModifiers:
+    - statType: 5
+      statValue: 0.05
     - statType: 8
       statValue: 18
     - statType: 6
       statValue: 10
-    - statType: 5
-      statValue: 0.05
     localizeStatNodeName:
       m_TableReference:
         m_TableCollectionName: GUID:437d1851397a6a242b0186b1d4ede023

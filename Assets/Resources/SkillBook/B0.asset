@@ -235,6 +235,39 @@ MonoBehaviour:
     unlocked: 0
     prerequisiteIndices: 04000000
     isStartingNode: 0
+  - nodeType: 1
+    activeSkill: {fileID: 0}
+    passiveSkill: {fileID: 11400000, guid: 1e7d73628dde2354ea2fcde52359d315, type: 2}
+    statModifiers: []
+    localizeStatNodeName:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizeStatNodeDesc:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    cost: 0
+    useCondition: 1
+    autoUnlockOnCondition: 1
+    conditions:
+    - conditionType: 1
+      targetValue: 5
+    - conditionType: 3
+      targetValue: 99
+    unlocked: 0
+    prerequisiteIndices: 04000000
+    isStartingNode: 0
   references:
     version: 2
     RefIds: []
