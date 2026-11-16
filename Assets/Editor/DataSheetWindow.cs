@@ -9,7 +9,10 @@ using UnityEditor.Localization;
 
 public class DataSheetWindow : EditorWindow
 {
-    private string webAppUrl = "https://script.google.com/macros/s/AKfycbylQmkk4__fy-oOHmULz3lUy-s2iZVK-bJh_u78IfmDzV6zxrESfdQ6Xk6wz9Whr81ZJw/exec";
+    // Web App 주소는 시트를 덮어쓸 수 있는 비밀 값이라 저장소에 넣지 않는다.
+    // 프로젝트의 UserSettings/DataSheetSync.json(git 제외)에 로컬로 보관한다.
+    private const string ConfigPath = "UserSettings/DataSheetSync.json";
+    private string webAppUrl = "";
     private bool isWorking = false;
 
     [Serializable]
@@ -33,13 +36,35 @@ public class DataSheetWindow : EditorWindow
         window.Show();
     }
 
+    [Serializable]
+    private class SyncConfig { public string webAppUrl; }
+
+    private void OnEnable() => LoadConfig();
+
+    private void LoadConfig()
+    {
+        if (!System.IO.File.Exists(ConfigPath)) return;
+        try { webAppUrl = JsonUtility.FromJson<SyncConfig>(System.IO.File.ReadAllText(ConfigPath))?.webAppUrl ?? ""; }
+        catch (Exception e) { Debug.LogWarning($"[DataSheetWindow] 설정 파일을 읽지 못했습니다: {e.Message}"); }
+    }
+
+    private void SaveConfig()
+    {
+        System.IO.Directory.CreateDirectory("UserSettings");
+        System.IO.File.WriteAllText(ConfigPath, JsonUtility.ToJson(new SyncConfig { webAppUrl = webAppUrl }, true));
+    }
+
     private void OnGUI()
     {
         GUILayout.Space(10);
         GUILayout.Label("데이터 <-> Google Sheet 통합 동기화", EditorStyles.boldLabel);
         GUILayout.Space(10);
 
+        EditorGUI.BeginChangeCheck();
         webAppUrl = EditorGUILayout.TextField("통합 Web App URL", webAppUrl);
+        if (EditorGUI.EndChangeCheck()) SaveConfig();
+        if (string.IsNullOrEmpty(webAppUrl))
+            EditorGUILayout.HelpBox("Web App URL을 입력하세요. 이 PC의 UserSettings/DataSheetSync.json에만 저장되고 git에는 올라가지 않습니다.", MessageType.Warning);
         GUILayout.Space(10);
 
         EditorGUI.BeginDisabledGroup(isWorking || string.IsNullOrEmpty(webAppUrl));
