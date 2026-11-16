@@ -304,7 +304,7 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         equippedWeapon = w;
         if (w != null)
         {
-            StatManager.Instance.AttackPower += w.attack * 2;
+            StatManager.Instance.AttackPower += w.attack;
             w.equipPassive?.skillLogic.Apply();
         }
     }
@@ -328,8 +328,8 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
         equippedArmor = a;
         if (a != null)
         {
-            StatManager.Instance.MaxHp += a.hp * 2;
-            StatManager.Instance.Armor += a.defense * 2;
+            StatManager.Instance.MaxHp += a.hp;
+            StatManager.Instance.Armor += a.defense;
             a.equipPassive?.skillLogic.Apply();
         }
     }
@@ -435,14 +435,17 @@ public class Player : MonoBehaviour, IDamageable, IBleedable
             else SkillEffectManager.Instance.GuardEffect(transform.position, transform.eulerAngles, caster, "GuardEffect");
 
             float RemainingDamage = 0;
-            float mpCost = StatManager.Instance.GuardSuccessCostMpMult * damage;
+            // MP 소모 감소를 반영한 실제 소모율. 부족할 때는 MP를 정확히 0으로 만들어 가드 브레이크가 일어나게 한다.
+            // (기존에는 ConsumeMP(MP)에 감소율이 적용되어 MP가 0이 되지 않아 가드가 깨지지 않았음)
+            float mpCostRate = StatManager.Instance.GuardSuccessCostMpMult * (1f - StatManager.Instance.MpConsumptionReduction);
+            float mpCost = mpCostRate * damage;
 
             if (MP > mpCost)
-                ConsumeMP(mpCost);
+                MP -= mpCost;
             else
             {
-                RemainingDamage = damage - MP / StatManager.Instance.GuardSuccessCostMpMult;
-                ConsumeMP(MP);
+                RemainingDamage = mpCostRate > 0f ? damage - MP / mpCostRate : 0f;
+                MP = 0f;
             }
 
             if (MP <= 0)

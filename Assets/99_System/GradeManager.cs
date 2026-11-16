@@ -41,6 +41,7 @@ public class GradeManager : MonoBehaviour
 
     private float originalCameraX;
     public bool IsPlayingUpgradeAnim;
+    private int appliedGradeIndex = 0; // 능력이 실제로 적용된 마지막 경지
     public GameObject UpperBar;
 
     public float CurrentExp
@@ -114,6 +115,7 @@ public class GradeManager : MonoBehaviour
         if (CurrentGradeIndex > 3) Apply_Ability_SuperPeak();
         if (CurrentGradeIndex > 4) Apply_Ability_TransformationRealm();
         if (CurrentGradeIndex > 5) Apply_Ability_ProfoundRealm();
+        appliedGradeIndex = CurrentGradeIndex;
 
         if (CurrentGradeIndex >= maxGrade)
         {
@@ -493,7 +495,10 @@ public class GradeManager : MonoBehaviour
 
         flowerRect.anchoredPosition = startPos;
         UpdatePetals(0f);
-        ApplyGradeAbilities(CurrentGradeIndex);
+        // 연출 전에 여러 단계가 올랐어도 건너뛴 경지의 능력까지 모두 적용
+        for (int g = appliedGradeIndex + 1; g <= CurrentGradeIndex; g++)
+            ApplyGradeAbilities(g);
+        appliedGradeIndex = CurrentGradeIndex;
 
         gradePanel.EnableUI(0.5f);
         IsPlayingUpgradeAnim = false;

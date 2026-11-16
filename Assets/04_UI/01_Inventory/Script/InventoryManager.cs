@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -163,7 +162,6 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        Player.Instance.equippedWeapon = weapon;
         Player.Instance.EquipWeapon(weapon);
         SetInfoPanel(0);
     }
@@ -194,7 +192,6 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        Player.Instance.equippedArmor = armor;
         Player.Instance.EquipArmor(armor);
         SetInfoPanel(1);
     }
