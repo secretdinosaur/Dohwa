@@ -190,7 +190,7 @@ public class DataManager : MonoBehaviour
           .Append(backup_ResolutionIndex).Append("/")
           .Append(backup_ScreenModeIndex);
 
-        File.WriteAllText(path, sb.ToString());
+        SafeWriteAllText(path, sb.ToString());
     }
 
     void ResetScriptableObjects()
@@ -218,17 +218,33 @@ public class DataManager : MonoBehaviour
             yield break;
         }
 
-        LoadStatData();
+        // 세이브 파일이 손상되어 예외가 나도 로딩이 멈추지 않도록 단계별로 보호
+        TryLoad(LoadStatData);
 
-        LoadInventoryData();
+        TryLoad(LoadInventoryData);
 
-        CheckAndGiveStartingSkillBook();
+        TryLoad(CheckAndGiveStartingSkillBook);
 
-        LoadSkillBookData();
+        TryLoad(LoadSkillBookData);
 
         IsLoading = false; // 로딩 완전 종료
 
         StartCoroutine(SaveRoutine());
+    }
+
+    private static void TryLoad(Action load)
+    {
+        try { load(); }
+        catch (Exception e) { Debug.LogException(e); }
+    }
+
+    // 임시 파일에 먼저 쓰고 교체해서, 저장 도중 종료되어도 기존 세이브가 깨지지 않게 한다
+    private static void SafeWriteAllText(string path, string contents)
+    {
+        string tmp = path + ".tmp";
+        File.WriteAllText(tmp, contents);
+        if (File.Exists(path)) File.Replace(tmp, path, null);
+        else File.Move(tmp, path);
     }
 
     private void CheckAndGiveStartingSkillBook()
@@ -301,7 +317,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {
@@ -410,7 +426,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {
@@ -676,7 +692,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
             Debug.Log($"데이터 저장 완료: {path}");
         }
         catch (Exception e)
@@ -801,7 +817,7 @@ public class DataManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(path, sb.ToString());
+            SafeWriteAllText(path, sb.ToString());
         }
         catch (Exception e)
         {

@@ -5,7 +5,6 @@ using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEngine.Analytics.IAnalytic;
 
 public class PlayerAttack : MonoBehaviour
 {
@@ -556,6 +555,7 @@ public class PlayerAttack : MonoBehaviour
             StopEffects(lastActivatedSkill.name);
             SkillEffectManager.Instance.ReturnSkillEffect(CurrentEffect, lastActivatedSkill.name);
             lastActivatedSkill = null;
+            CameraController.Instance?.OnSkillEnd(); // 스킬이 끊겨도 카메라를 기본 프레이밍으로 복귀
         }
 
         isAttacking = false;
